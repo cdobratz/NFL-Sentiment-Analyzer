@@ -30,21 +30,23 @@ docker-compose up --build
 
 The API will be available at `http://localhost:8000`
 
+## 📚 Documentation
+
+Detailed documentation is available in the [docs](docs) directory:
+
+- [Local Development Setup](docs/setup/local-setup.md)
+- [Production Deployment Guide](docs/setup/deployment.md)
+- [Architecture Overview](docs/architecture/tech-stack.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
+
+Visit our [Documentation Index](docs/README.md) for a complete list of documentation.
+
 ## 🔧 Tech Stack
 
 - **Backend**: Python, FastAPI
 - **Database**: MongoDB Atlas
 - **ML**: HuggingFace Transformers
 - **Infrastructure**: Docker, GitHub Actions
-- **Future**: React Frontend, Twitter API Integration
-
-## 📚 API Documentation
-
-Once running, visit `http://localhost:8000/docs` for interactive API documentation.
-
-Example endpoints:
-- `POST /analyze`: Analyze sentiment of NFL-related text
-- `GET /recent`: Get recent sentiment analyses
 
 ## 🛣️ Roadmap
 
@@ -57,7 +59,7 @@ Example endpoints:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting a Pull Request.
 
 ## 📝 License
 
