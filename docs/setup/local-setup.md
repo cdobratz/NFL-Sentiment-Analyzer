@@ -9,7 +9,23 @@ This guide will help you set up the NFL Sentiment Analyzer project for local dev
 - Git
 - MongoDB Atlas account
 
-## Step-by-Step Setup
+## Quick Start with Docker Hub
+
+The easiest way to get started is using our pre-built Docker image:
+
+```bash
+# Pull the image from Docker Hub
+docker pull cdobratz/nfl-sentiment-analyzer:latest
+
+# Create .env file with your MongoDB Atlas credentials
+cp .env.example .env
+# Edit .env with your credentials
+
+# Run with docker-compose
+docker-compose up
+```
+
+## Manual Setup
 
 1. **Clone the Repository**
    ```bash
@@ -30,9 +46,13 @@ This guide will help you set up the NFL Sentiment Analyzer project for local dev
    # Edit .env with your MongoDB Atlas credentials
    ```
 
-4. **Run with Docker**
+4. **Build and Run with Docker**
    ```bash
-   docker-compose up --build
+   # Build the image locally
+   docker-compose build
+
+   # Run the services
+   docker-compose up
    ```
 
 5. **Access the Application**
@@ -60,7 +80,7 @@ This guide will help you set up the NFL Sentiment Analyzer project for local dev
 - Check network connectivity
 
 ### Docker Issues
-- Ensure ports 8000 is not in use
+- Ensure port 8000 is not in use
 - Try removing old containers and images:
   ```bash
   docker-compose down
