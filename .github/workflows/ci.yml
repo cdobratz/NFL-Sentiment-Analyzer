@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 jobs:
   build:
@@ -30,6 +30,16 @@ jobs:
     # - name: Run tests
     #   run: pytest
 
-    # - name: Deploy to Digital Ocean
-    #   if: github.ref == 'refs/heads/main'
-    #   # Add deployment steps here
+    # Development branch specific steps
+    - name: Development specific checks
+      if: github.ref == 'refs/heads/dev'
+      run: |
+        echo "Running development branch specific checks..."
+        # Add development environment specific checks here
+
+    # Main branch specific steps
+    - name: Production deployment
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Running production deployment steps..."
+        # Add production deployment steps here
