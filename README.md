@@ -1,60 +1,64 @@
-# NFL Sentiment Analysis MVP
+# NFL Sentiment Analyzer
 
-This is a MVP (Minimum Viable Product) version of the NFL Sentiment Analysis project. It provides real-time sentiment analysis for NFL-related content using machine learning.
+A real-time sentiment analysis tool for NFL games that helps fans and analysts understand the public sentiment around games, teams, and players. Built with modern MLOps practices and scalable architecture.
 
-## Features
+## 🏈 Features
 
-- FastAPI backend with sentiment analysis endpoint
-- MongoDB integration for data persistence
-- Docker and Docker Compose setup for easy deployment
-- Basic sentiment analysis using pre-trained transformer models
+- Real-time sentiment analysis of NFL-related content
+- FastAPI backend with MongoDB Atlas integration
+- Containerized with Docker for easy deployment
+- Scalable architecture ready for high-traffic game days
 
-## Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+1. Clone the repository:
+```bash
+git clone https://github.com/cdobratz/NFL-Sentiment-Analyzer.git
+cd NFL-Sentiment-Analyzer
+```
 
-- Docker and Docker Compose installed
-- Git (for version control)
+2. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your MongoDB Atlas credentials
+```
 
-### Running Locally
-
-1. Clone the repository
-2. Navigate to the project directory
-3. Build and run the containers:
-
+3. Run with Docker:
 ```bash
 docker-compose up --build
 ```
 
-The API will be available at http://localhost:8000
+The API will be available at `http://localhost:8000`
 
-### API Endpoints
+## 🔧 Tech Stack
 
-- `GET /`: Health check endpoint
-- `POST /analyze`: Analyze sentiment of provided text
+- **Backend**: Python, FastAPI
+- **Database**: MongoDB Atlas
+- **ML**: HuggingFace Transformers
+- **Infrastructure**: Docker, GitHub Actions
+- **Future**: React Frontend, Twitter API Integration
+
+## 📚 API Documentation
+
+Once running, visit `http://localhost:8000/docs` for interactive API documentation.
+
+Example endpoints:
+- `POST /analyze`: Analyze sentiment of NFL-related text
 - `GET /recent`: Get recent sentiment analyses
 
-### Example Usage
+## 🛣️ Roadmap
 
-```bash
-# Analyze sentiment
-curl -X POST "http://localhost:8000/analyze" \
-     -H "Content-Type: application/json" \
-     -d '{"text": "The Chiefs are playing amazing football today!"}'
+- [ ] User authentication
+- [ ] Real-time Twitter/X data integration
+- [ ] Advanced sentiment analysis models
+- [ ] Interactive dashboard
+- [ ] Automated model retraining
+- [ ] Deployment to Digital Ocean
 
-# Get recent analyses
-curl "http://localhost:8000/recent"
-```
+## 🤝 Contributing
 
-## Deployment
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-This MVP is designed to be deployed to Digital Ocean. Detailed deployment instructions will be provided separately.
+## 📝 License
 
-## Next Steps
-
-- Add authentication
-- Implement real-time data collection from Twitter/X
-- Add more sophisticated sentiment analysis
-- Create frontend dashboard
-- Add automated testing
-- Set up CI/CD pipeline
+This project is licensed under the MIT License - see the LICENSE file for details.
