@@ -3,7 +3,7 @@ Hopsworks feature store integration service for ML features management.
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, Tuple
 from datetime import datetime, timedelta
 import pandas as pd
 import json

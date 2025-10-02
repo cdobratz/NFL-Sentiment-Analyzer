@@ -73,7 +73,7 @@ async def analyze_sentiment(
             "emotion_scores": result.emotion_scores,
             "aspect_sentiments": result.aspect_sentiments,
             "keyword_contributions": result.keyword_contributions,
-            "user_id": str(current_user["_id"]) if current_user else None,
+            "user_id": str(auth["_id"]) if isinstance(auth, dict) and auth else None,
         }
 
         db_result = await db.sentiment_analysis.insert_one(doc_data)

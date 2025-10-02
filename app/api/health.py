@@ -306,7 +306,7 @@ async def metrics_endpoint():
     return "\n".join(metrics) + "\n"
 
 
-@r.get("/rate-limits")
+@router.get("/rate-limits")
 async def get_rate_limit_status(
     request: Request, current_user: Optional[dict] = Depends(get_optional_user)
 ):

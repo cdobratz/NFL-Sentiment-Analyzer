@@ -9,9 +9,11 @@ from fastapi import Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import logging
+from jose import jwt
 
 from .logging import set_correlation_id, log_api_call, log_error
 from .exceptions import APIError
+from .config import settings
 
 logger = logging.getLogger(__name__)
 
