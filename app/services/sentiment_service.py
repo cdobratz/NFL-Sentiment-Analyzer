@@ -336,3 +336,12 @@ class SentimentAnalysisService:
                 )
 
         return weights
+
+
+# Global sentiment service instance
+sentiment_service = SentimentAnalysisService()
+
+
+async def get_sentiment_service() -> SentimentAnalysisService:
+    """Dependency to get sentiment service"""
+    return sentiment_service

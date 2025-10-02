@@ -19,7 +19,8 @@ from app.services.database_migration_service import (
 )
 from app.models.sentiment import DataSource, SentimentCategory
 from app.core.dependencies import get_current_user
-from app.models.user import User
+
+# User type is dict from get_current_user dependency
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
@@ -229,11 +230,11 @@ async def export_analytics_data(
 
 @router.get("/cache/stats")
 async def get_cache_stats(
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     caching_service: CachingService = Depends(get_caching_service),
 ):
     """Get cache statistics (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -250,11 +251,11 @@ async def invalidate_cache(
     pattern: Optional[str] = Query(None, description="Cache key pattern to invalidate"),
     entity_type: Optional[str] = Query(None, description="Entity type to invalidate"),
     entity_id: Optional[str] = Query(None, description="Entity ID to invalidate"),
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     caching_service: CachingService = Depends(get_caching_service),
 ):
     """Invalidate cache entries (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -283,11 +284,11 @@ async def invalidate_cache(
 
 @router.get("/archive/stats")
 async def get_archiving_stats(
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     archiving_service: DataArchivingService = Depends(get_archiving_service),
 ):
     """Get data archiving statistics (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -301,11 +302,11 @@ async def get_archiving_stats(
 
 @router.post("/archive/run")
 async def run_data_archiving(
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     archiving_service: DataArchivingService = Depends(get_archiving_service),
 ):
     """Run data archiving process (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -319,11 +320,11 @@ async def run_data_archiving(
 
 @router.post("/archive/maintenance")
 async def run_archive_maintenance(
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     archiving_service: DataArchivingService = Depends(get_archiving_service),
 ):
     """Run complete archiving maintenance cycle (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -339,11 +340,11 @@ async def run_archive_maintenance(
 async def restore_archived_data(
     start_date: datetime,
     end_date: datetime,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     archiving_service: DataArchivingService = Depends(get_archiving_service),
 ):
     """Restore archived data for a date range (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -358,11 +359,11 @@ async def restore_archived_data(
 
 @router.get("/migrations/status")
 async def get_migration_status(
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     migration_service: DatabaseMigrationService = Depends(get_migration_service),
 ):
     """Get database migration status (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -377,11 +378,11 @@ async def get_migration_status(
 @router.post("/migrations/up")
 async def run_migrations(
     target_version: Optional[str] = Query(None, description="Target migration version"),
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     migration_service: DatabaseMigrationService = Depends(get_migration_service),
 ):
     """Run database migrations (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:
@@ -396,11 +397,11 @@ async def run_migrations(
 @router.post("/migrations/down")
 async def rollback_migrations(
     target_version: str,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     migration_service: DatabaseMigrationService = Depends(get_migration_service),
 ):
     """Rollback database migrations (admin only)"""
-    if current_user.role != "admin":
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
     try:

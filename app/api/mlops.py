@@ -21,7 +21,8 @@ from ..models.mlops import (
 )
 from ..services.mlops.mlops_service import mlops_service
 from ..core.dependencies import get_current_user
-from ..models.user import User
+
+# User type is dict from get_current_user dependency
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/mlops", tags=["MLOps"])
@@ -42,7 +43,7 @@ async def initialize_mlops():
 
 @router.post("/models/register", response_model=Dict[str, Any])
 async def register_model(
-    request: ModelRegistrationRequest, current_user: User = Depends(get_current_user)
+    request: ModelRegistrationRequest, current_user: dict = Depends(get_current_user)
 ):
     """
     Register a new model in the MLOps pipeline
@@ -72,7 +73,7 @@ async def register_model(
 
 
 @router.get("/models", response_model=List[Dict[str, Any]])
-async def list_models(current_user: User = Depends(get_current_user)):
+async def list_models(current_user: dict = Depends(get_current_user)):
     """
     List available models
     """
@@ -86,7 +87,7 @@ async def list_models(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/models/{model_id}", response_model=Dict[str, Any])
-async def get_model_info(model_id: str, current_user: User = Depends(get_current_user)):
+async def get_model_info(model_id: str, current_user: dict = Depends(get_current_user)):
     """
     Get detailed information about a specific model
     """
@@ -110,7 +111,7 @@ async def get_model_info(model_id: str, current_user: User = Depends(get_current
 
 @router.post("/deployments", response_model=Dict[str, Any])
 async def deploy_model(
-    request: ModelDeploymentRequest, current_user: User = Depends(get_current_user)
+    request: ModelDeploymentRequest, current_user: dict = Depends(get_current_user)
 ):
     """
     Deploy a model to the specified environment
@@ -139,7 +140,7 @@ async def deploy_model(
 
 @router.get("/deployments", response_model=List[Dict[str, Any]])
 async def list_deployments(
-    environment: Optional[str] = None, current_user: User = Depends(get_current_user)
+    environment: Optional[str] = None, current_user: dict = Depends(get_current_user)
 ):
     """
     List active deployments
@@ -155,7 +156,7 @@ async def list_deployments(
 
 @router.get("/deployments/{deployment_id}", response_model=Dict[str, Any])
 async def get_deployment_status(
-    deployment_id: str, current_user: User = Depends(get_current_user)
+    deployment_id: str, current_user: dict = Depends(get_current_user)
 ):
     """
     Get status of a specific deployment
@@ -182,7 +183,7 @@ async def rollback_deployment(
     deployment_id: str,
     reason: str,
     target_version: Optional[str] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Rollback a deployment to a previous version
@@ -219,7 +220,7 @@ async def create_ab_test(
     model_b_version: str,
     traffic_split: float = 50.0,
     duration_days: int = 7,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Create an A/B test between two models
@@ -251,7 +252,7 @@ async def create_ab_test(
 
 @router.post("/experiments", response_model=Dict[str, Any])
 async def start_experiment(
-    request: ExperimentCreateRequest, current_user: User = Depends(get_current_user)
+    request: ExperimentCreateRequest, current_user: dict = Depends(get_current_user)
 ):
     """
     Start a new experiment for model training or evaluation
@@ -280,7 +281,7 @@ async def start_experiment(
 async def log_experiment_metrics(
     metrics: Dict[str, float],
     step: Optional[int] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Log metrics to the current experiment
@@ -298,7 +299,7 @@ async def log_experiment_metrics(
 @router.post("/experiments/finish", response_model=Dict[str, Any])
 async def finish_experiment(
     final_metrics: Optional[Dict[str, Any]] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Finish the current experiment
@@ -317,7 +318,7 @@ async def finish_experiment(
 async def list_experiments(
     experiment_name: Optional[str] = None,
     limit: int = 50,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     List experiment runs
@@ -341,7 +342,7 @@ async def list_experiments(
 async def trigger_model_retraining(
     request: ModelRetrainingRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Manually trigger model retraining
@@ -368,7 +369,7 @@ async def trigger_model_retraining(
 async def list_retraining_jobs(
     model_name: Optional[str] = None,
     limit: int = 50,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     List retraining jobs
@@ -387,7 +388,7 @@ async def list_retraining_jobs(
 
 @router.get("/retraining/jobs/{run_id}", response_model=Dict[str, Any])
 async def get_retraining_status(
-    run_id: str, current_user: User = Depends(get_current_user)
+    run_id: str, current_user: dict = Depends(get_current_user)
 ):
     """
     Get status of a specific retraining job
@@ -409,7 +410,7 @@ async def get_retraining_status(
 
 @router.get("/retraining/triggers/{model_name}", response_model=Dict[str, Any])
 async def check_retraining_triggers(
-    model_name: str, current_user: User = Depends(get_current_user)
+    model_name: str, current_user: dict = Depends(get_current_user)
 ):
     """
     Check if any retraining triggers are activated for a model
@@ -434,7 +435,7 @@ async def predict_sentiment(
     text: str,
     model_name: str = "sentiment_base",
     model_version: Optional[str] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Predict sentiment using a deployed model
@@ -462,7 +463,7 @@ async def batch_predict_sentiment(
     model_name: str = "sentiment_base",
     model_version: Optional[str] = None,
     batch_size: int = 32,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Batch predict sentiment for multiple texts
@@ -503,7 +504,7 @@ async def report_model_performance(
     model_id: str,
     model_version: str,
     performance_metrics: ModelPerformanceMetrics,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Report model performance metrics for monitoring
@@ -528,7 +529,7 @@ async def report_model_performance(
 @router.post("/features/update", response_model=Dict[str, Any])
 async def update_features(
     sentiment_results: List[Dict[str, Any]],
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Update feature store with sentiment analysis results
