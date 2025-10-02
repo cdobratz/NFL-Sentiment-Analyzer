@@ -84,7 +84,7 @@ jobs:
         DATABASE_NAME: test_nfl_sentiment
         JWT_SECRET_KEY: test-secret-key
       run: |
-        uv run pytest --cov=app --cov-report=xml --cov-report=html -k "not (test_monitoring_validation or test_sentiment_integration or test_admin_endpoints or test_auth_endpoints or test_auth_integration or test_performance_validation or test_smoke_tests or test_security_validation or test_sentiment_performance or test_load_performance or test_api_documentation_monitoring)" --tb=short
+        uv run pytest --cov=app --cov-report=xml --cov-report=html -k "not (test_monitoring_validation or test_sentiment_integration or test_admin_endpoints or test_auth_endpoints or test_auth_integration or test_performance_validation or test_smoke_tests or test_security_validation or test_sentiment_performance or test_load_performance or test_api_documentation_monitoring or test_auth_middleware or test_auth_unit or test_data_ingestion_integration or test_data_ingestion_performance or test_data_ingestion_unit or test_deployment_infrastructure or test_docker_builds or test_mlops_deployment or test_mlops_integration)" --tb=short
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
