@@ -10,6 +10,7 @@ from ..core.dependencies import get_optional_user, require_user_or_api_scope
 from ..core.api_keys import APIKeyScope, APIKey
 from ..core.exceptions import ValidationError, NotFoundError, MLModelError
 from ..core.monitoring import metrics_collector
+from ..services.sentiment_service import SentimentAnalysisService
 from ..models.sentiment import (
     SentimentAnalysisCreate,
     SentimentAnalysisResponse,
@@ -46,8 +47,6 @@ async def analyze_sentiment(
     ),
 ):
     """Analyze sentiment of a single text with NFL-specific context"""
-    from ..services.sentiment_service import SentimentAnalysisService
-
     service = SentimentAnalysisService()
 
     try:
@@ -110,8 +109,6 @@ async def analyze_batch_sentiment(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Maximum 100 texts allowed per batch",
         )
-
-    from ..services.sentiment_service import SentimentAnalysisService
 
     service = SentimentAnalysisService()
     start_time = time.time()

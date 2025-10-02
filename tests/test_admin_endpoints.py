@@ -53,7 +53,8 @@ def test_app():
 @pytest.fixture
 def client(test_app):
     """Create test client fixture."""
-    return TestClient(test_app)
+    with TestClient(test_app) as client:
+        yield client
 
 
 @pytest.fixture
