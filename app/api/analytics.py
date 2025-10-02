@@ -19,6 +19,7 @@ from app.services.database_migration_service import (
 )
 from app.models.sentiment import DataSource, SentimentCategory
 from app.core.dependencies import get_current_user
+from app.core.exceptions import APIError
 
 # User type is dict from get_current_user dependency
 
@@ -50,9 +51,16 @@ async def get_sentiment_metrics(
             categories=categories,
         )
         return metrics
+    except HTTPException:
+        # Re-raise FastAPI HTTPExceptions as-is
+        raise
+    except APIError as e:
+        # Convert service APIErrors to HTTPExceptions with proper status codes
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
+        # Convert unexpected exceptions to 500 with generic message
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving metrics: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while retrieving metrics"
         )
 
 
@@ -73,9 +81,13 @@ async def get_sentiment_trends(
             interval=interval,
         )
         return {"trends": [trend.dict() for trend in trends]}
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving trends: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while retrieving trends"
         )
 
 
@@ -103,9 +115,13 @@ async def get_sentiment_leaderboards(
             time_period=time_period,
         )
         return {"leaderboard": leaderboard}
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving leaderboard: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while retrieving leaderboard"
         )
 
 
@@ -124,9 +140,13 @@ async def get_historical_comparison(
             entity_type=entity_type, entity_id=entity_id, comparison_periods=periods
         )
         return comparison
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving comparison: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while retrieving comparison"
         )
 
 
@@ -145,9 +165,13 @@ async def get_sentiment_insights(
             analysis_period=analysis_period,
         )
         return insights
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error generating insights: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while generating insights"
         )
 
 
@@ -221,8 +245,12 @@ async def export_analytics_data(
             headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error exporting data: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while exporting data")
 
 
 # Cache management endpoints (admin only)
@@ -240,9 +268,13 @@ async def get_cache_stats(
     try:
         stats = await caching_service.get_cache_stats()
         return stats
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving cache stats: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while retrieving cache stats"
         )
 
 
@@ -273,9 +305,13 @@ async def invalidate_cache(
             await caching_service.invalidate_all_sentiment_cache()
             return {"message": "Invalidated all sentiment cache"}
 
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error invalidating cache: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while invalidating cache"
         )
 
 
@@ -294,9 +330,13 @@ async def get_archiving_stats(
     try:
         stats = await archiving_service.get_archiving_stats()
         return stats
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving archiving stats: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while retrieving archiving stats"
         )
 
 
@@ -312,9 +352,13 @@ async def run_data_archiving(
     try:
         result = await archiving_service.archive_old_sentiment_data()
         return result
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error running archiving: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while running archiving"
         )
 
 
@@ -330,9 +374,13 @@ async def run_archive_maintenance(
     try:
         result = await archiving_service.run_maintenance()
         return result
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error running maintenance: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while running maintenance"
         )
 
 
@@ -350,8 +398,12 @@ async def restore_archived_data(
     try:
         result = await archiving_service.restore_from_archive(start_date, end_date)
         return result
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error restoring data: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred while restoring data")
 
 
 # Database migration endpoints (admin only)
@@ -369,9 +421,13 @@ async def get_migration_status(
     try:
         status = await migration_service.get_migration_status()
         return status
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error retrieving migration status: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while retrieving migration status"
         )
 
 
@@ -388,9 +444,13 @@ async def run_migrations(
     try:
         result = await migration_service.migrate_up(target_version)
         return result
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error running migrations: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while running migrations"
         )
 
 
@@ -407,7 +467,11 @@ async def rollback_migrations(
     try:
         result = await migration_service.migrate_down(target_version)
         return result
+    except HTTPException:
+        raise
+    except APIError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error rolling back migrations: {str(e)}"
+            status_code=500, detail="An unexpected error occurred while rolling back migrations"
         )

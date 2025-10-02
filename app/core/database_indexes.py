@@ -11,8 +11,8 @@ class DatabaseIndexes:
     """Database indexing configuration for MongoDB collections"""
 
     @staticmethod
-    def get_sentiment_analysis_indexes() -> List[IndexModel]:
-        """Get indexes for sentiment_analysis collection"""
+    def get_sentiment_analyses_indexes() -> List[IndexModel]:
+        """Get indexes for sentiment_analyses collection"""
         return [
             # Primary queries
             IndexModel([("team_id", ASCENDING), ("timestamp", DESCENDING)]),
@@ -164,11 +164,11 @@ async def create_all_indexes(db: AsyncIOMotorDatabase) -> Dict[str, List[str]]:
     """Create all indexes for the application"""
     results = {}
 
-    # Sentiment analysis indexes
-    collection = db.sentiment_analysis
-    indexes = DatabaseIndexes.get_sentiment_analysis_indexes()
+    # Sentiment analyses indexes
+    collection = db.sentiment_analyses
+    indexes = DatabaseIndexes.get_sentiment_analyses_indexes()
     result = await collection.create_indexes(indexes)
-    results["sentiment_analysis"] = result
+    results["sentiment_analyses"] = result
 
     # Team sentiment indexes
     collection = db.team_sentiment
@@ -213,7 +213,7 @@ async def drop_all_indexes(db: AsyncIOMotorDatabase) -> Dict[str, bool]:
     """Drop all custom indexes (keep only _id indexes)"""
     results = {}
     collections = [
-        "sentiment_analysis",
+        "sentiment_analyses",
         "team_sentiment",
         "player_sentiment",
         "game_sentiment",

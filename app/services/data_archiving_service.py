@@ -25,9 +25,9 @@ class DataArchivingService:
         self.batch_size = 1000  # Process in batches
 
         # Collection names
-        self.active_collection = "sentiment_analysis"
-        self.archive_collection = "sentiment_analysis_archive"
-        self.deleted_collection = "sentiment_analysis_deleted"
+        self.active_collection = "sentiment_analyses"
+        self.archive_collection = "sentiment_analyses_archive"
+        self.deleted_collection = "sentiment_analyses_deleted"
 
     async def get_database(self) -> AsyncIOMotorDatabase:
         """Get database instance"""

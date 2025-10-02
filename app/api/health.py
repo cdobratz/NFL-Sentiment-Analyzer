@@ -56,10 +56,10 @@ class HealthChecker:
 
             # Test connection
             redis_client = db_manager.get_redis()
-            await redis_client.ping()
-
-            # Get info
-            info = await redis_client.info()
+            
+            # Run blocking Redis methods in thread pool
+            await asyncio.to_thread(redis_client.ping)
+            info = await asyncio.to_thread(redis_client.info)
 
             response_time = (time.time() - start_time) * 1000
 

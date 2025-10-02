@@ -20,7 +20,7 @@ from ..models.mlops import (
     DeploymentStrategy,
 )
 from ..services.mlops.mlops_service import mlops_service
-from ..core.dependencies import get_current_user
+from ..core.dependencies import get_current_user, get_current_admin_user
 
 # User type is dict from get_current_user dependency
 
@@ -43,7 +43,7 @@ async def initialize_mlops():
 
 @router.post("/models/register", response_model=Dict[str, Any])
 async def register_model(
-    request: ModelRegistrationRequest, current_user: dict = Depends(get_current_user)
+    request: ModelRegistrationRequest, current_user: dict = Depends(get_current_admin_user)
 ):
     """
     Register a new model in the MLOps pipeline
@@ -111,7 +111,7 @@ async def get_model_info(model_id: str, current_user: dict = Depends(get_current
 
 @router.post("/deployments", response_model=Dict[str, Any])
 async def deploy_model(
-    request: ModelDeploymentRequest, current_user: dict = Depends(get_current_user)
+    request: ModelDeploymentRequest, current_user: dict = Depends(get_current_admin_user)
 ):
     """
     Deploy a model to the specified environment
@@ -183,7 +183,7 @@ async def rollback_deployment(
     deployment_id: str,
     reason: str,
     target_version: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     """
     Rollback a deployment to a previous version
@@ -220,7 +220,7 @@ async def create_ab_test(
     model_b_version: str,
     traffic_split: float = 50.0,
     duration_days: int = 7,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     """
     Create an A/B test between two models
@@ -252,7 +252,7 @@ async def create_ab_test(
 
 @router.post("/experiments", response_model=Dict[str, Any])
 async def start_experiment(
-    request: ExperimentCreateRequest, current_user: dict = Depends(get_current_user)
+    request: ExperimentCreateRequest, current_user: dict = Depends(get_current_admin_user)
 ):
     """
     Start a new experiment for model training or evaluation
@@ -281,7 +281,7 @@ async def start_experiment(
 async def log_experiment_metrics(
     metrics: Dict[str, float],
     step: Optional[int] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     """
     Log metrics to the current experiment
@@ -299,7 +299,7 @@ async def log_experiment_metrics(
 @router.post("/experiments/finish", response_model=Dict[str, Any])
 async def finish_experiment(
     final_metrics: Optional[Dict[str, Any]] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     """
     Finish the current experiment
@@ -342,7 +342,7 @@ async def list_experiments(
 async def trigger_model_retraining(
     request: ModelRetrainingRequest,
     background_tasks: BackgroundTasks,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     """
     Manually trigger model retraining
@@ -504,7 +504,7 @@ async def report_model_performance(
     model_id: str,
     model_version: str,
     performance_metrics: ModelPerformanceMetrics,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     """
     Report model performance metrics for monitoring
@@ -529,7 +529,7 @@ async def report_model_performance(
 @router.post("/features/update", response_model=Dict[str, Any])
 async def update_features(
     sentiment_results: List[Dict[str, Any]],
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_admin_user),
 ):
     """
     Update feature store with sentiment analysis results

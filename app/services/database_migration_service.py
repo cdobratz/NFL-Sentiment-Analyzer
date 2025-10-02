@@ -241,7 +241,7 @@ class InitialSchemaMigration(Migration):
 
             # Create initial collections if they don't exist
             collections = [
-                "sentiment_analysis",
+                "sentiment_analyses",
                 "team_sentiment",
                 "player_sentiment",
                 "game_sentiment",
@@ -386,7 +386,7 @@ class AnalyticsIndexesMigration(Migration):
         try:
             # Add specialized indexes for analytics queries
             analytics_indexes = {
-                "sentiment_analysis": [
+                "sentiment_analyses": [
                     [("team_id", 1), ("category", 1), ("sentiment_score", -1)],
                     [("player_id", 1), ("source", 1), ("confidence", -1)],
                     [("game_id", 1), ("timestamp", -1), ("sentiment", 1)],

@@ -75,7 +75,7 @@ async def analyze_sentiment(
             "user_id": str(auth["_id"]) if isinstance(auth, dict) and auth else None,
         }
 
-        db_result = await db.sentiment_analysis.insert_one(doc_data)
+        db_result = await db.sentiment_analyses.insert_one(doc_data)
 
         # Update aggregated sentiment in background
         background_tasks.add_task(
@@ -150,7 +150,7 @@ async def analyze_batch_sentiment(
             docs_to_insert.append(doc_data)
 
         if docs_to_insert:
-            await db.sentiment_analysis.insert_many(docs_to_insert)
+            await db.sentiment_analyses.insert_many(docs_to_insert)
 
         # Calculate aggregated metrics
         total_processing_time = (time.time() - start_time) * 1000
@@ -253,7 +253,7 @@ async def get_team_sentiment(
             },
         ]
 
-        agg_result = await db.sentiment_analysis.aggregate(pipeline).to_list(1)
+        agg_result = await db.sentiment_analyses.aggregate(pipeline).to_list(1)
 
         if not agg_result:
             # Return empty sentiment data
@@ -309,7 +309,7 @@ async def get_team_sentiment(
             {"$sort": {"timestamp": 1}},
         ]
 
-        trend_data = await db.sentiment_analysis.aggregate(trend_pipeline).to_list(None)
+        trend_data = await db.sentiment_analyses.aggregate(trend_pipeline).to_list(None)
         sentiment_trend = [
             {
                 "timestamp": item["timestamp"],
@@ -403,7 +403,7 @@ async def get_player_sentiment(
             },
         ]
 
-        agg_result = await db.sentiment_analysis.aggregate(pipeline).to_list(1)
+        agg_result = await db.sentiment_analyses.aggregate(pipeline).to_list(1)
 
         if not agg_result:
             return PlayerSentiment(
@@ -459,7 +459,7 @@ async def get_player_sentiment(
             {"$sort": {"timestamp": 1}},
         ]
 
-        trend_data = await db.sentiment_analysis.aggregate(trend_pipeline).to_list(None)
+        trend_data = await db.sentiment_analyses.aggregate(trend_pipeline).to_list(None)
         sentiment_trend = [
             {
                 "timestamp": item["timestamp"],
@@ -544,13 +544,13 @@ async def get_game_sentiment(
             },
         ]
 
-        agg_result = await db.sentiment_analysis.aggregate(pipeline).to_list(1)
+        agg_result = await db.sentiment_analyses.aggregate(pipeline).to_list(1)
 
         # Get team-specific sentiment for this game
         home_team_query = {**query, "team_id": game["home_team_id"]}
         away_team_query = {**query, "team_id": game["away_team_id"]}
 
-        home_sentiment_data = await db.sentiment_analysis.aggregate(
+        home_sentiment_data = await db.sentiment_analyses.aggregate(
             [
                 {"$match": home_team_query},
                 {
@@ -562,7 +562,7 @@ async def get_game_sentiment(
             ]
         ).to_list(1)
 
-        away_sentiment_data = await db.sentiment_analysis.aggregate(
+        away_sentiment_data = await db.sentiment_analyses.aggregate(
             [
                 {"$match": away_team_query},
                 {
@@ -685,7 +685,7 @@ async def get_sentiment_trends(
             {"$limit": 1000},  # Limit results for performance
         ]
 
-        trend_data = await db.sentiment_analysis.aggregate(pipeline).to_list(None)
+        trend_data = await db.sentiment_analyses.aggregate(pipeline).to_list(None)
 
         # Process trend data
         trends = []
@@ -822,7 +822,7 @@ async def aggregate_sentiment(
             },
         ]
 
-        result = await db.sentiment_analysis.aggregate(pipeline).to_list(1)
+        result = await db.sentiment_analyses.aggregate(pipeline).to_list(1)
 
         if not result:
             return {
@@ -892,7 +892,7 @@ async def aggregate_sentiment(
                 {"$sort": {"timestamp": 1}},
             ]
 
-            trend_data = await db.sentiment_analysis.aggregate(trend_pipeline).to_list(
+            trend_data = await db.sentiment_analyses.aggregate(trend_pipeline).to_list(
                 None
             )
             trends = [
@@ -958,7 +958,7 @@ async def get_sentiment_insights(
             },
         ]
 
-        result = await db.sentiment_analysis.aggregate(pipeline).to_list(1)
+        result = await db.sentiment_analyses.aggregate(pipeline).to_list(1)
 
         if not result:
             return SentimentInsights(

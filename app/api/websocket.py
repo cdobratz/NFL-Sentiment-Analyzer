@@ -96,7 +96,7 @@ async def websocket_sentiment_endpoint(
     websocket: WebSocket, user: dict = Depends(get_current_user_websocket)
 ):
     """WebSocket endpoint for real-time sentiment updates"""
-    user_id = user.get("sub") if user else None
+    user_id = str(user["_id"]) if user and user.get("_id") else None
     await manager.connect(websocket, user_id)
 
     try:

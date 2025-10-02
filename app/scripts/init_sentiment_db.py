@@ -35,7 +35,7 @@ async def initialize_sentiment_database():
         collections = await db.list_collection_names()
 
         required_collections = [
-            "sentiment_analysis",
+            "sentiment_analyses",
             "team_sentiment",
             "player_sentiment",
             "game_sentiment",
