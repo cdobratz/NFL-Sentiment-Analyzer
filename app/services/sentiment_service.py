@@ -4,6 +4,7 @@ Enhanced sentiment analysis service with NFL-specific features.
 
 import re
 import time
+import asyncio
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 import logging
