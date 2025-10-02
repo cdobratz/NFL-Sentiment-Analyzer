@@ -105,7 +105,7 @@
   - Add GET /data/betting-lines endpoint with current odds
   - _Requirements: 6.1_
 
-- [ ]* 4.3 Write data ingestion service tests
+- [x] 4.3 Write data ingestion service tests
   - Create unit tests for data collection and processing methods
   - Mock external API responses for reliable testing
   - Test rate limiting and error handling for API failures
