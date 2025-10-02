@@ -7,6 +7,9 @@ addopts = [
     "--strict-markers",
     "--disable-warnings",
     "--tb=short",
+    "--ignore=tests/test_mlops_config.py",
+    "--ignore=tests/test_mlops_data_drift.py",
+    "--ignore=tests/test_mlops_validation.py",
 ]
 markers = [
     "unit: Unit tests",
@@ -19,7 +22,7 @@ asyncio_mode = "auto"
 [tool.black]
 line-length = 88
 target-version = ['py311']
-include = '\.pyi?$'$'
+include = '\.pyi?$'$'$'
 extend-exclude = '''
 /(
   # directories

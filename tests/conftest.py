@@ -16,8 +16,12 @@ os.environ.update({
 })
 
 # Mock numpy early to prevent pandas import issues
+# This is needed because some tests import pandas which requires numpy
 try:
     import numpy as np
+    # If numpy is already imported, make sure it has the __version__ attribute
+    if not hasattr(np, '__version__'):
+        np.__version__ = "1.26.4"
 except ImportError:
     # Create a minimal numpy mock if numpy is not available
     np_mock = MagicMock()
