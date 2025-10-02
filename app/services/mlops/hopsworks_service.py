@@ -5,18 +5,19 @@ Hopsworks feature store integration service for ML features management.
 import logging
 from typing import Dict, List, Optional, Any, Union, Tuple
 from datetime import datetime, timedelta
-import pandas as pd
 import json
 
 try:
     import hopsworks
     import hsfs
+    import pandas as pd
 
     HOPSWORKS_AVAILABLE = True
 except ImportError:
     HOPSWORKS_AVAILABLE = False
     hopsworks = None
     hsfs = None
+    pd = None
 
 from ...models.mlops import FeatureStore
 from ...models.sentiment import SentimentResult, TeamSentiment, PlayerSentiment
@@ -312,6 +313,10 @@ class HopsworksService:
         if not HOPSWORKS_AVAILABLE or not self.feature_store:
             logger.warning("Hopsworks not available, skipping feature insertion")
             return False
+        
+        if pd is None:
+            logger.warning("Pandas not available, skipping feature insertion")
+            return False
 
         try:
             # Get or create feature group
@@ -379,6 +384,10 @@ class HopsworksService:
         """
         if not HOPSWORKS_AVAILABLE or not self.feature_store:
             logger.warning("Hopsworks not available, returning None")
+            return None
+        
+        if pd is None:
+            logger.warning("Pandas not available, returning None")
             return None
 
         try:
@@ -503,6 +512,10 @@ class HopsworksService:
         """
         if not HOPSWORKS_AVAILABLE or not self.feature_store:
             logger.warning("Hopsworks not available, returning None")
+            return None
+        
+        if pd is None:
+            logger.warning("Pandas not available, returning None")
             return None
 
         try:
