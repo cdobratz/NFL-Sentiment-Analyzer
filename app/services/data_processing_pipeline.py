@@ -27,8 +27,7 @@ from ..services.data_ingestion_service import (
     RawDataItem,
     DataSource,
 )
-from ..services.sentiment_service import SentimentService
-from ..models.sentiment import SentimentAnalysis
+from ..services.sentiment_service import SentimentAnalysisService
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +225,7 @@ class DataProcessingPipeline:
 
     def __init__(self):
         self.data_ingestion = DataIngestionService()
-        self.sentiment_service = SentimentService()
+        self.sentiment_service = SentimentAnalysisService()
         self.validator = DataValidator()
         self.task_queue = TaskQueue()
         self.is_running = False

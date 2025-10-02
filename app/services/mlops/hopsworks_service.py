@@ -3,7 +3,11 @@ Hopsworks feature store integration service for ML features management.
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Union, Tuple
+from typing import Dict, List, Optional, Any, Union, Tuple, TYPE_CHECKING
+
+# Type checking imports
+if TYPE_CHECKING:
+    import pandas as pd
 from datetime import datetime, timedelta
 import json
 
@@ -330,8 +334,8 @@ class HopsworksService:
             logger.warning("Hopsworks not available, skipping feature insertion")
             return False
 
-        pd = _get_pandas()
-        if pd is None:
+        pandas = _get_pandas()
+        if pandas is None:
             logger.warning("Pandas not available, skipping feature insertion")
             return False
 
@@ -348,7 +352,7 @@ class HopsworksService:
                 feature_group = self.feature_groups[fg_key]
 
             # Convert to DataFrame
-            df = pd.DataFrame(sentiment_data)
+            df = pandas.DataFrame(sentiment_data)
 
             # Ensure required columns exist
             required_columns = [
@@ -384,7 +388,7 @@ class HopsworksService:
         end_time: Optional[datetime] = None,
         feature_group_name: str = "sentiment_features",
         version: int = 1,
-    ) -> Optional[pd.DataFrame]:
+    ) -> Optional["pd.DataFrame"]:
         """
         Get sentiment features for a specific entity
 
@@ -403,8 +407,8 @@ class HopsworksService:
             logger.warning("Hopsworks not available, returning None")
             return None
 
-        pd = _get_pandas()
-        if pd is None:
+        pandas = _get_pandas()
+        if pandas is None:
             logger.warning("Pandas not available, returning None")
             return None
 
@@ -514,7 +518,7 @@ class HopsworksService:
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         training_dataset_version: Optional[int] = None,
-    ) -> Optional[Tuple[pd.DataFrame, pd.DataFrame]]:
+    ) -> Optional[Tuple["pd.DataFrame", "pd.DataFrame"]]:
         """
         Get training data from a feature view
 
@@ -532,8 +536,8 @@ class HopsworksService:
             logger.warning("Hopsworks not available, returning None")
             return None
 
-        pd = _get_pandas()
-        if pd is None:
+        pandas = _get_pandas()
+        if pandas is None:
             logger.warning("Pandas not available, returning None")
             return None
 
