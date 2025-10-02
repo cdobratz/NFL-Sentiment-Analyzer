@@ -27,9 +27,8 @@ build:
 
 # Clean up
 clean:
-	docker-compose down -v
-	docker-compose -f docker-compose.dev.yml down -v
-	docker system prune -f
+	docker-compose down -v --rmi local
+	docker-compose -f docker-compose.dev.yml down -v --rmi local
 
 # Run tests
 test:
@@ -62,15 +61,15 @@ test-unit:
 # Run linting
 lint:
 	# Backend linting
-	cd app && python -m flake8 .
-	cd app && python -m mypy .
+	python -m flake8 app
+	python -m mypy app
 	# Frontend linting
 	cd frontend && npm run lint
 
 # Format code
 format:
 	# Backend formatting
-	cd app && python -m black .
+	python -m black app
 	# Frontend formatting
 	cd frontend && npm run format
 
@@ -96,7 +95,7 @@ logs:
 
 # Development backend only
 dev-backend:
-	cd app && uvicorn main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Development frontend only
 dev-frontend:

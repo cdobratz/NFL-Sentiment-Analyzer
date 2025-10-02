@@ -645,17 +645,18 @@ async def get_model_performance(
 
         # Calculate aggregated metrics
         if metrics:
-            avg_accuracy = sum(
-                m.get("accuracy", 0) for m in metrics if m.get("accuracy")
-            ) / len([m for m in metrics if m.get("accuracy")])
-            avg_f1_score = sum(
-                m.get("f1_score", 0) for m in metrics if m.get("f1_score")
-            ) / len([m for m in metrics if m.get("f1_score")])
-            avg_response_time = sum(
-                m.get("avg_prediction_time_ms", 0) for m in metrics
-            ) / len(metrics)
+            # Collect numeric values including zeros, excluding None
+            accuracy_values = [m.get("accuracy") for m in metrics if m.get("accuracy") is not None]
+            f1_score_values = [m.get("f1_score") for m in metrics if m.get("f1_score") is not None]
+            response_time_values = [m.get("avg_prediction_time_ms") for m in metrics if m.get("avg_prediction_time_ms") is not None]
+            error_rate_values = [m.get("error_rate") for m in metrics if m.get("error_rate") is not None]
+            
+            # Calculate averages with division guards
+            avg_accuracy = sum(accuracy_values) / len(accuracy_values) if len(accuracy_values) > 0 else 0
+            avg_f1_score = sum(f1_score_values) / len(f1_score_values) if len(f1_score_values) > 0 else 0
+            avg_response_time = sum(response_time_values) / len(response_time_values) if len(response_time_values) > 0 else 0
+            avg_error_rate = sum(error_rate_values) / len(error_rate_values) if len(error_rate_values) > 0 else 0
             total_predictions = sum(m.get("prediction_count", 0) for m in metrics)
-            avg_error_rate = sum(m.get("error_rate", 0) for m in metrics) / len(metrics)
         else:
             avg_accuracy = avg_f1_score = avg_response_time = total_predictions = (
                 avg_error_rate

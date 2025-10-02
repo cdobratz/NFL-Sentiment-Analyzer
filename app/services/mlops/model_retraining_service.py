@@ -689,7 +689,7 @@ class ModelRetrainingService:
         try:
             if self.db:
                 count = await self.db.sentiment_results.count_documents(
-                    {"timestamp": {"$gte": since}}
+                    {"timestamp": {"$gte": since}, "model_version": model_name}
                 )
                 return count
             return 0

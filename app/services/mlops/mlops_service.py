@@ -416,7 +416,7 @@ class MLOpsService:
 
     async def trigger_retraining(
         self, model_name: str, reason: str, config: Optional[Dict[str, Any]] = None
-    ) -> str:
+    ) -> ExperimentRun:
         """
         Manually trigger model retraining
 
@@ -426,7 +426,7 @@ class MLOpsService:
             config: Optional training configuration
 
         Returns:
-            Retraining job ID
+            Experiment run for the retraining job
         """
         try:
             experiment_run = await self.retraining_service.trigger_retraining(
@@ -436,7 +436,7 @@ class MLOpsService:
             logger.info(
                 f"Triggered retraining for {model_name}: {experiment_run.run_id}"
             )
-            return experiment_run.run_id
+            return experiment_run
 
         except Exception as e:
             logger.error(f"Error triggering retraining: {e}")
