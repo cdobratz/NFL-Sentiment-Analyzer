@@ -1,0 +1,23 @@
+# Development and testing dependencies
+-r requirements.txt
+
+# Build dependencies
+setuptools>=65.0.0
+
+# Testing dependencies
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0
+faker==20.1.0
+factory-boy==3.3.0
+
+# Code quality
+black==24.3.0
+flake8==7.0.0
+mypy==1.8.0
+
+# Security scanning
+safety==3.0.1
+bandit==1.7.5
