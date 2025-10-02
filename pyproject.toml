@@ -19,7 +19,7 @@ asyncio_mode = "auto"
 [tool.black]
 line-length = 88
 target-version = ['py311']
-include = '\.pyi?$'
+include = '\.pyi?$'$'
 extend-exclude = '''
 /(
   # directories
@@ -33,6 +33,8 @@ extend-exclude = '''
   | dist
 )/
 '''
+
+
 
 [tool.mypy]
 python_version = "3.11"

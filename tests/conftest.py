@@ -1,6 +1,7 @@
 import pytest
 import asyncio
 import os
+import sys
 from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock
 
@@ -13,6 +14,25 @@ os.environ.update({
     "DEBUG": "true",
     "TESTING": "true"
 })
+
+# Mock numpy early to prevent pandas import issues
+try:
+    import numpy as np
+except ImportError:
+    # Create a minimal numpy mock if numpy is not available
+    np_mock = MagicMock()
+    np_mock.__version__ = "1.26.4"
+    np_mock.array = MagicMock(return_value=MagicMock())
+    np_mock.mean = MagicMock(return_value=0.5)
+    np_mock.std = MagicMock(return_value=0.1)
+    np_mock.random = MagicMock()
+    np_mock.random.rand = MagicMock(return_value=0.5)
+    np_mock.random.choice = MagicMock(return_value="positive")
+    np_mock.zeros = MagicMock(return_value=MagicMock())
+    np_mock.ones = MagicMock(return_value=MagicMock())
+    np_mock.concatenate = MagicMock(return_value=MagicMock())
+    np_mock.reshape = MagicMock(return_value=MagicMock())
+    sys.modules["numpy"] = np_mock
 
 # Test settings
 class TestSettings:

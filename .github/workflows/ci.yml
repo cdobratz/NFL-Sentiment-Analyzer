@@ -51,6 +51,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
+        pip install email-validator==2.1.0
 
     - name: Run backend tests
       run: |
@@ -121,6 +122,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
+        pip install email-validator==2.1.0
 
     - name: Install frontend dependencies
       run: |
