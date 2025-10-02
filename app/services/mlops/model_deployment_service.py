@@ -32,6 +32,11 @@ class ModelDeploymentService:
     """Service for managing model deployments, versioning, and A/B testing"""
 
     def __init__(self):
+        """
+        Initialize the ModelDeploymentService instance and prepare runtime state.
+        
+        Sets up attributes for database access, on-disk model and deployment directories, in-memory stores for active deployments, A/B tests, and cached performance metrics, and establishes default performance thresholds. Ensures the models and deployments directories exist on disk.
+        """
         self.db = None
         self.models_dir = Path(getattr(settings, "MODELS_DIR", "./models"))
         self.deployments_dir = Path(
@@ -55,7 +60,11 @@ class ModelDeploymentService:
         }
 
     async def initialize(self):
-        """Initialize the deployment service"""
+        """
+        Initialize the model deployment service's runtime state.
+        
+        Establishes the database connection and loads active deployments and active A/B tests into the service's in-memory stores so the service can operate with current state. Logs success or errors encountered during initialization.
+        """
         try:
             self.db = await get_database()
             await self._load_active_deployments()
@@ -73,17 +82,17 @@ class ModelDeploymentService:
         resource_config: Optional[Dict[str, Any]] = None,
     ) -> ModelDeployment:
         """
-        Deploy a model to the specified environment
-
-        Args:
-            model_metadata: Model metadata
-            environment: Target environment (staging/production)
-            strategy: Deployment strategy
-            traffic_percentage: Percentage of traffic to route to this model
-            resource_config: Resource configuration
-
+        Deploys the given model to the target environment using the specified strategy.
+        
+        Parameters:
+            model_metadata (ModelMetadata): Metadata for the model to deploy, including id and version.
+            environment (str): Target environment name, e.g., "staging" or "production".
+            strategy (DeploymentStrategy): Deployment strategy to apply (IMMEDIATE, BLUE_GREEN, CANARY, A_B_TEST).
+            traffic_percentage (float): Percentage of traffic to route to this deployment.
+            resource_config (Optional[Dict[str, Any]]): Optional resource limits or configuration for the deployment.
+        
         Returns:
-            Model deployment object
+            ModelDeployment: The created ModelDeployment object representing the attempted deployment; its `status` reflects success (`DEPLOYED`) or failure (`FAILED`).
         """
         try:
             deployment_id = str(uuid.uuid4())
@@ -149,19 +158,19 @@ class ModelDeploymentService:
         minimum_sample_size: int = 1000,
     ) -> ABTestConfig:
         """
-        Create an A/B test between two models
-
-        Args:
-            test_name: Name of the A/B test
-            model_a_metadata: Metadata for model A (control)
-            model_b_metadata: Metadata for model B (treatment)
-            traffic_split_percentage: Percentage of traffic for model B
-            success_metrics: Metrics to track for success
-            test_duration_days: Duration of the test in days
-            minimum_sample_size: Minimum sample size for statistical significance
-
+        Create and start an A/B test by deploying two models to staging and recording the test configuration.
+        
+        Parameters:
+            test_name (str): Human-readable name for the A/B test.
+            model_a_metadata (ModelMetadata): Metadata for the control model (A).
+            model_b_metadata (ModelMetadata): Metadata for the treatment model (B).
+            traffic_split_percentage (float): Percentage of incoming traffic routed to model B (0-100).
+            success_metrics (Optional[List[str]]): List of metric names to evaluate test success; defaults to ["accuracy", "f1_score", "user_satisfaction"] if omitted.
+            test_duration_days (int): Planned duration of the test in days.
+            minimum_sample_size (int): Minimum number of samples required for statistical significance.
+        
         Returns:
-            A/B test configuration
+            ABTestConfig: The created A/B test configuration with deployments for both variants and status set to "running".
         """
         try:
             test_id = str(uuid.uuid4())
@@ -213,14 +222,16 @@ class ModelDeploymentService:
         self, deployment_id: str, metrics: ModelPerformanceMetrics
     ) -> List[ModelAlert]:
         """
-        Monitor model performance and generate alerts if needed
-
-        Args:
-            deployment_id: ID of the deployment to monitor
-            metrics: Current performance metrics
-
+        Monitor a deployment's performance and produce alerts when thresholds, drift, or error spikes are detected.
+        
+        Checks configured performance thresholds, data drift, and error-rate conditions for the specified deployment, updates the in-memory performance cache, persists any generated alerts, and returns the list of alerts. If the deployment_id is not an active deployment, the function returns an empty list.
+        
+        Parameters:
+            deployment_id (str): Identifier of the deployment to evaluate.
+            metrics (ModelPerformanceMetrics): Latest performance metrics for the deployment.
+        
         Returns:
-            List of generated alerts
+            List[ModelAlert]: List of generated alerts; empty list if no alerts were produced or the deployment is not active.
         """
         try:
             alerts = []
@@ -264,15 +275,15 @@ class ModelDeploymentService:
         self, deployment_id: str, reason: str, target_version: Optional[str] = None
     ) -> bool:
         """
-        Rollback a deployment to a previous version
-
-        Args:
-            deployment_id: ID of the deployment to rollback
-            reason: Reason for rollback
-            target_version: Target version to rollback to (if None, uses previous)
-
+        Rollback a deployment to a previous model version.
+        
+        Parameters:
+            deployment_id (str): Identifier of the active deployment to roll back.
+            reason (str): Human-readable reason for initiating the rollback.
+            target_version (Optional[str]): Specific model version to roll back to; if omitted, the previous stable version is used.
+        
         Returns:
-            Success status
+            bool: `True` if the rollback completed and the deployment record was updated, `False` otherwise.
         """
         try:
             if deployment_id not in self.active_deployments:
@@ -328,13 +339,21 @@ class ModelDeploymentService:
         self, deployment_id: str
     ) -> Optional[Dict[str, Any]]:
         """
-        Get status of a specific deployment
-
-        Args:
-            deployment_id: ID of the deployment
-
+        Provide status information for the specified deployment.
+        
         Returns:
-            Deployment status information
+            dict: Deployment status with keys:
+                - deployment_id (str)
+                - model_id (str)
+                - model_version (str)
+                - environment (str)
+                - status (str): current deployment state
+                - traffic_percentage (float)
+                - deployed_at (str | None): ISO 8601 timestamp when deployed, or None
+                - health_status (str)
+                - performance_metrics (dict | None): latest performance metrics, or None
+                - recent_alerts (List[dict]): recent alert documents for the deployment
+            None: If the deployment is not active or an error occurs.
         """
         try:
             if deployment_id not in self.active_deployments:
@@ -370,13 +389,15 @@ class ModelDeploymentService:
         self, environment: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
-        List all active deployments
-
-        Args:
-            environment: Filter by environment
-
+        List active deployments, optionally filtered by environment.
+        
+        Each item in the returned list is a deployment status dictionary containing keys such as deployment id, environment, status, traffic allocation, deployed_at timestamp, health_status, performance_metrics, and recent_alerts.
+        
+        Parameters:
+            environment (Optional[str]): If provided, only deployments in this environment are returned.
+        
         Returns:
-            List of active deployments
+            List[Dict[str, Any]]: A list of deployment status dictionaries; returns an empty list if no deployments match or on error.
         """
         try:
             deployments = []
@@ -398,7 +419,16 @@ class ModelDeploymentService:
     async def _execute_deployment(
         self, deployment: ModelDeployment, model_metadata: ModelMetadata
     ) -> bool:
-        """Execute the actual deployment based on strategy"""
+        """
+        Dispatches execution to the strategy-specific deployment handler for the given deployment.
+        
+        Parameters:
+            deployment (ModelDeployment): Deployment record that includes the chosen deployment strategy and target deployment metadata.
+            model_metadata (ModelMetadata): Metadata for the model version to be deployed.
+        
+        Returns:
+            bool: `True` if the chosen strategy handler completed successfully, `False` if the strategy is unknown or an error occurred.
+        """
         try:
             if deployment.strategy == DeploymentStrategy.IMMEDIATE:
                 return await self._immediate_deployment(deployment, model_metadata)
@@ -419,7 +449,16 @@ class ModelDeploymentService:
     async def _immediate_deployment(
         self, deployment: ModelDeployment, model_metadata: ModelMetadata
     ) -> bool:
-        """Execute immediate deployment"""
+        """
+        Perform an immediate deployment by creating a deployment directory, copying the model files into it, and writing a deployment configuration file.
+        
+        Parameters:
+            deployment (ModelDeployment): Deployment metadata containing identifiers, environment, traffic percentage, and resource limits.
+            model_metadata (ModelMetadata): Model metadata including the source model path and version information.
+        
+        Returns:
+            bool: `True` if the deployment directory and configuration were created successfully, `False` otherwise.
+        """
         try:
             # Copy model files to deployment directory
             deployment_path = self.deployments_dir / deployment.deployment_id
@@ -457,7 +496,14 @@ class ModelDeploymentService:
     async def _blue_green_deployment(
         self, deployment: ModelDeployment, model_metadata: ModelMetadata
     ) -> bool:
-        """Execute blue-green deployment"""
+        """
+        Perform a blue-green deployment for the given model and deployment configuration.
+        
+        This simplified implementation performs the actions required to deploy a new version alongside the current one and prepare for a traffic switch.
+        
+        Returns:
+            bool: `True` if the deployment succeeded, `False` otherwise.
+        """
         # Simplified implementation - in practice, this would involve
         # setting up parallel environments and switching traffic
         logger.info(f"Blue-green deployment: {deployment.deployment_id}")
@@ -466,7 +512,14 @@ class ModelDeploymentService:
     async def _canary_deployment(
         self, deployment: ModelDeployment, model_metadata: ModelMetadata
     ) -> bool:
-        """Execute canary deployment"""
+        """
+        Performs a canary deployment for the given model deployment.
+        
+        This simplified canary implementation currently delegates to the immediate deployment flow and does not perform gradual traffic ramp-up.
+        
+        Returns:
+            `true` if the deployment completed successfully, `false` otherwise.
+        """
         # Simplified implementation - in practice, this would gradually
         # increase traffic to the new version
         logger.info(f"Canary deployment: {deployment.deployment_id}")
@@ -475,14 +528,28 @@ class ModelDeploymentService:
     async def _ab_test_deployment(
         self, deployment: ModelDeployment, model_metadata: ModelMetadata
     ) -> bool:
-        """Execute A/B test deployment"""
+        """
+        Deploys a model variant for an A/B test to the specified deployment environment.
+        
+        Returns:
+            `True` if the A/B test deployment was successfully set up, `False` otherwise.
+        """
         logger.info(f"A/B test deployment: {deployment.deployment_id}")
         return await self._immediate_deployment(deployment, model_metadata)
 
     async def _check_performance_thresholds(
         self, deployment: ModelDeployment, metrics: ModelPerformanceMetrics
     ) -> List[ModelAlert]:
-        """Check if performance metrics exceed thresholds"""
+        """
+        Evaluate the provided performance metrics against the service's configured thresholds and produce alerts for any metrics that breach their thresholds.
+        
+        Parameters:
+            deployment (ModelDeployment): Deployment context for which metrics were reported (provides model_id and model_version).
+            metrics (ModelPerformanceMetrics): Observed performance metrics to evaluate.
+        
+        Returns:
+            List[ModelAlert]: A list of ModelAlert objects describing each threshold breach. Each alert includes the metric name, threshold and actual values, a severity of "high" when the deviation is greater than 20% of the threshold or "medium" otherwise, a human-readable message and recommended actions.
+        """
         alerts = []
 
         for metric_name, threshold in self.performance_thresholds.items():
@@ -533,7 +600,16 @@ class ModelDeploymentService:
     async def _check_data_drift(
         self, deployment: ModelDeployment, metrics: ModelPerformanceMetrics
     ) -> List[ModelAlert]:
-        """Check for data drift"""
+        """
+        Detects significant data drift for the given deployment and returns alerts when the drift score exceeds the configured threshold.
+        
+        Parameters:
+            deployment (ModelDeployment): Deployment metadata used to populate alert fields.
+            metrics (ModelPerformanceMetrics): Performance metrics where `metrics.data_drift_score` is evaluated; a score greater than 0.1 is considered significant drift.
+        
+        Returns:
+            List[ModelAlert]: A list of generated data drift alerts (each with severity "high"); returns an empty list if no significant drift is detected.
+        """
         alerts = []
 
         if metrics.data_drift_score and metrics.data_drift_score > 0.1:
@@ -561,7 +637,18 @@ class ModelDeploymentService:
     async def _check_error_rates(
         self, deployment: ModelDeployment, metrics: ModelPerformanceMetrics
     ) -> List[ModelAlert]:
-        """Check error rates"""
+        """
+        Generate alerts when a deployment's error rate exceeds configured thresholds.
+        
+        If metrics.error_rate > 0.05 an alert with type "error_spike" is created; severity is "critical" when error_rate > 0.1 and "high" otherwise.
+        
+        Parameters:
+            deployment (ModelDeployment): The deployment to evaluate (provides model_id and model_version).
+            metrics (ModelPerformanceMetrics): Performance metrics containing `error_rate` as a fraction (e.g., 0.07 for 7%).
+        
+        Returns:
+            List[ModelAlert]: A list of generated alerts (empty if the error rate is within acceptable limits).
+        """
         alerts = []
 
         if metrics.error_rate > 0.05:  # 5% error rate threshold
@@ -587,7 +674,11 @@ class ModelDeploymentService:
         return alerts
 
     async def _store_deployment(self, deployment: ModelDeployment):
-        """Store deployment in database"""
+        """
+        Persist the given deployment to the configured database, replacing any existing record with the same deployment_id.
+        
+        If a database connection is available, the deployment is upserted into the deployments collection using deployment.deployment_id as the selector. Failures during persistence are logged and not re-raised.
+        """
         if self.db:
             try:
                 await self.db.deployments.replace_one(
@@ -599,7 +690,13 @@ class ModelDeploymentService:
                 logger.error(f"Error storing deployment: {e}")
 
     async def _store_ab_test(self, ab_test: ABTestConfig):
-        """Store A/B test configuration in database"""
+        """
+        Persist an A/B test configuration to the database using an upsert keyed by `test_id`.
+        
+        If a database connection is available, this method replaces or inserts the `ab_test` document in the `ab_tests` collection using `test_id` as the key. On error the exception is logged and not propagated.
+        Parameters:
+            ab_test (ABTestConfig): The A/B test configuration to persist.
+        """
         if self.db:
             try:
                 await self.db.ab_tests.replace_one(
@@ -609,7 +706,16 @@ class ModelDeploymentService:
                 logger.error(f"Error storing A/B test: {e}")
 
     async def _store_alert(self, alert: ModelAlert):
-        """Store alert in database"""
+        """
+        Persist the provided ModelAlert to the service database if a database connection is configured.
+        
+        Parameters:
+            alert (ModelAlert): The alert object to persist.
+        
+        Notes:
+            - If no database is configured, the function performs no action.
+            - Persistence failures are logged; exceptions are not propagated.
+        """
         if self.db:
             try:
                 await self.db.alerts.insert_one(alert.dict())
@@ -617,7 +723,11 @@ class ModelDeploymentService:
                 logger.error(f"Error storing alert: {e}")
 
     async def _load_active_deployments(self):
-        """Load active deployments from database"""
+        """
+        Populate the in-memory active_deployments map with ModelDeployment records whose stored status is "deployed".
+        
+        Loads deployments from the service database (if available) and instantiates ModelDeployment objects, keyed by each deployment's deployment_id in self.active_deployments.
+        """
         if self.db:
             try:
                 cursor = self.db.deployments.find({"status": "deployed"})
@@ -629,7 +739,14 @@ class ModelDeploymentService:
                 logger.error(f"Error loading active deployments: {e}")
 
     async def _load_active_ab_tests(self):
-        """Load active A/B tests from database"""
+        """
+        Load running A/B test configurations from the database into the in-memory registry.
+        
+        Scans the database for A/B test documents where `status` is "running", constructs
+        ABTestConfig objects for each result, and stores them in `self.ab_tests` keyed
+        by `test_id`. If the database is not available or a query error occurs, the
+        method logs the error and leaves `self.ab_tests` unchanged.
+        """
         if self.db:
             try:
                 cursor = self.db.ab_tests.find({"status": "running"})
@@ -641,12 +758,30 @@ class ModelDeploymentService:
                 logger.error(f"Error loading active A/B tests: {e}")
 
     async def _check_deployment_health(self, deployment: ModelDeployment) -> str:
-        """Check health of a deployment"""
+        """
+        Return a simplified health status for the given deployment.
+        
+        Parameters:
+            deployment (ModelDeployment): Deployment object to assess.
+        
+        Returns:
+            status (str): One of health status strings such as "healthy", "degraded", or "unhealthy".
+        """
         # Simplified health check - in practice, this would ping the actual service
         return "healthy"
 
     async def _get_recent_alerts(self, deployment_id: str) -> List[Dict[str, Any]]:
-        """Get recent alerts for a deployment"""
+        """
+        Return recent alert documents for the specified deployment.
+        
+        Queries stored alerts for the deployment's model id and version from the last 24 hours and returns up to 10 documents ordered newest first.
+        
+        Parameters:
+            deployment_id (str): Identifier of the deployment whose recent alerts to retrieve.
+        
+        Returns:
+            List[Dict[str, Any]]: A list of alert documents (dictionaries) matching the deployment's model id and version from the past 24 hours, newest first, up to 10 items. Empty list if no database is configured, deployment is unknown, or an error occurs.
+        """
         if not self.db:
             return []
 
@@ -682,7 +817,14 @@ class ModelDeploymentService:
     async def _get_previous_stable_version(
         self, model_id: str, current_version: str
     ) -> Optional[str]:
-        """Get the previous stable version of a model"""
+        """
+        Return the previous stable version identifier for the given model.
+        
+        If a previous stable version cannot be determined, returns None.
+        
+        Returns:
+            The version string of the previous stable model (e.g., "1.0"), or `None` if unavailable.
+        """
         # This would query the model registry for the previous stable version
         # For now, return a mock version
         return "1.0"
@@ -690,7 +832,16 @@ class ModelDeploymentService:
     async def _get_model_metadata(
         self, model_id: str, version: str
     ) -> Optional[ModelMetadata]:
-        """Get model metadata for a specific version"""
+        """
+        Retrieve metadata for a specific model version from the model registry.
+        
+        Parameters:
+            model_id (str): Identifier of the model.
+            version (str): Version string of the model to retrieve.
+        
+        Returns:
+            Optional[ModelMetadata]: The metadata for the specified model version, or `None` if the model/version is not found.
+        """
         # This would query the model registry
         # For now, return None
         return None
@@ -698,7 +849,16 @@ class ModelDeploymentService:
     async def _execute_rollback(
         self, deployment: ModelDeployment, target_metadata: ModelMetadata
     ) -> bool:
-        """Execute rollback to target version"""
+        """
+        Execute a rollback of the given deployment to the specified target model version.
+        
+        Parameters:
+            deployment (ModelDeployment): The deployment to be rolled back.
+            target_metadata (ModelMetadata): Metadata of the target model version to roll back to.
+        
+        Returns:
+            bool: `True` if the rollback completed successfully, `False` otherwise.
+        """
         try:
             # In practice, this would involve updating the deployment
             # to point to the target model version

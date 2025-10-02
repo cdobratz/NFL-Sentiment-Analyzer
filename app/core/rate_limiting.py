@@ -29,6 +29,11 @@ class RateLimiter:
     """Advanced rate limiter with Redis backend and user-specific quotas"""
 
     def __init__(self):
+        """
+        Initialize the RateLimiter with default quotas and role-based overrides.
+        
+        Sets `default_limits` from the configured `settings.rate_limit_requests` for minute, hour, and day windows, and configures `role_limits` for "user" and "admin" roles with their per-minute, per-hour, and per-day quotas.
+        """
         self.default_limits = {
             RateLimitType.PER_MINUTE: settings.rate_limit_requests,
             RateLimitType.PER_HOUR: settings.rate_limit_requests * 60,
@@ -50,7 +55,15 @@ class RateLimiter:
         }
 
     def _get_window_seconds(self, limit_type: RateLimitType) -> int:
-        """Get window duration in seconds for rate limit type"""
+        """
+        Get the time window length, in seconds, corresponding to the provided RateLimitType.
+        
+        Parameters:
+            limit_type (RateLimitType): The rate limit type whose window duration is requested.
+        
+        Returns:
+            int: Number of seconds in the time window for the given `limit_type`. If `limit_type` is unrecognized, returns 60 (one minute).
+        """
         if limit_type == RateLimitType.PER_MINUTE:
             return 60
         elif limit_type == RateLimitType.PER_HOUR:
@@ -62,14 +75,29 @@ class RateLimiter:
     def _get_redis_key(
         self, identifier: str, limit_type: RateLimitType, endpoint: str = None
     ) -> str:
-        """Generate Redis key for rate limiting"""
+        """
+        Constructs the Redis key used for rate limiting.
+        
+        Parameters:
+            identifier (str): Unique identifier for the client (e.g., user ID, API key, or IP).
+            limit_type (RateLimitType): The rate limit window type to include in the key.
+            endpoint (str, optional): Specific endpoint or route to scope the key; appended when provided.
+        
+        Returns:
+            str: Redis key in the form "rate_limit:<identifier>:<limit_type>" with ":<endpoint>" appended if given.
+        """
         key_parts = ["rate_limit", identifier, limit_type.value]
         if endpoint:
             key_parts.append(endpoint)
         return ":".join(key_parts)
 
     async def _get_current_count(self, redis_key: str) -> int:
-        """Get current request count from Redis"""
+        """
+        Retrieve the current request count stored under the given Redis key.
+        
+        Returns:
+            int: Current count for the key, or 0 if the key does not exist or an error occurs while reading Redis.
+        """
         try:
             redis = db_manager.get_redis()
             count = await redis.get(redis_key)
@@ -79,7 +107,16 @@ class RateLimiter:
             return 0
 
     async def _increment_count(self, redis_key: str, window_seconds: int) -> int:
-        """Increment request count in Redis with expiration"""
+        """
+        Increment the counter for a rate-limit Redis key and set its expiration.
+        
+        Parameters:
+            redis_key (str): Redis key representing the rate-limit counter.
+            window_seconds (int): Time-to-live in seconds to set for the key after incrementing.
+        
+        Returns:
+            int: The updated counter value after incrementing; returns `1` if an error occurs.
+        """
         try:
             redis = db_manager.get_redis()
 
@@ -95,12 +132,31 @@ class RateLimiter:
             return 1
 
     def _get_user_limits(self, user: dict) -> Dict[RateLimitType, int]:
-        """Get rate limits for a user based on their role"""
+        """
+        Determine rate limits for a user based on their role.
+        
+        Parameters:
+            user (dict): User data containing a "role" key; if missing, "user" is assumed.
+        
+        Returns:
+            Dict[RateLimitType, int]: Mapping of each RateLimitType to the allowed request count for the user's role.
+        """
         role = user.get("role", "user")
         return self.role_limits.get(role, self.role_limits["user"])
 
     def _get_api_key_limits(self, api_key: APIKey) -> Dict[RateLimitType, int]:
-        """Get rate limits for an API key"""
+        """
+        Compute rate limit quotas for an API key across minute, hour, and day windows.
+        
+        Parameters:
+            api_key (APIKey): API key object whose `rate_limit` field denotes allowed requests per hour.
+        
+        Returns:
+            Dict[RateLimitType, int]: Mapping of rate limit windows to allowed request counts:
+                - `PER_MINUTE`: floor(rate_limit_per_hour / 60) capped at 100.
+                - `PER_HOUR`: rate_limit_per_hour.
+                - `PER_DAY`: rate_limit_per_hour * 24.
+        """
         # API keys have custom rate limits
         rate_limit_per_hour = api_key.rate_limit
 
@@ -119,10 +175,23 @@ class RateLimiter:
         api_key: APIKey = None,
     ) -> Tuple[bool, Dict[str, int]]:
         """
-        Check if request is within rate limits.
-
+        Check whether a request identified by `identifier` is within the configured rate limits for the specified window.
+        
+        Parameters:
+            identifier (str): Client identifier (typically an IP address). If `user` or `api_key` is provided, the identifier is replaced with the resolved user or API key identifier.
+            limit_type (RateLimitType): The rate limit window to check (PER_MINUTE, PER_HOUR, PER_DAY).
+            endpoint (str | None): Optional endpoint-specific key segment to apply endpoint-scoped limits.
+            user (dict | None): Optional user object; when provided, limits are determined from the user's role.
+            api_key (APIKey | None): Optional APIKey object; when provided, limits are determined from the API key's quota.
+        
         Returns:
-            Tuple of (is_allowed, rate_limit_info)
+            Tuple[bool, dict]: A tuple (is_allowed, info) where:
+                - is_allowed: `True` if the request is permitted, `False` if the limit has been exceeded.
+                - info: Dictionary with keys:
+                    - "limit" (int): configured limit for the window.
+                    - "remaining" (int): number of remaining allowed requests in the current window.
+                    - "reset" (int): UNIX timestamp when the current window resets.
+                    - "retry_after" (int): number of seconds the client should wait before retrying (0 if allowed).
         """
         try:
             # Determine limits based on user/API key
@@ -188,7 +257,19 @@ class RateLimiter:
         user: dict = None,
         api_key: APIKey = None,
     ) -> Tuple[bool, Dict[str, Dict[str, int]]]:
-        """Check multiple rate limit types simultaneously"""
+        """
+        Evaluate the minute, hourly, and daily rate limits for the given identifier and return an overall allow decision plus per-window status.
+        
+        Parameters:
+        	identifier (str): Unique identifier to check limits for (for example an IP address, user id, or API key id).
+        	endpoint (str, optional): Endpoint-specific scope to apply to the rate limits.
+        	user (dict, optional): User information used to derive role-based quotas when present.
+        	api_key (APIKey, optional): API key object used to derive API-key-specific quotas when present.
+        
+        Returns:
+        	overall_allowed (bool): `True` if all checked limits allow the request, `False` if any limit is exceeded.
+        	results (Dict[str, Dict[str, int]]): Mapping from limit type name (e.g. "PER_MINUTE", "PER_HOUR", "PER_DAY") to a status dictionary containing keys such as `limit`, `remaining`, `reset`, and `retry_after`.
+        """
 
         results = {}
         overall_allowed = True
@@ -214,7 +295,23 @@ class RateLimiter:
     async def get_rate_limit_status(
         self, identifier: str, user: dict = None, api_key: APIKey = None
     ) -> Dict[str, Dict[str, int]]:
-        """Get current rate limit status without incrementing counters"""
+        """
+        Return the current rate limit status for each configured window without modifying counters.
+        
+        When an API key or user is provided, the identifier is interpreted as that entity; otherwise the identifier is treated as an IP. The returned mapping keys are limit type names (e.g., "PER_MINUTE") and each value contains:
+        - "limit": configured maximum for the window,
+        - "remaining": requests left in the current window (zero if exceeded),
+        - "reset": UNIX timestamp when the window resets,
+        - "current": current observed count for the window.
+        
+        Parameters:
+            identifier (str): Primary identifier (typically an IP) used when neither `user` nor `api_key` is provided.
+            user (dict, optional): User object; when present the status is computed for that user.
+            api_key (APIKey, optional): APIKey object; when present the status is computed for that API key.
+        
+        Returns:
+            Dict[str, Dict[str, int]]: Mapping from limit type name to status dict with keys `"limit"`, `"remaining"`, `"reset"`, and `"current"`. Returns an empty dict on error.
+        """
 
         try:
             # Determine limits and identifier

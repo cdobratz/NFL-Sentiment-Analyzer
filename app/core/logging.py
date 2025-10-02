@@ -20,6 +20,15 @@ class CorrelationIdFilter(logging.Filter):
     """Add correlation ID to log records"""
 
     def filter(self, record):
+        """
+        Injects a `correlation_id` attribute into the given log record, using the current context's correlation ID or generating a new UUID when none is present.
+        
+        Parameters:
+            record (logging.LogRecord): The log record to augment.
+        
+        Returns:
+            bool: `True` to allow the record to be processed by subsequent handlers.
+        """
         record.correlation_id = correlation_id.get() or str(uuid.uuid4())
         return True
 
@@ -28,6 +37,17 @@ class StructuredFormatter(logging.Formatter):
     """JSON formatter for structured logging"""
 
     def format(self, record):
+        """
+        Format a logging.LogRecord into a JSON string containing structured log fields.
+        
+        The resulting JSON object includes core fields such as timestamp (UTC ISO 8601 with a trailing "Z"), level, logger name, message, correlation_id, module, function, and line number. If the record contains exception information, an `exception` field is included. Any additional attributes from the LogRecord that are not part of the formatter's excluded set are merged into the JSON object as extra fields.
+        
+        Parameters:
+            record (logging.LogRecord): The log record to format.
+        
+        Returns:
+            str: A JSON string representing the structured log entry.
+        """
         log_entry = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "level": record.levelname,
@@ -75,7 +95,14 @@ class StructuredFormatter(logging.Formatter):
 
 
 def setup_logging():
-    """Configure structured logging for the application"""
+    """
+    Configure the root logger for structured application logging.
+    
+    Sets root and console handler levels based on settings.debug, attaches a correlation ID filter, selects a human-readable formatter in debug mode or a JSON structured formatter otherwise, and silences noisy third-party loggers.
+    
+    Returns:
+        logging.Logger: The configured root logger instance.
+    """
 
     # Create root logger
     root_logger = logging.getLogger()
@@ -115,7 +142,14 @@ def setup_logging():
 
 
 def get_correlation_id() -> str:
-    """Get current correlation ID or generate a new one"""
+    """
+    Retrieve the current correlation identifier for the current execution context.
+    
+    If no correlation ID is present, a new UUID4 string is generated, stored in the context, and returned.
+    
+    Returns:
+        str: The correlation ID for the current context.
+    """
     current_id = correlation_id.get()
     if not current_id:
         current_id = str(uuid.uuid4())
@@ -124,7 +158,12 @@ def get_correlation_id() -> str:
 
 
 def set_correlation_id(new_id: str):
-    """Set correlation ID for current context"""
+    """
+    Set the correlation ID for the current execution context.
+    
+    Parameters:
+        new_id (str): Correlation identifier to store and propagate for the current context; used by logging to associate log records.
+    """
     correlation_id.set(new_id)
 
 
@@ -136,7 +175,21 @@ def log_api_call(
     user_id: Optional[str] = None,
     **kwargs,
 ):
-    """Log API call with structured data"""
+    """
+    Record a structured log entry for an HTTP API call.
+    
+    Builds a log payload with event_type "api_call" containing method, path, status_code,
+    duration_ms, optional user_id and any additional fields passed via kwargs. Logs with
+    the "api" logger at level ERROR if status_code is 400 or greater, otherwise at INFO.
+    
+    Parameters:
+        method (str): HTTP method (e.g., "GET", "POST").
+        path (str): Request path or URL.
+        status_code (int): HTTP response status code.
+        duration_ms (float): Request duration in milliseconds.
+        user_id (Optional[str]): Identifier of the user performing the call, if available.
+        **kwargs: Additional structured fields to include in the log entry.
+    """
     logger = logging.getLogger("api")
 
     log_data = {
@@ -158,7 +211,14 @@ def log_api_call(
 def log_business_event(
     event_type: str, event_data: Dict[str, Any], user_id: Optional[str] = None
 ):
-    """Log business events for analytics"""
+    """
+    Record a business analytics event with optional user context.
+    
+    Parameters:
+    	event_type (str): A short name identifying the business event.
+    	event_data (Dict[str, Any]): Additional attributes describing the event.
+    	user_id (Optional[str]): Identifier of the user associated with the event, if available.
+    """
     logger = logging.getLogger("business")
 
     log_data = {"event_type": event_type, "user_id": user_id, **event_data}
@@ -169,7 +229,16 @@ def log_business_event(
 def log_error(
     error: Exception, context: Dict[str, Any] = None, user_id: Optional[str] = None
 ):
-    """Log errors with context"""
+    """
+    Log an application error with contextual metadata.
+    
+    Records the exception's type, message, and traceback along with any provided contextual fields and optional user identifier.
+    
+    Parameters:
+        error (Exception): The exception to log.
+        context (Dict[str, Any], optional): Additional key-value metadata to include in the log entry.
+        user_id (Optional[str], optional): Identifier of the user related to the error, if available.
+    """
     logger = logging.getLogger("error")
 
     log_data = {

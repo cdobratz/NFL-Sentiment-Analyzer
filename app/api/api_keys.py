@@ -53,26 +53,17 @@ async def create_api_key(
     request: CreateAPIKeyRequest, current_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Create a new API key for third-party access.
-
-    **Required Role**: Admin
-
-    **Scopes Available**:
-    - `read:sentiment` - Read sentiment analysis data
-    - `write:sentiment` - Submit text for sentiment analysis
-    - `read:data` - Read NFL data (teams, players, games)
-    - `write:data` - Submit data updates (limited use)
-    - `read:analytics` - Read analytics and trends
-    - `admin` - Full administrative access
-
-    **Rate Limits**:
-    - Default: 1000 requests per hour
-    - Can be customized per key
-
-    **Security Notes**:
-    - API keys are hashed and cannot be retrieved after creation
-    - Keys can be revoked at any time
-    - All API key usage is logged and monitored
+    Create a new API key with the provided name, scopes, expiration, rate limit, and metadata.
+    
+    Parameters:
+    	request (CreateAPIKeyRequest): Payload containing name, scopes, optional expires_in_days, rate_limit, and metadata.
+    
+    Returns:
+    	CreateAPIKeyResponse: Contains the newly created API key value (shown only once) and associated key metadata (APIKeyResponse).
+    
+    Raises:
+    	ValidationError: If one or more requested scopes are invalid.
+    	HTTPException: On unexpected server-side failures (status 500).
     """
     try:
         # Validate scopes
@@ -121,12 +112,10 @@ async def create_api_key(
 @router.get("/", response_model=List[APIKeyResponse])
 async def list_api_keys(current_user: dict = Depends(get_current_admin_user)):
     """
-    List all API keys in the system.
-
-    **Required Role**: Admin
-
-    Returns all API keys with their metadata and usage statistics.
-    The actual key values are never returned for security.
+    Retrieve all API keys and their associated metadata.
+    
+    Returns:
+        List[APIKeyResponse]: A list of APIKeyResponse objects representing each API key and its usage/metadata. The actual secret key values are not included.
     """
     try:
         api_keys = await api_key_manager.list_api_keys()
@@ -160,9 +149,16 @@ async def get_api_key(
     key_id: str, current_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Get detailed information about a specific API key.
-
-    **Required Role**: Admin
+    Retrieve metadata for the API key identified by `key_id`.
+    
+    Parameters:
+        key_id (str): The unique identifier of the API key to retrieve.
+    
+    Returns:
+        APIKeyResponse: The API key's metadata (id, name, scopes, status, timestamps, usage, rate limit, creator, and metadata) excluding the secret key.
+    
+    Raises:
+        NotFoundError: If no API key with `key_id` exists.
     """
     try:
         api_keys = await api_key_manager.list_api_keys()
@@ -199,15 +195,19 @@ async def get_api_key_usage(
     key_id: str, current_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Get usage statistics for a specific API key.
-
-    **Required Role**: Admin
-
-    Returns detailed usage metrics including:
-    - Total requests made
-    - Average daily usage
-    - Last usage timestamp
-    - Rate limit information
+    Retrieve usage statistics for the API key identified by `key_id`.
+    
+    Returns detailed usage metrics such as total requests, average daily usage, last usage timestamp, and rate limit information.
+    
+    Parameters:
+        key_id (str): Identifier of the API key to query.
+    
+    Returns:
+        dict: Usage statistics including keys like `total_requests`, `average_daily_usage`, `last_used_at`, and `rate_limit`.
+    
+    Raises:
+        NotFoundError: If no API key with `key_id` exists.
+        HTTPException: If an internal error occurs while retrieving usage.
     """
     try:
         usage_stats = await api_key_manager.get_api_key_usage(key_id)
@@ -231,12 +231,19 @@ async def revoke_api_key(
     key_id: str, current_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Revoke an API key, immediately disabling access.
-
-    **Required Role**: Admin
-
-    Once revoked, the API key cannot be reactivated and will be
-    permanently disabled. This action cannot be undone.
+    Revoke the API key identified by `key_id`, disabling it permanently.
+    
+    Attempts to revoke the key and returns a confirmation payload on success. This operation is irreversible and requires an admin user.
+    
+    Parameters:
+        key_id (str): Identifier of the API key to revoke.
+    
+    Returns:
+        dict: Confirmation containing `message`, `key_id`, `revoked_by` (admin user id), and `revoked_at` (ISO 8601 UTC timestamp).
+    
+    Raises:
+        NotFoundError: If no API key with `key_id` exists.
+        HTTPException: For unexpected failures during revocation (results in a 500 response).
     """
     try:
         success = await api_key_manager.revoke_api_key(key_id, current_user["_id"])

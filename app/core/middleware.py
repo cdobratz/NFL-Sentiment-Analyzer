@@ -23,6 +23,14 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         # Get or generate correlation ID
+        """
+        Ensure each request has a correlation ID and propagate it through request state, logging context, and the response.
+        
+        If the incoming request includes an `X-Correlation-ID` header, that value is used; otherwise a new UUID is generated. The correlation ID is stored on `request.state.correlation_id` and set in the logging/context via `set_correlation_id`, and the same ID is injected into the response `X-Correlation-ID` header.
+        
+        @returns
+        Response with the `X-Correlation-ID` header set to the correlation ID used for the request.
+        """
         correlation_id = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
 
         # Set correlation ID in context
@@ -44,6 +52,18 @@ class AuthContextMiddleware(BaseHTTPMiddleware):
     """Middleware to extract and store authentication context"""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """
+        Extract authentication information from incoming request headers and attach it to request.state for downstream middleware and handlers.
+        
+        This middleware:
+        - Initializes request.state.user to None and request.state.api_key to None.
+        - If an X-API-Key header is present and valid, stores the validated API key object on request.state.api_key.
+        - If an Authorization header contains a Bearer JWT and the token decodes successfully, stores the token's `sub` claim on request.state.user_id for downstream use (e.g., rate limiting).
+        - Silently ignores invalid or malformed JWTs (does not raise).
+        
+        Returns:
+            The HTTP response returned by the next handler in the middleware chain.
+        """
         from .api_keys import api_key_manager
         from .dependencies import get_current_user, get_database, get_redis
         from fastapi.security import HTTPBearer
@@ -83,6 +103,17 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware to log all API requests and responses"""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """
+        Log incoming requests and their outcomes, including duration and contextual metadata.
+        
+        Logs a successful response with method, path, status code, duration (ms), user_id (if present), query parameters, user agent, and client IP. If an exception occurs, logs the error with the same contextual fields and re-raises the exception.
+        
+        Returns:
+            Response: The response returned by the downstream handler.
+        
+        Raises:
+            Exception: Re-raises any exception raised by the downstream handler after logging it.
+        """
         start_time = time.time()
 
         # Extract user info if available
@@ -138,6 +169,18 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     """Middleware to handle and format errors consistently"""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """
+        Dispatch middleware that forwards the request to the next handler and converts raised exceptions into structured JSON error responses.
+        
+        On success, returns the response produced by `call_next`. If an APIError is raised, returns a JSON response using the error's status code and a body containing `error`, `message`, `details`, `timestamp`, and `correlation_id`. If a FastAPI `HTTPException` is raised, returns a JSON response with status code from the exception and a body containing `error: "HTTP_ERROR"`, `message`, `timestamp`, and `correlation_id`. For any other unexpected exception, logs the error (via `log_error`) and returns a 500 JSON response with `error: "INTERNAL_SERVER_ERROR"`, a generic message, `timestamp`, and `correlation_id`.
+        
+        Parameters:
+            request (Request): The incoming ASGI request.
+            call_next (Callable): The next request handler/callable in the middleware chain.
+        
+        Returns:
+            Response: The downstream handler's response on success, or a JSONResponse with a structured error payload on failure.
+        """
         try:
             return await call_next(request)
         except APIError as exc:
@@ -193,9 +236,27 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """Advanced rate limiting middleware with Redis backend and user-specific quotas"""
 
     def __init__(self, app):
+        """
+        Initialize the RateLimitMiddleware and attach it to the given ASGI app.
+        
+        Parameters:
+            app: The ASGI application instance to wrap with the rate limiting middleware.
+        """
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """
+        Enforces per-minute rate limits for incoming requests, attaches rate-limit headers to successful responses, and returns a structured 429 response when a limit is exceeded.
+        
+        Skips rate limiting for health and documentation endpoints. Determines the client identifier from request.client.host (or "unknown"), uses request.state.user and request.state.api_key if present, and consults the shared rate_limiter for allowance and rate metadata. If the request is not allowed, returns a JSON response with error details, a Retry-After header, and a correlation_id when available. On success, forwards the request and adds X-RateLimit-Limit, X-RateLimit-Remaining, and X-RateLimit-Reset headers to the response. If rate limiting raises an unexpected exception, logs the error and allows the request to proceed (fail-open).
+        
+        Parameters:
+            request (Request): The incoming ASGI request.
+            call_next (Callable): The next request handler to invoke when forwarding the request.
+        
+        Returns:
+            Response: Either the forwarded handler response with rate-limit headers or a 429 JSONResponse when the limit is exceeded.
+        """
         from .rate_limiting import rate_limiter, RateLimitType
         from .api_keys import APIKey
 
