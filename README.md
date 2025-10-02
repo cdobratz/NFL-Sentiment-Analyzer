@@ -38,6 +38,7 @@ Detailed documentation is available in the [docs](docs) directory:
 - [Production Deployment Guide](docs/setup/deployment.md)
 - [Architecture Overview](docs/architecture/tech-stack.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
+- [Type Checking TODO](docs/type-checking-todo.md) - Plan for re-enabling mypy
 
 Visit our [Documentation Index](docs/README.md) for a complete list of documentation.
 
