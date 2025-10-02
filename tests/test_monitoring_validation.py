@@ -486,9 +486,8 @@ class TestPerformanceMonitoring:
 class TestObservabilityFeatures:
     """Test observability and monitoring features"""
     
-    def test_correlation_id_presence(self):
+    def test_correlation_id_presence(self, client):
         """Test that correlation IDs are present in responses"""
-        client = TestClient(app)
         response = client.get("/health/")
         
         assert "X-Correlation-ID" in response.headers
