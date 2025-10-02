@@ -31,6 +31,7 @@ class DataSource(str, Enum):
 
 class NFLContext(BaseModel):
     """NFL-specific context for sentiment analysis"""
+
     team_mentions: List[str] = []
     player_mentions: List[str] = []
     position_mentions: List[str] = []
@@ -76,7 +77,7 @@ class SentimentAnalysisInDB(SentimentAnalysisBase):
     processed_at: datetime
     model_version: str = "1.0"
     processing_time_ms: Optional[float] = None
-    
+
     class Config:
         populate_by_name = True
 
@@ -90,6 +91,7 @@ class SentimentAnalysisResponse(SentimentAnalysisBase):
 
 class SentimentResult(BaseModel):
     """Enhanced result model for sentiment analysis with detailed breakdown"""
+
     text: str
     sentiment: SentimentLabel
     sentiment_score: float = Field(..., ge=-1.0, le=1.0)
@@ -103,11 +105,13 @@ class SentimentResult(BaseModel):
     timestamp: datetime
     model_version: str
     processing_time_ms: float
-    
+
     # Detailed sentiment breakdown
     emotion_scores: Dict[str, float] = {}  # joy, anger, fear, etc.
     aspect_sentiments: Dict[str, float] = {}  # performance, coaching, etc.
-    keyword_contributions: Dict[str, float] = {}  # How each keyword contributed to sentiment
+    keyword_contributions: Dict[str, float] = (
+        {}
+    )  # How each keyword contributed to sentiment
 
 
 class BatchSentimentRequest(BaseModel):
@@ -118,8 +122,8 @@ class BatchSentimentRequest(BaseModel):
     game_id: Optional[str] = None
     source: DataSource = DataSource.USER_INPUT
     include_detailed_analysis: bool = False
-    
-    
+
+
 class BatchSentimentResponse(BaseModel):
     results: List[SentimentResult]
     total_processed: int
@@ -139,6 +143,7 @@ class SentimentTrend(BaseModel):
 
 class AggregatedSentiment(BaseModel):
     """Base class for aggregated sentiment data"""
+
     current_sentiment: float = Field(..., ge=-1.0, le=1.0)
     sentiment_trend: List[SentimentTrend] = []
     total_mentions: int = 0
@@ -158,8 +163,8 @@ class TeamSentiment(AggregatedSentiment):
     injury_sentiment: float = 0.0
     trade_sentiment: float = 0.0
     fan_engagement_score: float = 0.0
-    
-    
+
+
 class PlayerSentiment(AggregatedSentiment):
     player_id: str
     player_name: str
@@ -194,6 +199,7 @@ class GameSentiment(AggregatedSentiment):
 
 class SentimentAggregationRequest(BaseModel):
     """Request model for sentiment aggregation queries"""
+
     entity_type: str  # "team", "player", "game"
     entity_id: str
     start_date: Optional[datetime] = None
@@ -206,10 +212,13 @@ class SentimentAggregationRequest(BaseModel):
 
 class SentimentInsights(BaseModel):
     """Advanced insights derived from sentiment analysis"""
+
     entity_id: str
     entity_type: str
     key_themes: List[str] = []
-    sentiment_drivers: Dict[str, float] = {}  # What's driving positive/negative sentiment
+    sentiment_drivers: Dict[str, float] = (
+        {}
+    )  # What's driving positive/negative sentiment
     anomalies: List[Dict[str, Any]] = []  # Unusual sentiment patterns
     predictions: Dict[str, float] = {}  # Predicted sentiment trends
     recommendations: List[str] = []  # Actionable insights

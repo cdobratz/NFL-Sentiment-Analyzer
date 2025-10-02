@@ -20,44 +20,44 @@ logger = logging.getLogger(__name__)
 
 class ScheduledTasksService:
     """Service for managing scheduled maintenance tasks"""
-    
+
     def __init__(self):
         self.scheduler = AsyncIOScheduler()
         self.is_running = False
         self.task_history: Dict[str, Dict[str, Any]] = {}
-    
+
     async def start(self):
         """Start the scheduled tasks service"""
         if self.is_running:
             logger.warning("Scheduled tasks service is already running")
             return
-        
+
         logger.info("Starting scheduled tasks service...")
-        
+
         # Schedule tasks
         await self._schedule_tasks()
-        
+
         # Start the scheduler
         self.scheduler.start()
         self.is_running = True
-        
+
         logger.info("Scheduled tasks service started successfully")
-    
+
     async def stop(self):
         """Stop the scheduled tasks service"""
         if not self.is_running:
             return
-        
+
         logger.info("Stopping scheduled tasks service...")
-        
+
         self.scheduler.shutdown(wait=True)
         self.is_running = False
-        
+
         logger.info("Scheduled tasks service stopped")
-    
+
     async def _schedule_tasks(self):
         """Schedule all maintenance tasks"""
-        
+
         # Daily data archiving at 2 AM
         self.scheduler.add_job(
             self._run_data_archiving,
@@ -65,9 +65,9 @@ class ScheduledTasksService:
             id="daily_archiving",
             name="Daily Data Archiving",
             max_instances=1,
-            coalesce=True
+            coalesce=True,
         )
-        
+
         # Weekly full maintenance on Sundays at 3 AM
         self.scheduler.add_job(
             self._run_full_maintenance,
@@ -75,9 +75,9 @@ class ScheduledTasksService:
             id="weekly_maintenance",
             name="Weekly Full Maintenance",
             max_instances=1,
-            coalesce=True
+            coalesce=True,
         )
-        
+
         # Cache cleanup every 4 hours
         self.scheduler.add_job(
             self._run_cache_cleanup,
@@ -85,9 +85,9 @@ class ScheduledTasksService:
             id="cache_cleanup",
             name="Cache Cleanup",
             max_instances=1,
-            coalesce=True
+            coalesce=True,
         )
-        
+
         # Analytics cache refresh every hour
         self.scheduler.add_job(
             self._refresh_analytics_cache,
@@ -95,9 +95,9 @@ class ScheduledTasksService:
             id="analytics_refresh",
             name="Analytics Cache Refresh",
             max_instances=1,
-            coalesce=True
+            coalesce=True,
         )
-        
+
         # System health check every 30 minutes
         self.scheduler.add_job(
             self._system_health_check,
@@ -105,242 +105,250 @@ class ScheduledTasksService:
             id="health_check",
             name="System Health Check",
             max_instances=1,
-            coalesce=True
+            coalesce=True,
         )
-        
+
         logger.info("Scheduled tasks configured:")
         for job in self.scheduler.get_jobs():
             logger.info(f"  - {job.name} ({job.id}): {job.trigger}")
-    
+
     async def _run_data_archiving(self):
         """Run daily data archiving"""
         task_name = "data_archiving"
         start_time = datetime.utcnow()
-        
+
         logger.info("Starting scheduled data archiving...")
-        
+
         try:
             archiving_service = await get_archiving_service()
             result = await archiving_service.archive_old_sentiment_data()
-            
+
             # Record success
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "success",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "result": result
+                "result": result,
             }
-            
-            logger.info(f"Data archiving completed: {result['archived_count']} documents archived")
-            
+
+            logger.info(
+                f"Data archiving completed: {result['archived_count']} documents archived"
+            )
+
         except Exception as e:
             # Record failure
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "failed",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "error": str(e)
+                "error": str(e),
             }
-            
+
             logger.error(f"Data archiving failed: {e}")
-    
+
     async def _run_full_maintenance(self):
         """Run weekly full maintenance"""
         task_name = "full_maintenance"
         start_time = datetime.utcnow()
-        
+
         logger.info("Starting scheduled full maintenance...")
-        
+
         try:
             archiving_service = await get_archiving_service()
             result = await archiving_service.run_maintenance()
-            
+
             # Record success
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "success",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "result": result
+                "result": result,
             }
-            
+
             logger.info("Full maintenance completed successfully")
-            
+
         except Exception as e:
             # Record failure
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "failed",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "error": str(e)
+                "error": str(e),
             }
-            
+
             logger.error(f"Full maintenance failed: {e}")
-    
+
     async def _run_cache_cleanup(self):
         """Run cache cleanup"""
         task_name = "cache_cleanup"
         start_time = datetime.utcnow()
-        
+
         logger.info("Starting scheduled cache cleanup...")
-        
+
         try:
             caching_service = await get_caching_service()
-            
+
             # Get stats before cleanup
             stats_before = await caching_service.get_cache_stats()
-            
+
             # Clean up expired analytics cache
             deleted_analytics = await caching_service.delete_pattern("analytics:*")
-            
+
             # Clean up old trend cache
             deleted_trends = await caching_service.delete_pattern("sentiment_trends:*")
-            
+
             # Get stats after cleanup
             stats_after = await caching_service.get_cache_stats()
-            
+
             result = {
                 "deleted_analytics": deleted_analytics,
                 "deleted_trends": deleted_trends,
                 "keys_before": stats_before.get("total_keys", 0),
-                "keys_after": stats_after.get("total_keys", 0)
+                "keys_after": stats_after.get("total_keys", 0),
             }
-            
+
             # Record success
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "success",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "result": result
+                "result": result,
             }
-            
-            logger.info(f"Cache cleanup completed: {deleted_analytics + deleted_trends} keys deleted")
-            
+
+            logger.info(
+                f"Cache cleanup completed: {deleted_analytics + deleted_trends} keys deleted"
+            )
+
         except Exception as e:
             # Record failure
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "failed",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "error": str(e)
+                "error": str(e),
             }
-            
+
             logger.error(f"Cache cleanup failed: {e}")
-    
+
     async def _refresh_analytics_cache(self):
         """Refresh analytics cache with popular queries"""
         task_name = "analytics_refresh"
         start_time = datetime.utcnow()
-        
+
         logger.info("Starting analytics cache refresh...")
-        
+
         try:
             analytics_service = await get_analytics_service()
-            
+
             # Refresh popular leaderboards
             leaderboard_types = ["most_positive", "most_negative", "most_mentioned"]
             refreshed_count = 0
-            
+
             for lb_type in leaderboard_types:
                 try:
                     await analytics_service.get_sentiment_leaderboards(
                         leaderboard_type=lb_type,
                         entity_type="team",
                         limit=10,
-                        time_period="24h"
+                        time_period="24h",
                     )
                     refreshed_count += 1
                 except Exception as e:
                     logger.warning(f"Failed to refresh {lb_type} leaderboard: {e}")
-            
+
             # Record success
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "success",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "result": {"refreshed_leaderboards": refreshed_count}
+                "result": {"refreshed_leaderboards": refreshed_count},
             }
-            
-            logger.info(f"Analytics cache refresh completed: {refreshed_count} leaderboards refreshed")
-            
+
+            logger.info(
+                f"Analytics cache refresh completed: {refreshed_count} leaderboards refreshed"
+            )
+
         except Exception as e:
             # Record failure
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "failed",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "error": str(e)
+                "error": str(e),
             }
-            
+
             logger.error(f"Analytics cache refresh failed: {e}")
-    
+
     async def _system_health_check(self):
         """Run system health check"""
         task_name = "health_check"
         start_time = datetime.utcnow()
-        
+
         try:
             # Check cache service
             caching_service = await get_caching_service()
             cache_stats = await caching_service.get_cache_stats()
             cache_healthy = "connected_clients" in cache_stats
-            
+
             # Check archiving service
             archiving_service = await get_archiving_service()
             archive_stats = await archiving_service.get_archiving_stats()
             archive_healthy = "active_documents" in archive_stats
-            
+
             health_status = {
                 "cache_healthy": cache_healthy,
                 "archive_healthy": archive_healthy,
-                "overall_healthy": cache_healthy and archive_healthy
+                "overall_healthy": cache_healthy and archive_healthy,
             }
-            
+
             # Record result
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "success",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "result": health_status
+                "result": health_status,
             }
-            
+
             if not health_status["overall_healthy"]:
                 logger.warning(f"System health check detected issues: {health_status}")
-            
+
         except Exception as e:
             # Record failure
             self.task_history[task_name] = {
                 "last_run": start_time.isoformat(),
                 "status": "failed",
                 "duration_seconds": (datetime.utcnow() - start_time).total_seconds(),
-                "error": str(e)
+                "error": str(e),
             }
-            
+
             logger.error(f"System health check failed: {e}")
-    
+
     def get_task_status(self) -> Dict[str, Any]:
         """Get status of all scheduled tasks"""
         jobs_info = []
-        
+
         for job in self.scheduler.get_jobs():
             job_info = {
                 "id": job.id,
                 "name": job.name,
-                "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-                "trigger": str(job.trigger)
+                "next_run": (
+                    job.next_run_time.isoformat() if job.next_run_time else None
+                ),
+                "trigger": str(job.trigger),
             }
-            
+
             # Add history if available
             if job.id in self.task_history:
                 job_info["last_execution"] = self.task_history[job.id]
-            
+
             jobs_info.append(job_info)
-        
+
         return {
             "scheduler_running": self.is_running,
             "total_jobs": len(jobs_info),
-            "jobs": jobs_info
+            "jobs": jobs_info,
         }
-    
+
     async def run_task_manually(self, task_id: str) -> Dict[str, Any]:
         """Manually run a scheduled task"""
         task_functions = {
@@ -348,17 +356,20 @@ class ScheduledTasksService:
             "weekly_maintenance": self._run_full_maintenance,
             "cache_cleanup": self._run_cache_cleanup,
             "analytics_refresh": self._refresh_analytics_cache,
-            "health_check": self._system_health_check
+            "health_check": self._system_health_check,
         }
-        
+
         if task_id not in task_functions:
             raise ValueError(f"Unknown task ID: {task_id}")
-        
+
         logger.info(f"Manually running task: {task_id}")
-        
+
         try:
             await task_functions[task_id]()
-            return {"status": "success", "message": f"Task {task_id} completed successfully"}
+            return {
+                "status": "success",
+                "message": f"Task {task_id} completed successfully",
+            }
         except Exception as e:
             logger.error(f"Manual task execution failed: {e}")
             return {"status": "failed", "message": str(e)}

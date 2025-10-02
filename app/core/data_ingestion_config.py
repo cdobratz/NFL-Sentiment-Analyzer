@@ -9,38 +9,53 @@ from dataclasses import dataclass
 @dataclass
 class DataIngestionConfig:
     """Configuration for data ingestion service"""
-    
+
     # Twitter/X API configuration
     twitter_keywords: List[str] = None
     twitter_max_results: int = 100
     twitter_collection_interval: int = 5  # minutes
-    
+
     # ESPN API configuration
     espn_collection_interval: int = 15  # minutes
-    
+
     # Betting APIs configuration
     betting_collection_interval: int = 30  # minutes
     betting_sportsbooks: List[str] = None
-    
+
     # Data processing configuration
     max_queue_size: int = 1000
     worker_count: int = 3
     data_retention_days: int = 30
-    
+
     # Rate limiting configuration
     twitter_rate_limit: int = 300  # requests per 15 minutes
-    espn_rate_limit: int = 100     # requests per hour
-    betting_rate_limit: int = 60   # requests per minute
-    
+    espn_rate_limit: int = 100  # requests per hour
+    betting_rate_limit: int = 60  # requests per minute
+
     def __post_init__(self):
         if self.twitter_keywords is None:
             self.twitter_keywords = [
-                "NFL", "football", "Chiefs", "Bills", "Cowboys", "Patriots",
-                "Packers", "Steelers", "49ers", "Rams", "Super Bowl", "playoff",
-                "quarterback", "touchdown", "fantasy football", "NFL draft",
-                "injury report", "trade", "free agency"
+                "NFL",
+                "football",
+                "Chiefs",
+                "Bills",
+                "Cowboys",
+                "Patriots",
+                "Packers",
+                "Steelers",
+                "49ers",
+                "Rams",
+                "Super Bowl",
+                "playoff",
+                "quarterback",
+                "touchdown",
+                "fantasy football",
+                "NFL draft",
+                "injury report",
+                "trade",
+                "free agency",
             ]
-        
+
         if self.betting_sportsbooks is None:
             self.betting_sportsbooks = ["draftkings", "mgm", "fanduel", "caesars"]
 
@@ -82,22 +97,67 @@ NFL_TEAM_KEYWORDS = {
     "seattle_seahawks": ["Seahawks", "Seattle Seahawks", "SEA", "12th Man"],
     "tampa_bay_buccaneers": ["Buccaneers", "Tampa Bay Buccaneers", "TB", "Bucs"],
     "tennessee_titans": ["Titans", "Tennessee Titans", "TEN", "Titan Up"],
-    "washington_commanders": ["Commanders", "Washington Commanders", "WAS", "HTTC"]
+    "washington_commanders": ["Commanders", "Washington Commanders", "WAS", "HTTC"],
 }
 
 
 # Common NFL-related keywords for sentiment analysis
 NFL_GENERAL_KEYWORDS = [
-    "NFL", "National Football League", "football", "American football",
-    "Super Bowl", "playoffs", "postseason", "regular season",
-    "quarterback", "QB", "running back", "RB", "wide receiver", "WR",
-    "tight end", "TE", "offensive line", "defense", "linebacker", "LB",
-    "cornerback", "CB", "safety", "defensive back", "DB",
-    "touchdown", "field goal", "interception", "fumble", "sack",
-    "draft", "NFL draft", "rookie", "veteran", "free agency",
-    "trade", "injury", "injury report", "IR", "practice squad",
-    "fantasy football", "fantasy", "DFS", "daily fantasy",
-    "betting", "odds", "spread", "over under", "moneyline",
-    "coach", "head coach", "offensive coordinator", "defensive coordinator",
-    "owner", "general manager", "GM", "front office"
+    "NFL",
+    "National Football League",
+    "football",
+    "American football",
+    "Super Bowl",
+    "playoffs",
+    "postseason",
+    "regular season",
+    "quarterback",
+    "QB",
+    "running back",
+    "RB",
+    "wide receiver",
+    "WR",
+    "tight end",
+    "TE",
+    "offensive line",
+    "defense",
+    "linebacker",
+    "LB",
+    "cornerback",
+    "CB",
+    "safety",
+    "defensive back",
+    "DB",
+    "touchdown",
+    "field goal",
+    "interception",
+    "fumble",
+    "sack",
+    "draft",
+    "NFL draft",
+    "rookie",
+    "veteran",
+    "free agency",
+    "trade",
+    "injury",
+    "injury report",
+    "IR",
+    "practice squad",
+    "fantasy football",
+    "fantasy",
+    "DFS",
+    "daily fantasy",
+    "betting",
+    "odds",
+    "spread",
+    "over under",
+    "moneyline",
+    "coach",
+    "head coach",
+    "offensive coordinator",
+    "defensive coordinator",
+    "owner",
+    "general manager",
+    "GM",
+    "front office",
 ]

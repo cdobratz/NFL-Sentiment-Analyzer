@@ -38,7 +38,7 @@ class UserInDB(UserBase):
     created_at: datetime
     last_login: Optional[datetime] = None
     preferences: UserPreferences = UserPreferences()
-    
+
     class Config:
         populate_by_name = True
 

@@ -9,6 +9,7 @@ from datetime import datetime
 
 class ErrorResponse(BaseModel):
     """Standard error response model"""
+
     error: str
     message: str
     details: Optional[Dict[str, Any]] = None
@@ -18,6 +19,7 @@ class ErrorResponse(BaseModel):
 
 class SuccessResponse(BaseModel):
     """Standard success response model"""
+
     message: str
     data: Optional[Dict[str, Any]] = None
     timestamp: float
@@ -26,6 +28,7 @@ class SuccessResponse(BaseModel):
 
 class PaginatedResponse(BaseModel):
     """Paginated response model"""
+
     items: List[Any]
     total: int
     page: int
@@ -37,6 +40,7 @@ class PaginatedResponse(BaseModel):
 
 class RateLimitInfo(BaseModel):
     """Rate limit information"""
+
     limit: int
     remaining: int
     reset: int
@@ -45,6 +49,7 @@ class RateLimitInfo(BaseModel):
 
 class HealthStatus(BaseModel):
     """Health check status"""
+
     status: str  # healthy, degraded, unhealthy
     timestamp: str
     version: str
@@ -53,6 +58,7 @@ class HealthStatus(BaseModel):
 
 class ComponentHealth(BaseModel):
     """Individual component health status"""
+
     status: str
     response_time_ms: Optional[float] = None
     error: Optional[str] = None
@@ -62,6 +68,7 @@ class ComponentHealth(BaseModel):
 
 class SystemMetrics(BaseModel):
     """System resource metrics"""
+
     cpu: Dict[str, Any]
     memory: Dict[str, Any]
     disk: Dict[str, Any]
@@ -69,6 +76,7 @@ class SystemMetrics(BaseModel):
 
 class APIKeyInfo(BaseModel):
     """API key information (without the actual key)"""
+
     id: str
     name: str
     scopes: List[str]
@@ -84,6 +92,7 @@ class APIKeyInfo(BaseModel):
 
 class ValidationErrorDetail(BaseModel):
     """Validation error detail"""
+
     field: str
     message: str
     invalid_value: Optional[Any] = None
@@ -91,4 +100,5 @@ class ValidationErrorDetail(BaseModel):
 
 class ValidationErrorResponse(ErrorResponse):
     """Validation error response with field details"""
+
     validation_errors: List[ValidationErrorDetail] = []

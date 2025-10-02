@@ -40,7 +40,7 @@ class Team(BaseModel):
     established: Optional[int] = None
     stadium: Optional[str] = None
     head_coach: Optional[str] = None
-    
+
     class Config:
         populate_by_name = True
 
@@ -62,7 +62,7 @@ class Player(BaseModel):
     contract_year: Optional[int] = None
     is_rookie: bool = False
     fantasy_relevant: bool = True
-    
+
     class Config:
         populate_by_name = True
 
@@ -95,7 +95,7 @@ class Game(BaseModel):
     rivalry_game: bool = False
     playoff_implications: bool = False
     keywords: List[str] = []  # Game-specific keywords
-    
+
     class Config:
         populate_by_name = True
 
