@@ -22,12 +22,22 @@ class ScheduledTasksService:
     """Service for managing scheduled maintenance tasks"""
 
     def __init__(self):
+        """
+        Initialize the ScheduledTasksService instance.
+        
+        Sets up an AsyncIOScheduler for scheduling tasks, an `is_running` flag initialized to False, and a `task_history` dictionary for storing per-task execution metadata (last run time, status, duration, result or error).
+        """
         self.scheduler = AsyncIOScheduler()
         self.is_running = False
         self.task_history: Dict[str, Dict[str, Any]] = {}
 
     async def start(self):
-        """Start the scheduled tasks service"""
+        """
+        Start the scheduled tasks service and register its maintenance jobs.
+        
+        If the service is already running, the call returns immediately without making changes.
+        This schedules configured tasks, starts the scheduler, and marks the service as running.
+        """
         if self.is_running:
             logger.warning("Scheduled tasks service is already running")
             return
@@ -56,7 +66,11 @@ class ScheduledTasksService:
         logger.info("Scheduled tasks service stopped")
 
     async def _schedule_tasks(self):
-        """Schedule all maintenance tasks"""
+        """
+        Register all maintenance jobs with the scheduler.
+        
+        Adds scheduled jobs for data archiving, weekly maintenance, periodic cache cleanup, analytics cache refresh, and system health checks, each configured with single-instance execution and coalescing.
+        """
 
         # Daily data archiving at 2 AM
         self.scheduler.add_job(
@@ -113,7 +127,16 @@ class ScheduledTasksService:
             logger.info(f"  - {job.name} ({job.id}): {job.trigger}")
 
     async def _run_data_archiving(self):
-        """Run daily data archiving"""
+        """
+        Archive old sentiment data using the archiving service and record execution metadata.
+        
+        Invokes the archiving service to archive old sentiment data and stores a per-run entry in self.task_history containing:
+        - "last_run": ISO-formatted start time
+        - "status": "success" or "failed"
+        - "duration_seconds": run duration in seconds
+        - "result": service result on success
+        - "error": error message on failure
+        """
         task_name = "data_archiving"
         start_time = datetime.utcnow()
 
@@ -179,7 +202,11 @@ class ScheduledTasksService:
             logger.error(f"Full maintenance failed: {e}")
 
     async def _run_cache_cleanup(self):
-        """Run cache cleanup"""
+        """
+        Perform cache maintenance by removing expired analytics and old sentiment trend entries, capturing before/after cache statistics, and recording the outcome.
+        
+        This updates the service's task_history under "cache_cleanup" with last_run, status ("success" or "failed"), duration_seconds, and either a result object containing counts for deleted keys and key totals before/after or an error string. Logs a summary on success or an error on failure.
+        """
         task_name = "cache_cleanup"
         start_time = datetime.utcnow()
 
@@ -231,7 +258,11 @@ class ScheduledTasksService:
             logger.error(f"Cache cleanup failed: {e}")
 
     async def _refresh_analytics_cache(self):
-        """Refresh analytics cache with popular queries"""
+        """
+        Refresh the analytics cache by updating popular sentiment leaderboards.
+        
+        Attempts to refresh leaderboards for "most_positive", "most_negative", and "most_mentioned" and counts how many refreshed successfully. Updates the service's task_history entry "analytics_refresh" with `last_run`, `status` ("success" or "failed"), `duration_seconds`, and either a `result` object containing `refreshed_leaderboards` or an `error` string. Per-leaderboard failures are logged and do not stop other leaderboard refreshes.
+        """
         task_name = "analytics_refresh"
         start_time = datetime.utcnow()
 
@@ -280,7 +311,11 @@ class ScheduledTasksService:
             logger.error(f"Analytics cache refresh failed: {e}")
 
     async def _system_health_check(self):
-        """Run system health check"""
+        """
+        Perform a system health check and record the outcome in the service's task history.
+        
+        Queries the caching and archiving services to determine `cache_healthy` and `archive_healthy`, derives `overall_healthy`, and writes an entry into `self.task_history["health_check"]` containing `last_run` (ISO timestamp), `status` (`"success"` or `"failed"`), `duration_seconds`, and either `result` (the health booleans) or `error` (the exception message). Logs a warning when the overall health is not healthy and logs an error on exceptions.
+        """
         task_name = "health_check"
         start_time = datetime.utcnow()
 
@@ -324,7 +359,20 @@ class ScheduledTasksService:
             logger.error(f"System health check failed: {e}")
 
     def get_task_status(self) -> Dict[str, Any]:
-        """Get status of all scheduled tasks"""
+        """
+        Provides a status summary of the scheduler and its scheduled jobs.
+        
+        Returns:
+            status (Dict[str, Any]): Summary object containing:
+                - scheduler_running (bool): Whether the scheduler is currently running.
+                - total_jobs (int): Number of scheduled jobs.
+                - jobs (List[Dict[str, Any]]): List of job summaries. Each job summary contains:
+                    - id (str): Job identifier.
+                    - name (str): Job name.
+                    - next_run (str | None): ISO 8601 timestamp of the next run, or `None` if not scheduled.
+                    - trigger (str): String representation of the job trigger.
+                    - last_execution (Dict[str, Any], optional): Latest execution metadata from task_history, if available.
+        """
         jobs_info = []
 
         for job in self.scheduler.get_jobs():
@@ -350,7 +398,22 @@ class ScheduledTasksService:
         }
 
     async def run_task_manually(self, task_id: str) -> Dict[str, Any]:
-        """Manually run a scheduled task"""
+        """
+        Run a mapped maintenance task immediately by its task identifier.
+        
+        Parameters:
+            task_id (str): Identifier of the task to run. Valid values:
+                "daily_archiving", "weekly_maintenance", "cache_cleanup",
+                "analytics_refresh", "health_check".
+        
+        Returns:
+            result (Dict[str, Any]): A status dictionary with:
+                - "status": "success" if the task completed, "failed" otherwise.
+                - "message": human-readable summary or error message.
+        
+        Raises:
+            ValueError: If `task_id` is not one of the valid task identifiers.
+        """
         task_functions = {
             "daily_archiving": self._run_data_archiving,
             "weekly_maintenance": self._run_full_maintenance,
@@ -380,5 +443,10 @@ scheduled_tasks_service = ScheduledTasksService()
 
 
 async def get_scheduled_tasks_service() -> ScheduledTasksService:
-    """Dependency to get scheduled tasks service"""
+    """
+    Get the global scheduled tasks service instance used by the application.
+    
+    Returns:
+        The global ScheduledTasksService instance.
+    """
     return scheduled_tasks_service

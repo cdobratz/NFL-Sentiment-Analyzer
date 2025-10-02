@@ -25,7 +25,20 @@ class HealthChecker:
     """Health check service for monitoring system components"""
 
     async def check_mongodb(self) -> Dict[str, Any]:
-        """Check MongoDB connection and status"""
+        """
+        Evaluate MongoDB connectivity and basic server health.
+        
+        Performs a connectivity check and retrieves basic server status metrics.
+        
+        Returns:
+            dict: A dictionary describing MongoDB health. Keys:
+                - "status": `"healthy"` when checks succeed, `"unhealthy"` otherwise.
+                - "response_time_ms": Round-trip latency in milliseconds (float) when healthy.
+                - "version": Server version string or `None` if unavailable.
+                - "uptime_seconds": Server uptime in seconds or `None` if unavailable.
+                - "connections": Current connection count (int, 0 if not reported).
+                - "error": Error message string present when `"status"` is `"unhealthy"`.
+        """
         try:
             start_time = time.time()
 
@@ -50,7 +63,21 @@ class HealthChecker:
             return {"status": "unhealthy", "error": str(e)}
 
     async def check_redis(self) -> Dict[str, Any]:
-        """Check Redis connection and status"""
+        """
+        Check Redis connectivity and return a structured health payload.
+        
+        Returns:
+            dict: Health information for Redis. On success contains:
+                - `status`: "healthy"
+                - `response_time_ms`: Response time in milliseconds (rounded to 2 decimals)
+                - `version`: Redis server version string or `None`
+                - `uptime_seconds`: Server uptime in seconds or `None`
+                - `connected_clients`: Number of connected clients (int)
+                - `used_memory`: Human-readable memory usage string or `None`
+            On failure contains:
+                - `status`: "unhealthy"
+                - `error`: Error message string describing the failure
+        """
         try:
             start_time = time.time()
 
@@ -76,7 +103,14 @@ class HealthChecker:
             return {"status": "unhealthy", "error": str(e)}
 
     async def check_external_apis(self) -> Dict[str, Any]:
-        """Check external API connectivity"""
+        """
+        Check connectivity to external APIs used by the application.
+        
+        Returns:
+            results (Dict[str, Any]): Mapping of external service identifiers to their health details.
+                Each value contains a `status` field with one of: `"healthy"`, `"stopped"`, or `"unhealthy"`.
+                When a service is `"unhealthy"`, an `error` field will contain the error message.
+        """
         results = {}
 
         # Check data ingestion service
@@ -91,7 +125,17 @@ class HealthChecker:
         return results
 
     async def check_ml_services(self) -> Dict[str, Any]:
-        """Check ML services status"""
+        """
+        Verifies availability of ML services used by the application.
+        
+        Performs a live test of the sentiment analysis service and reports its health and test outcome.
+        
+        Returns:
+            result (Dict[str, Any]): A mapping with key "sentiment_service" containing:
+                - "status": "healthy" or "unhealthy".
+                - If healthy, "test_result" (bool) indicates whether the test call produced a truthy result.
+                - If unhealthy, "error" (str) contains the exception message.
+        """
         try:
             # Test sentiment analysis
             test_result = await sentiment_service.analyze_text(
@@ -109,7 +153,16 @@ class HealthChecker:
             return {"sentiment_service": {"status": "unhealthy", "error": str(e)}}
 
     def get_system_metrics(self) -> Dict[str, Any]:
-        """Get system resource metrics"""
+        """
+        Collect current system resource metrics for CPU, memory, and the root filesystem disk.
+        
+        Returns:
+            dict: A mapping with keys:
+                - "cpu": dict with "usage_percent" (float) and "count" (int).
+                - "memory": dict with "total" (int bytes), "available" (int bytes), "percent" (float), and "used" (int bytes).
+                - "disk": dict with "total" (int bytes), "used" (int bytes), "free" (int bytes), and "percent" (float).
+                - On failure, returns {"error": "<error message>"} describing the collection error.
+        """
         try:
             # CPU usage
             cpu_percent = psutil.cpu_percent(interval=1)
@@ -145,7 +198,16 @@ health_checker = HealthChecker()
 
 @router.get("/")
 async def basic_health_check():
-    """Basic health check endpoint"""
+    """
+    Return a minimal health status for the service.
+    
+    Returns:
+        dict: Health payload containing:
+            - status (str): "healthy" or other overall status string.
+            - timestamp (str): ISO 8601 UTC timestamp (ends with "Z").
+            - version (str): Application version from settings.
+            - service (str): Application/service name from settings.
+    """
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -156,7 +218,23 @@ async def basic_health_check():
 
 @router.get("/detailed")
 async def detailed_health_check():
-    """Detailed health check with all system components"""
+    """
+    Perform a comprehensive health check across database, cache, external APIs, ML services, and system metrics.
+    
+    Runs MongoDB, Redis, external API, and ML-service checks concurrently, collects system metrics, and aggregates results into a structured payload describing each component and overall status. If any component check raises an exception or indicates an unhealthy state, the overall status is set accordingly.
+    
+    Returns:
+        dict: Health report with keys:
+            - status: overall health string, one of "healthy", "degraded", or "unhealthy".
+            - timestamp: ISO 8601 UTC timestamp string.
+            - version: application version string from settings.
+            - check_duration_ms: total duration of checks in milliseconds (rounded).
+            - components: mapping with keys "mongodb", "redis", "external_apis", and "ml_services" containing each component's result or an error object.
+            - system_metrics: CPU, memory, and disk usage metrics collected from the host.
+    
+    Raises:
+        HTTPException: with status code 503 and the health payload when overall status is "unhealthy".
+    """
     start_time = time.time()
 
     # Run all health checks concurrently
@@ -232,7 +310,14 @@ async def detailed_health_check():
 
 @router.get("/ready")
 async def readiness_check():
-    """Kubernetes readiness probe endpoint"""
+    """
+    Perform a Kubernetes readiness probe by verifying critical dependencies.
+    
+    Checks MongoDB and Redis health; if both are healthy returns a payload with status "ready" and an ISO8601 UTC timestamp. If any check fails, raises HTTPException with status code 503 and a detail object containing status "not_ready", an error message, and a timestamp.
+    
+    Returns:
+        dict: {"status": "ready", "timestamp": "<ISO8601 UTC time>Z"}
+    """
     try:
         # Check critical dependencies
         mongodb_status = await health_checker.check_mongodb()
@@ -258,7 +343,15 @@ async def readiness_check():
 
 @router.get("/live")
 async def liveness_check():
-    """Kubernetes liveness probe endpoint"""
+    """
+    Return liveness information for the service (Kubernetes liveness probe).
+    
+    Returns:
+        health (dict): Dictionary with keys:
+            - status (str): "alive".
+            - timestamp (str): UTC ISO 8601 timestamp ending with "Z".
+            - uptime_seconds (float): Seconds elapsed since system boot.
+    """
     return {
         "status": "alive",
         "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -268,7 +361,14 @@ async def liveness_check():
 
 @router.get("/metrics")
 async def metrics_endpoint():
-    """Prometheus-style metrics endpoint"""
+    """
+    Expose system and application metrics in Prometheus text format.
+    
+    Collects CPU, memory, and disk metrics from the health checker and formats them as Prometheus-compatible gauge lines, plus an application info metric with the current version.
+    
+    Returns:
+        prometheus_text (str): Prometheus-formatted metrics payload as a single string ending with a newline.
+    """
     system_metrics = health_checker.get_system_metrics()
 
     # Convert to Prometheus format
@@ -311,9 +411,15 @@ async def get_rate_limit_status(
     request: Request, current_user: Optional[dict] = Depends(get_optional_user)
 ):
     """
-    Get current rate limit status for the authenticated user or IP.
-
-    Shows remaining requests for different time windows and when limits reset.
+    Return the current rate limit status for the requesting client (by API key, authenticated user, or IP).
+    
+    Provides the rate limit details computed for the client, an ISO 8601 UTC timestamp, and the inferred client type.
+    
+    Returns:
+        dict: A payload containing:
+            - rate_limits: Mapping of rate-limit windows to status/usage details for the client.
+            - timestamp: ISO 8601 UTC timestamp string when the status was generated (e.g., "2025-10-02T12:34:56.789Z").
+            - client_type: One of `"api_key"`, `"user"`, or `"anonymous"` indicating how the client was identified.
     """
     from ..core.rate_limiting import rate_limiter
     from ..core.api_keys import APIKey

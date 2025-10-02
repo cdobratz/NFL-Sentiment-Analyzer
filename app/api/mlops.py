@@ -30,7 +30,11 @@ router = APIRouter(prefix="/mlops", tags=["MLOps"])
 
 @router.on_event("startup")
 async def initialize_mlops():
-    """Initialize MLOps services on startup"""
+    """
+    Initialize MLOps services used by the application at startup.
+    
+    If initialization fails, the error is logged and the exception is suppressed so startup continues.
+    """
     try:
         await mlops_service.initialize()
         logger.info("MLOps services initialized")
@@ -46,7 +50,18 @@ async def register_model(
     request: ModelRegistrationRequest, current_user: dict = Depends(get_current_user)
 ):
     """
-    Register a new model in the MLOps pipeline
+    Register a new model and return its registration metadata.
+    
+    Returns:
+        dict: A payload containing:
+            - `success` (bool): `True` when registration succeeded.
+            - `model_id` (str): The assigned model identifier.
+            - `version` (str): The registered model version.
+            - `status` (str): The model status.
+            - `message` (str): Human-readable confirmation message.
+    
+    Raises:
+        HTTPException: With status 500 when model registration fails.
     """
     try:
         model_metadata = await mlops_service.register_model(
@@ -75,7 +90,10 @@ async def register_model(
 @router.get("/models", response_model=List[Dict[str, Any]])
 async def list_models(current_user: dict = Depends(get_current_user)):
     """
-    List available models
+    Retrieve the list of registered models.
+    
+    Returns:
+        List[dict]: A list of model metadata dictionaries, each describing a registered model (for example: id, name, versions, status, and related metadata).
     """
     try:
         models = await mlops_service.list_models()
@@ -89,7 +107,13 @@ async def list_models(current_user: dict = Depends(get_current_user)):
 @router.get("/models/{model_id}", response_model=Dict[str, Any])
 async def get_model_info(model_id: str, current_user: dict = Depends(get_current_user)):
     """
-    Get detailed information about a specific model
+    Return detailed information for the specified model.
+    
+    Returns:
+        dict: A dictionary containing the model's metadata, available versions, and current status.
+    
+    Raises:
+        HTTPException: with status 404 if the model is not found, or 500 for other internal errors.
     """
     try:
         model_info = await mlops_service.get_model_info(model_id)
@@ -114,7 +138,18 @@ async def deploy_model(
     request: ModelDeploymentRequest, current_user: dict = Depends(get_current_user)
 ):
     """
-    Deploy a model to the specified environment
+    Deploy a model to the specified environment and return deployment metadata.
+    
+    Returns:
+        dict: Deployment result containing:
+            - `success` (bool): True when deployment was initiated successfully.
+            - `deployment_id` (str): Identifier of the created deployment.
+            - `status` (str): Current deployment status.
+            - `environment` (str): Target environment for the deployment.
+            - `message` (str): Human-readable summary of the outcome.
+    
+    Raises:
+        HTTPException: If an error occurs while creating the deployment.
     """
     try:
         deployment = await mlops_service.deploy_model(
@@ -143,7 +178,13 @@ async def list_deployments(
     environment: Optional[str] = None, current_user: dict = Depends(get_current_user)
 ):
     """
-    List active deployments
+    List deployments, optionally filtered by environment.
+    
+    Parameters:
+        environment (Optional[str]): If provided, only deployments for this environment (e.g., "staging", "production") are returned.
+    
+    Returns:
+        List[dict]: A list of deployment records containing deployment metadata and status.
     """
     try:
         deployments = await mlops_service.list_deployments(environment=environment)
@@ -159,7 +200,14 @@ async def get_deployment_status(
     deployment_id: str, current_user: dict = Depends(get_current_user)
 ):
     """
-    Get status of a specific deployment
+    Retrieve the status information for a deployment by its identifier.
+    
+    Returns:
+        status (Any): Deployment status object returned by the deployment service.
+    
+    Raises:
+        HTTPException: 404 if the deployment is not found.
+        HTTPException: 500 if an internal error occurs while retrieving the status.
     """
     try:
         status = await mlops_service.deployment_service.get_deployment_status(
@@ -186,7 +234,18 @@ async def rollback_deployment(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Rollback a deployment to a previous version
+    Rollback a deployment to a specified target version with a provided reason.
+    
+    Parameters:
+        deployment_id (str): Identifier of the deployment to roll back.
+        reason (str): Human-readable justification for performing the rollback.
+        target_version (Optional[str]): Specific model/service version to revert to; if omitted, the service will select the previous stable version.
+    
+    Returns:
+        dict: Response payload containing `success` (True) and a `message` describing the result.
+    
+    Raises:
+        HTTPException: Raised with status code 400 if the rollback could not be performed, or 500 for unexpected internal errors.
     """
     try:
         success = await mlops_service.deployment_service.rollback_deployment(
@@ -223,7 +282,26 @@ async def create_ab_test(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Create an A/B test between two models
+    Create an A/B test that splits traffic between two model versions.
+    
+    Parameters:
+        test_name (str): Human-readable name for the A/B test.
+        model_a_id (str): Identifier of model A.
+        model_a_version (str): Version of model A to include in the test.
+        model_b_id (str): Identifier of model B.
+        model_b_version (str): Version of model B to include in the test.
+        traffic_split (float): Percentage of traffic routed to model A (0-100). The remainder goes to model B.
+        duration_days (int): Duration of the A/B test in days.
+    
+    Returns:
+        dict: {
+            "success": True if the test was created, False otherwise,
+            "test_id": Identifier of the created A/B test,
+            "message": Human-readable status message
+        }
+    
+    Raises:
+        HTTPException: If the A/B test creation fails.
     """
     try:
         test_id = await mlops_service.create_ab_test(
@@ -255,7 +333,20 @@ async def start_experiment(
     request: ExperimentCreateRequest, current_user: dict = Depends(get_current_user)
 ):
     """
-    Start a new experiment for model training or evaluation
+    Start a new experiment run with the provided configuration and metadata.
+    
+    Parameters:
+        request (ExperimentCreateRequest): Contains experiment_name, hyperparameters (config), tags, and notes.
+    
+    Returns:
+        dict: A payload with keys:
+            - "success": True when the experiment was started,
+            - "run_id": the identifier of the created run,
+            - "experiment_name": the name provided in the request,
+            - "message": a short status message.
+    
+    Raises:
+        HTTPException: Returned with status 500 if the experiment cannot be started.
     """
     try:
         run_id = await mlops_service.start_experiment(
@@ -284,7 +375,17 @@ async def log_experiment_metrics(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Log metrics to the current experiment
+    Log numeric metrics for the currently active experiment run.
+    
+    Parameters:
+        metrics (Dict[str, float]): Mapping of metric names to their numeric values.
+        step (Optional[int]): Optional step index (e.g., epoch or batch number) associated with these metrics.
+    
+    Returns:
+        dict: A dictionary containing `success` (True on success) and `message` describing the outcome.
+    
+    Raises:
+        HTTPException: Raised with status code 500 if logging fails; the exception detail contains the error message.
     """
     try:
         await mlops_service.log_metrics(metrics, step=step)
@@ -302,7 +403,13 @@ async def finish_experiment(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Finish the current experiment
+    Finalize the active experiment and record optional final metrics.
+    
+    Parameters:
+        final_metrics (Optional[Dict[str, Any]]): Final metric values to attach to the experiment; keys are metric names and values are their final measurements.
+    
+    Returns:
+        dict: A payload containing `success` (bool) and `message` (str) describing the result of the operation.
     """
     try:
         await mlops_service.finish_experiment(final_metrics=final_metrics)
@@ -321,7 +428,14 @@ async def list_experiments(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    List experiment runs
+    List experiment runs optionally filtered by name.
+    
+    Parameters:
+        experiment_name (Optional[str]): If provided, only experiments matching this name are returned.
+        limit (int): Maximum number of experiments to return.
+    
+    Returns:
+        List[dict]: A list of experiment run records.
     """
     try:
         experiments = await mlops_service.list_experiments(
@@ -345,7 +459,18 @@ async def trigger_model_retraining(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Manually trigger model retraining
+    Trigger a retraining run for a model using the provided retraining request.
+    
+    Parameters:
+        request (ModelRetrainingRequest): Contains model_name, trigger_reason, and training_config for the retraining run.
+        background_tasks (BackgroundTasks): FastAPI background task manager used to schedule the retraining work.
+    
+    Returns:
+        dict: {
+            "success": True if the retraining run was scheduled successfully, False otherwise,
+            "run_id": identifier of the created retraining run,
+            "message": human-readable status message
+        }
     """
     try:
         run_id = await mlops_service.trigger_retraining(
@@ -372,7 +497,14 @@ async def list_retraining_jobs(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    List retraining jobs
+    Retrieve retraining jobs optionally filtered by model name.
+    
+    Parameters:
+        model_name (Optional[str]): If provided, only return retraining jobs for this model.
+        limit (int): Maximum number of jobs to return.
+    
+    Returns:
+        List[dict]: A list of retraining job records matching the filter and constrained by `limit`.
     """
     try:
         jobs = await mlops_service.retraining_service.list_retraining_jobs(
@@ -391,7 +523,14 @@ async def get_retraining_status(
     run_id: str, current_user: dict = Depends(get_current_user)
 ):
     """
-    Get status of a specific retraining job
+    Return the status of a retraining job identified by `run_id`.
+    
+    Returns:
+        dict: Retraining job status payload.
+    
+    Raises:
+        HTTPException: 404 if the retraining job is not found.
+        HTTPException: 500 on internal server error with error details.
     """
     try:
         status = await mlops_service.retraining_service.get_retraining_status(run_id)
@@ -413,7 +552,10 @@ async def check_retraining_triggers(
     model_name: str, current_user: dict = Depends(get_current_user)
 ):
     """
-    Check if any retraining triggers are activated for a model
+    Determines whether retraining triggers are active for a model.
+    
+    Returns:
+        dict: A mapping describing retraining trigger statuses for the given model (e.g., which triggers are active and associated metadata).
     """
     try:
         trigger_status = (
@@ -438,7 +580,14 @@ async def predict_sentiment(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Predict sentiment using a deployed model
+    Return a sentiment prediction for the given text using the specified deployed model.
+    
+    Returns:
+        dict: A payload containing:
+            - `success` (bool): `True` on successful prediction.
+            - `prediction`: The model's prediction (value or structured object).
+            - `model_name` (str): The name of the model used.
+            - `model_version` (str | None): The model version used, or `None` if not specified.
     """
     try:
         prediction = await mlops_service.predict_sentiment(
@@ -466,7 +615,24 @@ async def batch_predict_sentiment(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Batch predict sentiment for multiple texts
+    Batch-predict sentiment labels for a list of texts using a specified deployed model.
+    
+    Parameters:
+        texts (List[str]): List of input texts to classify; maximum 1000 items.
+        model_name (str): Name of the deployed model to use (default "sentiment_base").
+        model_version (Optional[str]): Specific model version to use; if omitted, uses the served/default version.
+        batch_size (int): Number of texts processed per prediction batch.
+    
+    Returns:
+        dict: A payload containing:
+            - success (bool): `True` when predictions were produced.
+            - predictions (List[dict]): Model predictions for each input text.
+            - total_processed (int): Number of predictions returned.
+            - model_name (str): Echoed model_name used for prediction.
+            - model_version (Optional[str]): Echoed model_version used for prediction.
+    
+    Raises:
+        HTTPException: With status 400 if more than 1000 texts are provided, or with status 500 for internal prediction errors.
     """
     try:
         if len(texts) > 1000:
@@ -507,7 +673,13 @@ async def report_model_performance(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Report model performance metrics for monitoring
+    Report model performance metrics to the monitoring subsystem.
+    
+    Parameters:
+        performance_metrics (ModelPerformanceMetrics): Aggregated performance metrics and metadata for the model (e.g., accuracy, latency, throughput, evaluation timestamp).
+    
+    Returns:
+        result (dict): Dictionary containing `success` (`True` if metrics were accepted, `False` otherwise) and a human-readable `message`.
     """
     try:
         await mlops_service.monitor_model_performance(
@@ -532,7 +704,26 @@ async def update_features(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Update feature store with sentiment analysis results
+    Update the feature store with sentiment analysis results.
+    
+    Parameters:
+        sentiment_results (List[Dict[str, Any]]): List of sentiment result dictionaries. Each dictionary may include keys:
+            - "text": analyzed text
+            - "sentiment": label string (e.g., "POSITIVE", "NEGATIVE", "NEUTRAL")
+            - "sentiment_score": numeric score for sentiment
+            - "confidence": numeric confidence value
+            - "category": category string (e.g., "general")
+            - "source": source identifier (e.g., "user_input")
+        current_user (dict, implicitly provided): Authenticated user (injected dependency; not documented here).
+    
+    Returns:
+        Dict[str, Any]: A payload with:
+            - "success" (bool): `true` if feature update succeeded, `false` otherwise.
+            - "updated_count" (int): Number of records processed and updated when successful; `0` on failure.
+            - "message" (str): Human-readable summary of the operation outcome.
+    
+    Raises:
+        HTTPException: Raised with status code 500 if an internal error occurs while updating features.
     """
     try:
         # Convert dict to SentimentResult objects (simplified)
@@ -583,7 +774,13 @@ async def update_features(
 @router.get("/status", response_model=Dict[str, Any])
 async def get_mlops_status():
     """
-    Get status of all MLOps services
+    Retrieve the status of all MLOps services.
+    
+    Returns:
+        dict: A mapping of service names to their current status and metadata.
+    
+    Raises:
+        HTTPException: With status code 500 if an internal error occurs while obtaining status.
     """
     try:
         status = await mlops_service.get_service_status()
@@ -597,7 +794,14 @@ async def get_mlops_status():
 @router.get("/health", response_model=Dict[str, Any])
 async def health_check():
     """
-    Health check endpoint for MLOps services
+    Perform a health check of MLOps services and return a summarized status payload.
+    
+    Returns:
+        dict: A payload describing health:
+            - `status`: `"healthy"` if services report initialized, `"unhealthy"` otherwise.
+            - `timestamp`: ISO 8601 UTC timestamp of the check.
+            - `services`: mapping of individual service statuses when available.
+            - `error` (optional): error message when the health check failed.
     """
     try:
         status = await mlops_service.get_service_status()

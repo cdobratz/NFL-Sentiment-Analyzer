@@ -27,7 +27,14 @@ async def get_users(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Get all users (admin only)"""
+    """
+    Return a paginated list of users.
+    
+    Each returned user has the MongoDB `_id` converted to a string `id` and excludes the `hashed_password` field.
+    
+    Returns:
+        List[UserResponse]: List of user objects with `id` as a string and without `hashed_password`.
+    """
     cursor = db.users.find({}, {"hashed_password": 0}).skip(skip).limit(limit)
     users = []
 
@@ -44,7 +51,15 @@ async def get_user(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Get specific user by ID (admin only)"""
+    """
+    Retrieve a user by ID and return its public representation.
+    
+    Returns:
+        UserResponse: The user's data with `id` as a string and `hashed_password` excluded.
+    
+    Raises:
+        HTTPException: 404 if the user with the given ID is not found.
+    """
     user = await db.users.find_one({"_id": user_id}, {"hashed_password": 0})
     if not user:
         raise HTTPException(
@@ -61,7 +76,18 @@ async def deactivate_user(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Deactivate a user (admin only)"""
+    """
+    Deactivate a user account by ID.
+    
+    Parameters:
+        user_id (str): The user's identifier (MongoDB `_id` as a string).
+    
+    Returns:
+        dict: {"message": "User deactivated successfully"} on success.
+    
+    Raises:
+        HTTPException: 404 if no user with the given `user_id` exists.
+    """
     result = await db.users.update_one(
         {"_id": user_id},
         {"$set": {"is_active": False, "deactivated_at": datetime.utcnow()}},
@@ -81,7 +107,18 @@ async def activate_user(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Activate a user (admin only)"""
+    """
+    Activate the user with the given ID.
+    
+    Parameters:
+        user_id (str): The user's MongoDB `_id` as a string.
+    
+    Returns:
+        dict: A success message, e.g. {"message": "User activated successfully"}.
+    
+    Raises:
+        HTTPException: HTTP 404 if no user with the given ID is found.
+    """
     result = await db.users.update_one(
         {"_id": user_id},
         {"$set": {"is_active": True}, "$unset": {"deactivated_at": ""}},
@@ -101,7 +138,16 @@ async def get_system_health(
     db=Depends(get_database),
     redis=Depends(get_redis),
 ):
-    """Get comprehensive system health status (admin only)"""
+    """
+    Gather a comprehensive health report for system services and resources.
+    
+    Returns:
+        dict: A dictionary containing:
+            - timestamp (datetime): UTC time of the check.
+            - services (dict): Health details per service (e.g., mongodb, redis, mlops). Each service entry includes a `status` and service-specific diagnostics such as response_time_ms, sizes, initialization state, or error messages.
+            - system_resources (dict): Resource metrics (cpu_usage_percent, memory_usage_percent, memory_available_gb, disk_usage_percent, disk_free_gb) or an error message if unavailable.
+            - overall_status (str): Overall health state, either "healthy" or "degraded".
+    """
     health_status = {
         "timestamp": datetime.utcnow(),
         "services": {},
@@ -207,7 +253,21 @@ async def get_analytics(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Get comprehensive system analytics (admin only)"""
+    """
+    Compile system analytics across users, sentiment analyses, model performance, API usage, and errors for a recent period.
+    
+    Parameters:
+        days (int): Number of days to include in the analysis (1-30).
+    
+    Returns:
+        dict: Analytics payload containing:
+            - "period", "period_start", "period_end", "generated_at" (ISO 8601 timestamps)
+            - "users": totals and daily registrations
+            - "sentiment_analyses": totals, distribution, confidence averages, daily volumes, and top teams
+            - "model_performance": per-model aggregated metrics (accuracy, F1, prediction time, predictions, error rate)
+            - "api_usage": daily usage with total requests, unique users, and average response time
+            - "errors": top error types with counts and last occurrence timestamps (ISO 8601)
+    """
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=days)
 
@@ -454,7 +514,26 @@ async def retrain_models(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Trigger model retraining (admin only)"""
+    """
+    Trigger a retraining job for a machine learning model and record the job in the database.
+    
+    If `request` is omitted, defaults are used: model_name="sentiment_base", trigger_reason="manual_admin_trigger", training_config=None, and auto_deploy=False.
+    
+    Parameters:
+        request (Optional[ModelRetrainingRequest]): Optional retraining request specifying `model_name`, `trigger_reason`, `training_config`, and `auto_deploy`. When omitted, server-default values are applied.
+    
+    Returns:
+        dict: Information about the started retraining job including:
+            - `message`: success message,
+            - `job_id`: internal job identifier,
+            - `experiment_id`: experiment identifier,
+            - `model_name`: name of the model being retrained,
+            - `status`: job status string,
+            - `started_at`: ISO-formatted start timestamp.
+    
+    Raises:
+        HTTPException: Raised with status 500 if triggering the retraining or recording the job fails.
+    """
     try:
         # Default values if no request body provided
         model_name = request.model_name if request else "sentiment_base"
@@ -511,7 +590,20 @@ async def get_ml_jobs(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Get ML job history with filtering (admin only)"""
+    """
+    Return ML job history and summary statistics filtered by status and model name.
+    
+    Parameters:
+        limit (int): Maximum number of jobs to return (1-100).
+        status (Optional[str]): Filter jobs by their status when provided.
+        model_name (Optional[str]): Filter jobs by model name when provided.
+    
+    Returns:
+        dict: A mapping with:
+            - "jobs": list of job documents where MongoDB `_id` is converted to string `id`
+              and datetime fields (`created_at`, `started_at`, `completed_at`) are ISO-formatted strings.
+            - "statistics": dict with counts `total`, `running`, `completed`, and `failed`.
+    """
     # Build query
     query = {}
     if status:
@@ -552,7 +644,16 @@ async def get_ml_jobs(
 
 @router.get("/models")
 async def get_models(current_admin: dict = Depends(get_current_admin_user)):
-    """Get available models and their status (admin only)"""
+    """
+    Retrieve available ML models, active deployments, and recent experiments.
+    
+    Returns:
+        result (dict): Dictionary containing:
+            - models: list of available model metadata.
+            - deployments: list of active deployments.
+            - recent_experiments: list of recent experiments (limited to 10).
+            - timestamp: ISO-formatted UTC timestamp of when the data was retrieved.
+    """
     try:
         # Initialize MLOps service if not already done
         if not mlops_service.initialized:
@@ -586,7 +687,18 @@ async def get_models(current_admin: dict = Depends(get_current_admin_user)):
 async def get_model_details(
     model_id: str, current_admin: dict = Depends(get_current_admin_user)
 ):
-    """Get detailed information about a specific model (admin only)"""
+    """
+    Retrieve detailed information for a specific model.
+    
+    Parameters:
+        model_id (str): Identifier of the model to retrieve.
+    
+    Returns:
+        dict: Model details object as returned by the MLOps service.
+    
+    Raises:
+        HTTPException: `404` if the model is not found; `500` if an unexpected error occurs while fetching model details.
+    """
     try:
         # Initialize MLOps service if not already done
         if not mlops_service.initialized:
@@ -620,7 +732,25 @@ async def get_model_performance(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Get model performance metrics (admin only)"""
+    """
+    Return aggregated performance metrics for models over a recent time window.
+    
+    Parameters:
+        model_id (Optional[str]): Filter results to a single model by its identifier; if omitted, metrics for all models are returned.
+        days (int): Number of past days to include in the analysis (minimum 1, maximum 30).
+    
+    Returns:
+        dict: A dictionary containing:
+            - "period": string describing the window (e.g., "7 days").
+            - "model_id": the provided model_id or None.
+            - "metrics": list of metric documents with ISO-formatted timestamps and string `id` fields.
+            - "summary": aggregated values including:
+                - "avg_accuracy": average accuracy rounded to three decimals.
+                - "avg_f1_score": average F1 score rounded to three decimals.
+                - "avg_response_time_ms": average prediction time in milliseconds rounded to two decimals.
+                - "total_predictions": total number of predictions summed over the period.
+                - "avg_error_rate": average error rate rounded to four decimals.
+    """
     try:
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
@@ -690,7 +820,19 @@ async def get_system_alerts(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Get system alerts (admin only)"""
+    """
+    Retrieve system alerts filtered by optional severity and status, returning the most recent alerts and summary statistics.
+    
+    Alerts are returned sorted by created_at descending and limited by `limit`. Each alert document includes an `id` string (MongoDB _id converted to string) and any datetime fields (`created_at`, `acknowledged_at`, `resolved_at`) are converted to ISO 8601 strings.
+    
+    Returns:
+        dict: A mapping with two keys:
+            - "alerts": list of alert documents with `id` and ISO-formatted date fields.
+            - "statistics": dict with integer counts `total`, `active`, and `critical`.
+    
+    Raises:
+        HTTPException: With status 500 if retrieving alerts or computing statistics fails.
+    """
     try:
         # Build query
         query = {}
@@ -740,7 +882,18 @@ async def acknowledge_alert(
     current_admin: dict = Depends(get_current_admin_user),
     db=Depends(get_database),
 ):
-    """Acknowledge a system alert (admin only)"""
+    """
+    Mark a system alert as acknowledged.
+    
+    Sets the alert's status to "acknowledged", records the acknowledgement timestamp, and records the acknowledging admin's id.
+    
+    Returns:
+        dict: A dictionary containing a confirmation message, e.g. {"message": "Alert acknowledged successfully"}.
+    
+    Raises:
+        HTTPException: With status 404 if no alert matches the given `alert_id`.
+        HTTPException: With status 500 if an unexpected error occurs while updating the alert.
+    """
     try:
         result = await db.alerts.update_one(
             {"alert_id": alert_id},
@@ -778,7 +931,21 @@ async def clear_cache(
     current_admin: dict = Depends(get_current_admin_user),
     redis=Depends(get_redis),
 ):
-    """Clear application cache (admin only)"""
+    """
+    Clear configured application caches according to the requested cache type.
+    
+    Parameters:
+        cache_type (Optional[str]): Which cache to clear. One of "redis", "mlops", "all", or None to clear all available caches.
+    
+    Returns:
+        dict: {
+            "message": Human-readable summary of cleared caches,
+            "cleared_caches": List[str] of cache names that were cleared
+        }
+    
+    Raises:
+        HTTPException: 503 if no cache services are available; 400 if an invalid cache_type is provided; 500 if an internal error occurs while clearing caches.
+    """
     try:
         cleared_caches = []
 
@@ -825,7 +992,15 @@ async def get_scheduled_tasks_status(
     current_admin: dict = Depends(get_current_admin_user),
     scheduled_tasks: ScheduledTasksService = Depends(get_scheduled_tasks_service),
 ):
-    """Get status of all scheduled tasks (admin only)"""
+    """
+    Get the current status of all scheduled tasks.
+    
+    Returns:
+        dict: Mapping of task IDs to their status details.
+    
+    Raises:
+        HTTPException: If retrieving the scheduled tasks status fails.
+    """
     try:
         status = scheduled_tasks.get_task_status()
         return status
@@ -843,7 +1018,19 @@ async def run_scheduled_task_manually(
     current_admin: dict = Depends(get_current_admin_user),
     scheduled_tasks: ScheduledTasksService = Depends(get_scheduled_tasks_service),
 ):
-    """Manually run a scheduled task (admin only)"""
+    """
+    Execute a scheduled task immediately by task ID.
+    
+    Parameters:
+    	task_id (str): Identifier of the scheduled task to run.
+    
+    Returns:
+    	result: The value returned by the scheduled tasks service for the executed task.
+    
+    Raises:
+    	HTTPException: Raised with status 400 if the task request is invalid (ValueError from the service),
+    		or status 500 for unexpected errors while running the task.
+    """
     try:
         result = await scheduled_tasks.run_task_manually(task_id)
         return result

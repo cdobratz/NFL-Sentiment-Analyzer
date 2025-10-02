@@ -31,6 +31,18 @@ class HuggingFaceModelService:
     """Service for managing HuggingFace models for sentiment analysis"""
 
     def __init__(self):
+        """
+        Initialize the HuggingFaceModelService instance by creating API clients, in-memory caches, default model mappings, and optionally authenticating to the HuggingFace Hub.
+        
+        Initializes:
+        - hf_api: HuggingFace Hub API client.
+        - models_cache: in-memory cache mapping model identifiers (name+version) to loaded pipelines.
+        - tokenizers_cache: in-memory cache for tokenizers.
+        - model_metadata_cache: in-memory cache for registered model metadata.
+        - default_models: preset model IDs used for common sentiment and emotion tasks.
+        
+        If a HUGGINGFACE_TOKEN is available in settings, attempts to authenticate to the HuggingFace Hub.
+        """
         self.hf_api = HfApi()
         self.models_cache: Dict[str, Pipeline] = {}
         self.tokenizers_cache: Dict[str, Any] = {}
@@ -112,16 +124,18 @@ class HuggingFaceModelService:
         return_all_scores: bool = False,
     ) -> Dict[str, Any]:
         """
-        Predict sentiment using a HuggingFace model
-
-        Args:
-            text: Text to analyze
-            model_name: Model to use (key from default_models or HF model ID)
-            model_version: Specific model version
-            return_all_scores: Return scores for all labels
-
+        Predict sentiment for a single text using a resolved HuggingFace model.
+        
+        Resolves model_name against the service's default model mapping, loads the model (optionally at a specific version), runs the pipeline, and returns a normalized prediction.
+        
+        Parameters:
+            text (str): Text to analyze.
+            model_name (str): Key from the service's default_models mapping or a HuggingFace model ID.
+            model_version (Optional[str]): Specific model revision or version to load; when omitted the latest is used.
+            return_all_scores (bool): If true, include scores for all labels in the pipeline output.
+        
         Returns:
-            Sentiment prediction with scores
+            Dict[str, Any]: Normalized sentiment prediction. For a single prediction this includes keys such as `label`, `sentiment_score`, `confidence`, and `raw_prediction`. If multiple label scores are returned, the dictionary may contain a `predictions` list with per-label entries.
         """
         try:
             # Resolve model name
@@ -154,16 +168,16 @@ class HuggingFaceModelService:
         batch_size: int = 32,
     ) -> List[Dict[str, Any]]:
         """
-        Batch predict sentiment for multiple texts
-
-        Args:
-            texts: List of texts to analyze
-            model_name: Model to use
-            model_version: Specific model version
-            batch_size: Batch size for processing
-
+        Predict sentiment for multiple input texts in batches and return normalized results.
+        
+        Parameters:
+            texts (List[str]): Input texts to analyze; order of results matches input order.
+            model_name (str): Named key from defaults or explicit model ID to resolve which model to load.
+            model_version (Optional[str]): Optional model revision or version to load.
+            batch_size (int): Number of texts to process per model inference call.
+        
         Returns:
-            List of sentiment predictions
+            List[Dict[str, Any]]: List of normalized prediction dictionaries corresponding to each input text.
         """
         try:
             resolved_model_name = self.default_models.get(model_name, model_name)
@@ -198,18 +212,18 @@ class HuggingFaceModelService:
         tags: Optional[List[str]] = None,
     ) -> ModelMetadata:
         """
-        Register a model in the HuggingFace Hub
-
-        Args:
-            model_name: Name for the model
-            model_path: Local path to the model
-            model_type: Type of model
-            metrics: Performance metrics
-            description: Model description
-            tags: Model tags
-
+        Register a local model and, if authenticated, upload it to the HuggingFace Hub, returning the created metadata.
+        
+        Parameters:
+            model_name (str): Desired name for the registered model (used to form the model ID).
+            model_path (str): Filesystem path to the model artifacts to register/upload.
+            model_type (ModelType): Domain-specific classification of the model; defaults to sentiment analysis.
+            metrics (Optional[Dict[str, float]]): Optional custom performance metrics to attach to the metadata.
+            description (Optional[str]): Optional human-readable description of the model.
+            tags (Optional[List[str]]): Optional list of tags to associate with the model.
+        
         Returns:
-            Model metadata
+            ModelMetadata: Metadata for the registered model, including model_id, version, status, timestamps, and, when uploaded, deployment details.
         """
         try:
             # Create model metadata
@@ -271,15 +285,22 @@ class HuggingFaceModelService:
         self, task: str = "sentiment-analysis", sort: str = "downloads", limit: int = 20
     ) -> List[Dict[str, Any]]:
         """
-        List available models from HuggingFace Hub
-
-        Args:
-            task: Task type to filter by
-            sort: Sort criteria
-            limit: Maximum number of models to return
-
+        Retrieve a list of models from the HuggingFace Hub filtered and sorted by the given criteria.
+        
+        Parameters:
+            task (str): Task filter to apply (e.g., "sentiment-analysis").
+            sort (str): Sort key used by the Hub (e.g., "downloads").
+            limit (int): Maximum number of models to return.
+        
         Returns:
-            List of available models
+            List[dict]: A list of model information dictionaries. Each dictionary contains:
+                - model_id: Model identifier on the Hub.
+                - downloads: Number of downloads (or 0 if unavailable).
+                - likes: Number of likes (or 0 if unavailable).
+                - tags: List of model tags (or empty list if unavailable).
+                - pipeline_tag: Primary pipeline tag (or None if unavailable).
+                - created_at: Creation timestamp (or None if unavailable).
+                - last_modified: Last modified timestamp (or None if unavailable).
         """
         try:
             models = self.hf_api.list_models(task=task, sort=sort, limit=limit)
@@ -305,13 +326,21 @@ class HuggingFaceModelService:
 
     async def get_model_info(self, model_id: str) -> Dict[str, Any]:
         """
-        Get detailed information about a specific model
-
-        Args:
-            model_id: HuggingFace model ID
-
+        Retrieve detailed metadata for a HuggingFace model.
+        
         Returns:
-            Model information
+            A dictionary with model metadata:
+            - `model_id` (str): Model identifier on HuggingFace.
+            - `sha` (str): Commit SHA or revision identifier.
+            - `downloads` (int): Number of downloads (0 if unavailable).
+            - `likes` (int): Number of likes (0 if unavailable).
+            - `tags` (List[str]): Model tags (empty list if unavailable).
+            - `pipeline_tag` (Optional[str]): Primary pipeline tag (e.g., "text-classification").
+            - `library_name` (Optional[str]): Primary library name (e.g., "transformers").
+            - `created_at` (Optional[str]): Creation timestamp if available.
+            - `last_modified` (Optional[str]): Last modified timestamp if available.
+            - `card_data` (dict): Model card metadata (empty dict if unavailable).
+            - `siblings` (List[str]): Filenames of sibling files in the model repository.
         """
         try:
             model_info = self.hf_api.model_info(model_id)
@@ -345,19 +374,21 @@ class HuggingFaceModelService:
         batch_size: int = 16,
     ) -> ModelMetadata:
         """
-        Fine-tune a model for NFL-specific sentiment analysis
-
-        Args:
-            base_model: Base model to fine-tune
-            training_data: Training dataset
-            validation_data: Validation dataset
-            output_dir: Output directory for the fine-tuned model
-            num_epochs: Number of training epochs
-            learning_rate: Learning rate
-            batch_size: Training batch size
-
+        Fine-tune a HuggingFace Transformers model for NFL-specific sentiment analysis.
+        
+        This creates and saves a fine-tuned model artifact in output_dir and records training metadata in the service cache. `training_data` and `validation_data` should be lists of labeled examples (e.g., dicts containing text and a sentiment label) suitable for building a sequence-classification dataset. The returned metadata reflects the created fine-tuned model and is updated to indicate validation is pending on successful save.
+        
+        Parameters:
+            base_model: Identifier of the pretrained HuggingFace model to fine-tune (e.g., a model ID or local path).
+            training_data: List of training examples (labeled text records) used for fine-tuning.
+            validation_data: Optional list of validation examples used for evaluation during or after training.
+            output_dir: Filesystem path where the fine-tuned model and tokenizer are saved.
+            num_epochs: Number of training epochs to run.
+            learning_rate: Learning rate used for fine-tuning.
+            batch_size: Batch size used during training.
+        
         Returns:
-            Metadata for the fine-tuned model
+            ModelMetadata: Metadata for the created fine-tuned model; on successful completion the metadata.status is set to VALIDATING and the metadata is cached by the service.
         """
         try:
             # This is a simplified implementation
@@ -435,14 +466,14 @@ class HuggingFaceModelService:
         self, result: Dict[str, Any], return_all_scores: bool = False
     ) -> Dict[str, Any]:
         """
-        Normalize HuggingFace prediction result to standard format
-
-        Args:
-            result: Raw prediction result from HuggingFace
-            return_all_scores: Whether to include all label scores
-
+        Convert a HuggingFace pipeline output into the service's standardized prediction structure.
+        
+        Parameters:
+            result (dict|list[dict]): Raw prediction(s) returned by a HuggingFace pipeline (single prediction dict or a list of prediction dicts).
+            return_all_scores (bool): Whether normalized predictions should include scores for all labels.
+        
         Returns:
-            Normalized prediction result
+            dict: If a single prediction was provided, returns a normalized prediction dict with keys such as `label`, `sentiment_score`, `confidence`, and `raw_prediction`. If a list was provided, returns `{"predictions": [<normalized prediction dicts>]}`.
         """
         # Handle different result formats
         if isinstance(result, list):
@@ -458,7 +489,21 @@ class HuggingFaceModelService:
             return self._normalize_single_prediction(result)
 
     def _normalize_single_prediction(self, pred: Dict[str, Any]) -> Dict[str, Any]:
-        """Normalize a single prediction result"""
+        """
+        Normalize a single HuggingFace model prediction into the service's standardized sentiment format.
+        
+        This maps common HF label names (including `LABEL_0`/`LABEL_1`/`LABEL_2`) to the internal SentimentLabel enum, converts the model `score` into a signed `sentiment_score` (positive for positive sentiment, negative for negative sentiment, zero for neutral), and preserves the original prediction.
+        
+        Parameters:
+            pred (Dict[str, Any]): Prediction object from a HuggingFace pipeline, expected to contain at least `label` and `score`.
+        
+        Returns:
+            Dict[str, Any]: A dictionary with keys:
+                - `label` (str): Standardized sentiment label value.
+                - `sentiment_score` (float): Signed sentiment score (positive for positive sentiment, negative for negative, 0.0 for neutral).
+                - `confidence` (float): Original model score.
+                - `raw_prediction` (Dict[str, Any]): The original prediction object.
+        """
         # Map HuggingFace labels to our standard labels
         label_mapping = {
             "POSITIVE": SentimentLabel.POSITIVE,
@@ -491,13 +536,25 @@ class HuggingFaceModelService:
         }
 
     async def cleanup_cache(self):
-        """Clean up model cache to free memory"""
+        """
+        Clear in-memory model and tokenizer caches to free resources.
+        
+        This removes all entries from the service's model and tokenizer caches.
+        """
         self.models_cache.clear()
         self.tokenizers_cache.clear()
         logger.info("Cleared HuggingFace model cache")
 
     def get_cache_info(self) -> Dict[str, Any]:
-        """Get information about cached models"""
+        """
+        Return current in-memory cache state for loaded model pipelines and tokenizers.
+        
+        Returns:
+            dict: Mapping with keys:
+                - cached_models: list of cache keys for model pipelines.
+                - cached_tokenizers: list of cache keys for tokenizers.
+                - cache_size: number of cached model pipelines.
+        """
         return {
             "cached_models": list(self.models_cache.keys()),
             "cached_tokenizers": list(self.tokenizers_cache.keys()),

@@ -18,6 +18,23 @@ class DataArchivingService:
     """Service for managing historical sentiment data archiving"""
 
     def __init__(self, db: Optional[AsyncIOMotorDatabase] = None):
+        """
+        Initialize the DataArchivingService with an optional database handle and default archiving configuration.
+        
+        Parameters:
+            db (Optional[AsyncIOMotorDatabase]): Optional database instance to use for operations. If not provided, the service will acquire a database connection when needed.
+        
+        Detailed behavior:
+            Sets default thresholds and batch settings:
+              - archive_after_days = 90 (archive active documents older than 90 days)
+              - delete_after_days = 365 (delete archived documents older than 365 days)
+              - batch_size = 1000 (process documents in batches)
+        
+            Establishes collection names used by the service:
+              - active_collection = "sentiment_analysis"
+              - archive_collection = "sentiment_analysis_archive"
+              - deleted_collection = "sentiment_analysis_deleted"
+        """
         self.db = db
         # Archiving configuration
         self.archive_after_days = 90  # Archive data older than 90 days
@@ -30,13 +47,28 @@ class DataArchivingService:
         self.deleted_collection = "sentiment_analysis_deleted"
 
     async def get_database(self) -> AsyncIOMotorDatabase:
-        """Get database instance"""
+        """
+        Return the service's MongoDB database instance and cache it on the service for reuse.
+        
+        If the service has no cached database handle, obtain one and store it on self.db before returning.
+        
+        Returns:
+            db (AsyncIOMotorDatabase): The MongoDB database instance used by the service.
+        """
         if not self.db:
             self.db = await get_database()
         return self.db
 
     async def archive_old_sentiment_data(self) -> Dict[str, int]:
-        """Archive sentiment data older than configured threshold"""
+        """
+        Archive sentiment documents from the active collection that are older than the configured threshold.
+        
+        Returns:
+            result (dict): A dictionary with the following keys:
+                - archived_count (int): Number of documents successfully inserted into the archive collection.
+                - deleted_from_active (int): Number of documents removed from the active collection after archiving.
+                - cutoff_date (str): ISO 8601 string of the cutoff timestamp used to select documents for archiving.
+        """
         db = await self.get_database()
 
         # Calculate cutoff date
@@ -101,7 +133,17 @@ class DataArchivingService:
         }
 
     async def delete_old_archived_data(self) -> Dict[str, int]:
-        """Delete archived data older than configured threshold"""
+        """
+        Remove archived documents older than the configured deletion threshold and record them in the deleted collection.
+        
+        This moves archived documents with a timestamp earlier than the retention cutoff into the deleted collection with deletion metadata, then removes them from the archive collection. Processing is performed in batches to limit resource usage.
+        
+        Returns:
+            result (Dict[str, int | str]): Summary of the deletion run containing:
+                - deleted_count (int): Number of documents removed from the archive collection.
+                - moved_to_deleted (int): Number of documents inserted into the deleted collection.
+                - cutoff_date (str): ISO-formatted cutoff timestamp used to identify deletable documents.
+        """
         db = await self.get_database()
 
         # Calculate cutoff date for deletion
@@ -169,7 +211,24 @@ class DataArchivingService:
         }
 
     async def get_archiving_stats(self) -> Dict[str, Any]:
-        """Get statistics about data archiving"""
+        """
+        Collects statistics and threshold information for archiving and deletion across the active, archive, and deleted sentiment collections.
+        
+        Returns:
+            stats (Dict[str, Any]): A dictionary containing:
+                - active_documents (int): Number of documents in the active collection.
+                - archived_documents (int): Number of documents in the archive collection.
+                - deleted_documents (int): Number of documents in the deleted collection.
+                - total_documents (int): Sum of active, archived, and deleted document counts.
+                - active_date_range (Dict[str, Optional[str]]): Oldest and newest `timestamp` in the active collection as ISO strings or None.
+                - archive_date_range (Dict[str, Optional[str]]): Oldest and newest `timestamp` in the archive collection as ISO strings or None.
+                - eligible_for_archiving (int): Count of active documents older than the archive threshold.
+                - eligible_for_deletion (int): Count of archived documents older than the deletion threshold.
+                - archive_threshold_days (int): Configured number of days after which active documents are eligible for archiving.
+                - deletion_threshold_days (int): Configured number of days after which archived documents are eligible for deletion.
+                - next_archive_cutoff (str): ISO-formatted cutoff timestamp used to determine archival eligibility.
+                - next_deletion_cutoff (str): ISO-formatted cutoff timestamp used to determine deletion eligibility.
+        """
         db = await self.get_database()
 
         active_collection = db[self.active_collection]
@@ -213,7 +272,15 @@ class DataArchivingService:
         }
 
     async def _get_date_range(self, collection) -> Dict[str, Optional[str]]:
-        """Get the date range for a collection"""
+        """
+        Return the oldest and newest `timestamp` values present in the given collection as ISO-formatted strings.
+        
+        Parameters:
+            collection (Collection): MongoDB collection-like object to inspect; must contain documents with a `timestamp` field.
+        
+        Returns:
+            Dict[str, Optional[str]]: A mapping with keys `"oldest"` and `"newest"` whose values are the ISO-formatted timestamp strings for the oldest and newest documents respectively, or `None` when the collection has no documents or the value is unavailable.
+        """
         try:
             # Get oldest document
             oldest = await collection.find_one({}, sort=[("timestamp", 1)])
@@ -232,7 +299,23 @@ class DataArchivingService:
     async def restore_from_archive(
         self, start_date: datetime, end_date: datetime
     ) -> Dict[str, int]:
-        """Restore archived data back to active collection for a date range"""
+        """
+        Restore archived documents whose `timestamp` falls between `start_date` and `end_date` (inclusive) back into the active collection and remove them from the archive.
+        
+        Parameters:
+            start_date (datetime): Lower bound of the inclusive timestamp range for restoration.
+            end_date (datetime): Upper bound of the inclusive timestamp range for restoration.
+        
+        Returns:
+            dict: {
+                "restored_count": int,                # number of documents restored
+                "start_date": str,                    # ISO 8601 string of `start_date`
+                "end_date": str                       # ISO 8601 string of `end_date`
+            }
+        
+        Raises:
+            Exception: Propagates any exception raised during database operations.
+        """
         db = await self.get_database()
 
         active_collection = db[self.active_collection]
@@ -286,7 +369,15 @@ class DataArchivingService:
         }
 
     async def cleanup_deleted_data(self, older_than_days: int = 30) -> int:
-        """Permanently delete data from deleted collection"""
+        """
+        Permanently remove documents from the deleted collection that are older than the given number of days.
+        
+        Parameters:
+            older_than_days (int): Age threshold in days; documents with `deleted_at` earlier than (now - older_than_days) will be removed.
+        
+        Returns:
+            int: The number of documents permanently deleted.
+        """
         db = await self.get_database()
         deleted_collection = db[self.deleted_collection]
 
@@ -303,7 +394,19 @@ class DataArchivingService:
         return result.deleted_count
 
     async def run_maintenance(self) -> Dict[str, Any]:
-        """Run complete maintenance cycle"""
+        """
+        Run a full data archiving and cleanup maintenance cycle.
+        
+        Performs the following operations in sequence: archive old active sentiment documents, delete old archived documents (moving them to a deleted collection), permanently clean up aged deleted records, and then gather final archiving statistics. Records each step's results in the returned mapping and propagates exceptions after recording an error entry.
+        
+        Returns:
+            results (dict): Mapping of step names to their outcomes. Expected keys:
+                - "archiving": dict with keys like `archived_count`, `deleted_from_active`, and `cutoff_date`.
+                - "deletion": dict with keys like `deleted_count`, `moved_to_deleted`, and `cutoff_date`.
+                - "cleanup": dict containing `permanently_deleted` (int).
+                - "final_stats": dict of aggregated archiving statistics.
+                - "error" (optional): string error message present if the cycle failed.
+        """
         logger.info("Starting data archiving maintenance cycle")
 
         results = {}
@@ -340,5 +443,10 @@ archiving_service = DataArchivingService()
 
 
 async def get_archiving_service() -> DataArchivingService:
-    """Dependency to get archiving service"""
+    """
+    Retrieve the module-level archiving service singleton.
+    
+    Returns:
+        DataArchivingService: The shared DataArchivingService instance used by the application.
+    """
     return archiving_service

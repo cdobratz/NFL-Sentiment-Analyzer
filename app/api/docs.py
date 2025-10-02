@@ -79,10 +79,22 @@ async def api_info():
 @router.get("/endpoints")
 async def list_endpoints():
     """
-    List all available API endpoints with their authentication requirements and rate limits.
-
-    Provides a comprehensive overview of all endpoints, their HTTP methods,
-    required authentication, and any special rate limiting rules.
+    Return a structured listing of all API endpoints with authentication and rate-limit metadata.
+    
+    Returns:
+        dict: A dictionary containing:
+            - endpoints (list): Groups of endpoints; each group is a dict with:
+                - group (str): Group name.
+                - endpoints (list): List of endpoint descriptors, each with:
+                    - path (str): Endpoint path.
+                    - method (str): HTTP method(s).
+                    - description (str): Brief purpose of the endpoint.
+                    - authentication (str): Required authentication or scopes.
+                    - rate_limit (str): Rate-limit classification or notes.
+            - total_endpoints (int): Total number of endpoints across all groups.
+            - authentication_note (str): General note about API key scopes and access.
+            - rate_limit_note (str): General note about how rate limits are applied.
+            - timestamp (str): UTC timestamp in ISO 8601 format with trailing "Z".
     """
     endpoints = [
         {
@@ -283,10 +295,15 @@ async def list_endpoints():
 @router.get("/scopes")
 async def list_api_scopes():
     """
-    List all available API key scopes and their permissions.
-
-    API keys can be granted specific scopes that determine which endpoints
-    they can access. This endpoint lists all available scopes.
+    List available API key scopes and the endpoints each scope permits.
+    
+    Returns:
+        dict: Payload containing:
+            - scopes: list of scope descriptors (each has `scope`, `description`, `endpoints`).
+            - total_scopes: number of scopes listed.
+            - note: explanatory note about combining scopes and admin privileges.
+            - contact: instructions to obtain scoped API keys.
+            - timestamp: ISO 8601 UTC timestamp string of when the list was generated.
     """
     scopes = [
         {

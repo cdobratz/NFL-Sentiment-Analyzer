@@ -57,14 +57,29 @@ class APIKeyManager:
     """Manages API keys for third-party access"""
 
     def __init__(self):
+        """
+        Initialize the APIKeyManager.
+        
+        Sets the `collection_name` attribute to "api_keys", the database collection used for storing API key records.
+        """
         self.collection_name = "api_keys"
 
     def _hash_key(self, key: str) -> str:
-        """Hash an API key for secure storage"""
+        """
+        Hash an API key for secure storage.
+        
+        Returns:
+            Hexadecimal SHA-256 hash of the provided key.
+        """
         return hashlib.sha256(key.encode()).hexdigest()
 
     def _generate_key(self) -> str:
-        """Generate a new API key"""
+        """
+        Generate a new API key string with a fixed prefix and a URL-safe random token.
+        
+        Returns:
+            api_key (str): An API key string beginning with "nfl_" followed by a URL-safe random token.
+        """
         return f"nfl_{secrets.token_urlsafe(32)}"
 
     async def create_api_key(
@@ -76,7 +91,23 @@ class APIKeyManager:
         rate_limit: int = 1000,
         metadata: Dict[str, Any] = None,
     ) -> tuple[str, APIKey]:
-        """Create a new API key"""
+        """
+        Generate, persist, and return a new API key record along with its plaintext key.
+        
+        Parameters:
+            name (str): Human-readable name for the API key.
+            scopes (List[APIKeyScope]): Permission scopes granted to the key.
+            created_by (str): Identifier of the user that creates the key.
+            expires_in_days (Optional[int]): Number of days until the key expires; if omitted the key does not expire.
+            rate_limit (int): Allowed requests per hour for the key.
+            metadata (Dict[str, Any]): Optional additional data to store with the key.
+        
+        Returns:
+            tuple[str, APIKey]: A tuple containing the generated plaintext API key and the persisted APIKey model.
+        
+        Raises:
+            ValidationError: If key generation or persistence fails.
+        """
         try:
             # Generate key
             key = self._generate_key()
@@ -125,7 +156,14 @@ class APIKeyManager:
             raise ValidationError(f"Failed to create API key: {str(e)}")
 
     async def validate_api_key(self, key: str) -> Optional[APIKey]:
-        """Validate an API key and return the key object if valid"""
+        """
+        Validate an API key and return its APIKey record when it is active and not expired.
+        
+        Checks the provided key against stored keys; if a matching key is found and its status is ACTIVE and its expires_at (if set) is in the future, updates the key's last_used_at and usage_count and returns the corresponding APIKey. If the key is expired, updates the stored status to EXPIRED and returns None. Returns None when the key is not found, not active, expired, or if an error occurs.
+         
+        Returns:
+            APIKey or None: `APIKey` instance when the key is valid, `None` otherwise.
+        """
         try:
             key_hash = self._hash_key(key)
 
@@ -168,7 +206,16 @@ class APIKeyManager:
             return None
 
     async def revoke_api_key(self, key_id: str, revoked_by: str) -> bool:
-        """Revoke an API key"""
+        """
+        Mark an API key as revoked in the persistent store.
+        
+        Parameters:
+            key_id (str): Identifier of the API key to revoke.
+            revoked_by (str): User ID of the actor performing the revocation (used for logging).
+        
+        Returns:
+            `True` if the key's status was updated to revoked, `False` otherwise.
+        """
         try:
             db = db_manager.get_database()
             collection = db[self.collection_name]
@@ -190,7 +237,15 @@ class APIKeyManager:
             return False
 
     async def list_api_keys(self, created_by: Optional[str] = None) -> List[APIKey]:
-        """List API keys, optionally filtered by creator"""
+        """
+        List API keys, optionally filtered by the creator.
+        
+        Parameters:
+            created_by (Optional[str]): If provided, only return keys created by this user ID; if omitted, return all keys.
+        
+        Returns:
+            List[APIKey]: APIKey instances ordered by creation time (newest first). 
+        """
         try:
             db = db_manager.get_database()
             collection = db[self.collection_name]
@@ -212,7 +267,21 @@ class APIKeyManager:
             return []
 
     async def get_api_key_usage(self, key_id: str) -> Dict[str, Any]:
-        """Get usage statistics for an API key"""
+        """
+        Return usage statistics for the API key identified by `key_id`.
+        
+        Parameters:
+            key_id (str): The unique identifier of the API key to retrieve usage for.
+        
+        Returns:
+            Dict[str, Any]: A dictionary containing usage metrics:
+                - `total_requests` (int): Total number of requests made with the key.
+                - `days_active` (int): Number of days since the key was created (minimum 1).
+                - `avg_daily_requests` (float): Average daily requests, rounded to two decimal places.
+                - `last_used` (Optional[str]): ISO 8601 timestamp of the last use, or `None` if never used.
+                - `rate_limit` (int): Configured requests-per-hour rate limit for the key.
+                - `status` (str): Current key status value (e.g., "ACTIVE", "REVOKED").
+        """
         try:
             db = db_manager.get_database()
             collection = db[self.collection_name]
@@ -244,7 +313,16 @@ class APIKeyManager:
             return {}
 
     def has_scope(self, api_key: APIKey, required_scope: APIKeyScope) -> bool:
-        """Check if API key has required scope"""
+        """
+        Determine whether the given API key grants the required permission scope; `ADMIN` counts as granting all scopes.
+        
+        Parameters:
+            api_key (APIKey): The API key record to check.
+            required_scope (APIKeyScope): The permission scope required.
+        
+        Returns:
+            bool: `True` if `required_scope` is present in `api_key.scopes` or `APIKeyScope.ADMIN` is present, `False` otherwise.
+        """
         return required_scope in api_key.scopes or APIKeyScope.ADMIN in api_key.scopes
 
 

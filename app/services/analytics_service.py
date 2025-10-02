@@ -32,23 +32,52 @@ class AnalyticsService:
     """Advanced analytics service for sentiment data"""
 
     def __init__(self, db: Optional[AsyncIOMotorDatabase] = None):
+        """
+        Initialize the AnalyticsService with optional preconfigured resources.
+        
+        Parameters:
+            db (Optional[AsyncIOMotorDatabase]): Optional MongoDB database handle to use for queries. If not provided, the service will obtain the database lazily when first needed.
+        
+        Notes:
+            The cache_service is initialized to None and will be created lazily via get_cache_service().
+        """
         self.db = db
         self.cache_service = None
 
     async def get_database(self) -> AsyncIOMotorDatabase:
-        """Get database instance"""
+        """
+        Lazily obtain and cache the MongoDB database instance for this service.
+        
+        Returns:
+            The cached AsyncIOMotorDatabase instance used by the service.
+        """
         if not self.db:
             self.db = await get_database()
         return self.db
 
     async def get_cache_service(self):
-        """Get caching service instance"""
+        """
+        Lazily obtain and cache the application's caching service instance.
+        
+        If no cache service is stored on this AnalyticsService instance, fetch one and store it for future calls.
+        
+        Returns:
+            The caching service instance.
+        """
         if not self.cache_service:
             self.cache_service = await get_caching_service()
         return self.cache_service
 
     def _generate_query_hash(self, query_params: Dict[str, Any]) -> str:
-        """Generate hash for caching query results"""
+        """
+        Create a deterministic MD5 hash from query parameters suitable for use as a cache key.
+        
+        Parameters:
+            query_params (Dict[str, Any]): Mapping of query parameters. The mapping is serialized with json.dumps using sorted keys; values that are not JSON-serializable are converted via str.
+        
+        Returns:
+            str: Hexadecimal MD5 digest of the serialized query parameters.
+        """
         query_str = json.dumps(query_params, sort_keys=True, default=str)
         return hashlib.md5(query_str.encode()).hexdigest()
 
@@ -61,7 +90,20 @@ class AnalyticsService:
         sources: Optional[List[DataSource]] = None,
         categories: Optional[List[SentimentCategory]] = None,
     ) -> Dict[str, Any]:
-        """Get aggregated sentiment metrics for entities"""
+        """
+        Retrieve aggregated sentiment metrics for entities of a given type.
+        
+        Parameters:
+            entity_type (str): Entity category to aggregate ("team", "player", or "game").
+            entity_id (Optional[str]): If provided, restricts aggregation to the specific entity identifier.
+            start_date (Optional[datetime]): Inclusive lower bound for event timestamps; if omitted, no lower bound is applied.
+            end_date (Optional[datetime]): Inclusive upper bound for event timestamps; if omitted, no upper bound is applied.
+            sources (Optional[List[DataSource]]): If provided, include only records from these data sources.
+            categories (Optional[List[SentimentCategory]]): If provided, include only records matching these sentiment categories.
+        
+        Returns:
+            Dict[str, Any]: A dictionary containing the original `query_parameters`, `total_entities`, `generated_at` timestamp, and `metrics` — a list of per-entity metric objects with fields such as `entity_id`, `entity_type`, `total_mentions`, `average_sentiment`, `average_confidence`, `sentiment_distribution`, `sentiment_volatility`, `category_breakdown`, `source_breakdown`, and `time_range`.
+        """
 
         # Generate cache key
         query_params = {
@@ -190,7 +232,15 @@ class AnalyticsService:
         return final_result
 
     def _calculate_category_breakdown(self, categories: List[str]) -> Dict[str, float]:
-        """Calculate category distribution"""
+        """
+        Compute the relative frequency of each category in a list of category labels.
+        
+        Parameters:
+            categories (List[str]): List of category labels to summarize.
+        
+        Returns:
+            Dict[str, float]: Mapping from category label to its proportion of the input (a float between 0 and 1). Returns an empty dict if `categories` is empty.
+        """
         if not categories:
             return {}
 
@@ -204,7 +254,15 @@ class AnalyticsService:
         return breakdown
 
     def _calculate_source_breakdown(self, sources: List[str]) -> Dict[str, float]:
-        """Calculate source distribution"""
+        """
+        Compute the relative distribution of data sources.
+        
+        Parameters:
+            sources (List[str]): A list of source identifiers; duplicate entries count as multiple occurrences.
+        
+        Returns:
+            Dict[str, float]: A mapping from each unique source to its proportion of the total (values between 0 and 1).
+        """
         if not sources:
             return {}
 
@@ -224,7 +282,22 @@ class AnalyticsService:
         period: str = "24h",  # "1h", "24h", "7d", "30d"
         interval: str = "hour",  # "minute", "hour", "day"
     ) -> List[SentimentTrend]:
-        """Get sentiment trends over time"""
+        """
+        Retrieve time-series sentiment trends for a specific entity.
+        
+        Parameters:
+            entity_type (str): Type of entity to query (e.g., "team", "player", "game").
+            entity_id (str): Identifier of the entity to fetch trends for.
+            period (str): Time range to analyze. Supported values: "1h", "24h", "7d", "30d". Defaults to "24h".
+            interval (str): Aggregation interval for trend points. Supported values: "minute", "hour", "day". Defaults to "hour".
+        
+        Returns:
+            List[SentimentTrend]: Ordered list of SentimentTrend objects (oldest to newest) containing per-interval
+            average sentiment, volume, category breakdown, and source breakdown.
+        
+        Notes:
+            Results are cached by entity and period; cached values are returned when available.
+        """
 
         # Check cache first
         cache_service = await self.get_cache_service()
@@ -319,7 +392,21 @@ class AnalyticsService:
         limit: int = 10,
         time_period: str = "24h",
     ) -> List[Dict[str, Any]]:
-        """Get sentiment leaderboards"""
+        """
+        Generate a ranked sentiment leaderboard for entities over a recent time window.
+        
+        Parameters:
+            leaderboard_type (str): Type of leaderboard to produce. Accepted values: "most_positive", "most_negative", "most_volatile", "most_mentioned".
+            entity_type (str): Entity kind to include in the leaderboard, e.g., "team" or "player".
+            limit (int): Maximum number of entries to return.
+            time_period (str): Time range to consider (e.g., "1h", "24h", "7d").
+        
+        Returns:
+            List[Dict[str, Any]]: A list of leaderboard entries sorted according to the requested type. Each entry is a metrics dictionary augmented with a numeric "rank" field starting at 1.
+        
+        Notes:
+            The computed leaderboard is stored in the service cache for subsequent calls with the same parameters.
+        """
 
         # Check cache first
         cache_key = f"{leaderboard_type}_{entity_type}_{time_period}_{limit}"
@@ -383,7 +470,29 @@ class AnalyticsService:
         entity_id: str,
         comparison_periods: List[str] = ["7d", "30d", "90d"],
     ) -> Dict[str, Any]:
-        """Get historical sentiment comparison"""
+        """
+        Generate period-by-period historical sentiment metrics and comparisons for an entity.
+        
+        Fetches aggregated sentiment metrics for each period in `comparison_periods`, extracts key values
+        (average_sentiment, total_mentions, sentiment_distribution, sentiment_volatility), and computes
+        absolute and percent changes between consecutive periods with a directional indicator.
+        
+        Parameters:
+            entity_type (str): Type of the entity (e.g., "team", "player", "game").
+            entity_id (str): Identifier of the entity to analyze.
+            comparison_periods (List[str]): List of period identifiers (e.g., "7d", "30d", "90d") to include
+                in the comparison. Unsupported period strings are ignored.
+        
+        Returns:
+            Dict[str, Any]: A dictionary with keys:
+                - entity_type: the provided entity_type.
+                - entity_id: the provided entity_id.
+                - comparisons: mapping of period -> metrics object with `average_sentiment`, `total_mentions`,
+                  `sentiment_distribution`, and `sentiment_volatility`.
+                - changes: mapping of "period_vs_previousperiod" -> change object containing
+                  `absolute_change`, `percent_change`, and `direction` ("up", "down", or "stable").
+                - generated_at: ISO-formatted timestamp when the comparison was generated.
+        """
 
         current_time = datetime.utcnow()
         comparisons = {}
@@ -455,7 +564,25 @@ class AnalyticsService:
         data_type: str,  # "metrics", "trends", "leaderboard"
         **kwargs,
     ) -> Union[str, bytes]:
-        """Export analytics data in specified format"""
+        """
+        Export analytics data as JSON or CSV for metrics, trends, or leaderboard results.
+        
+        Supported data_type values are "metrics", "trends", and "leaderboard". The function delegates retrieval to the corresponding methods and then formats the resulting data:
+        - "metrics": uses aggregated sentiment metrics and exports the "metrics" list.
+        - "trends": exports a list of trend dictionaries.
+        - "leaderboard": exports leaderboard entry dictionaries.
+        
+        Parameters:
+        	export_format (str): Either "json" or "csv".
+        	data_type (str): One of "metrics", "trends", or "leaderboard".
+        	**kwargs: Passed through to the underlying retrieval method (e.g., filters, entity identifiers, time ranges).
+        
+        Returns:
+        	str or bytes: For "json", a pretty-printed JSON string of the exported data. For "csv", a CSV string with flattened fields (returns an empty string if there is no data to export).
+        
+        Raises:
+        	ValueError: If data_type or export_format is not supported.
+        """
 
         # Get the data based on type
         if data_type == "metrics":
@@ -498,7 +625,19 @@ class AnalyticsService:
     def _flatten_dict(
         self, d: Dict[str, Any], parent_key: str = "", sep: str = "_"
     ) -> Dict[str, Any]:
-        """Flatten nested dictionary for CSV export"""
+        """
+        Flatten a nested dictionary into a single-level mapping suitable for CSV export.
+        
+        Nested dictionary keys are joined using `sep` to form compound keys. List values are converted to comma-separated strings; other values are kept as-is.
+        
+        Parameters:
+            d (Dict[str, Any]): The nested dictionary to flatten.
+            parent_key (str): Prefix for keys during recursive calls (used internally).
+            sep (str): Separator inserted between joined keys.
+        
+        Returns:
+            Dict[str, Any]: A flat dictionary where nested keys are joined by `sep` and list values are converted to comma-separated strings.
+        """
         items = []
         for k, v in d.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -514,7 +653,26 @@ class AnalyticsService:
     async def get_sentiment_insights(
         self, entity_type: str, entity_id: str, analysis_period: str = "7d"
     ) -> Dict[str, Any]:
-        """Generate advanced sentiment insights and recommendations"""
+        """
+        Produce summarized sentiment insights and actionable recommendations for the specified entity over the given analysis period.
+        
+        Parameters:
+            entity_type (str): The type of entity being analyzed (e.g., "team", "player", "game").
+            entity_id (str): The identifier of the entity to analyze.
+            analysis_period (str): Time window to analyze (e.g., "7d", "30d"); determines the trend window.
+        
+        Returns:
+            insights (Dict[str, Any]): Dictionary containing the analysis with keys:
+                - entity_type (str): Echoed entity type.
+                - entity_id (str): Echoed entity identifier.
+                - analysis_period (str): Echoed analysis period.
+                - key_findings (List[str]): Concise observations about recent sentiment behavior.
+                - sentiment_drivers (Dict[str, Any]): Contributors to sentiment (e.g., top categories or sources).
+                - anomalies (List[Any]): Detected anomalous events or periods.
+                - predictions (Dict[str, Any]): Short-term sentiment predictions or expected directions.
+                - recommendations (List[str]): Suggested actions or monitoring steps.
+                - generated_at (str): ISO-formatted timestamp when the insights were produced.
+        """
 
         # Get historical data
         historical_comparison = await self.get_historical_comparison(
@@ -584,5 +742,10 @@ analytics_service = AnalyticsService()
 
 
 async def get_analytics_service() -> AnalyticsService:
-    """Dependency to get analytics service"""
+    """
+    Provide the global AnalyticsService instance for dependency injection.
+    
+    Returns:
+        The shared AnalyticsService instance.
+    """
     return analytics_service

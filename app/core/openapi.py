@@ -10,7 +10,15 @@ from .config import settings
 
 
 def custom_openapi(app: FastAPI) -> Dict[str, Any]:
-    """Generate custom OpenAPI schema with comprehensive documentation"""
+    """
+    Generate a customized OpenAPI schema for the provided FastAPI application and attach it to the app for caching.
+    
+    Parameters:
+        app (FastAPI): The FastAPI application instance to generate the schema for.
+    
+    Returns:
+        Dict[str, Any]: The OpenAPI schema dictionary; if a schema already exists on `app.openapi_schema`, that cached schema is returned and the same schema is stored on `app.openapi_schema`.
+    """
 
     if app.openapi_schema:
         return app.openapi_schema
@@ -232,7 +240,16 @@ For API support and questions:
 
 
 def setup_openapi_docs(app: FastAPI):
-    """Setup OpenAPI documentation for the FastAPI app"""
+    """
+    Configure the FastAPI application's OpenAPI schema and API metadata.
+    
+    Overrides the app's OpenAPI generator to use a customized schema and updates the application's
+    title, description, version, terms of service, contact, and license information to match the
+    NFL Sentiment Analyzer API configuration.
+    
+    Parameters:
+        app (FastAPI): The FastAPI application instance to configure.
+    """
 
     # Custom OpenAPI schema
     app.openapi = lambda: custom_openapi(app)
