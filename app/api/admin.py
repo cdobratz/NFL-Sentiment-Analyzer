@@ -645,12 +645,20 @@ async def get_model_performance(
 
         # Calculate aggregated metrics
         if metrics:
-            avg_accuracy = sum(
-                m.get("accuracy", 0) for m in metrics if m.get("accuracy")
-            ) / len([m for m in metrics if m.get("accuracy")])
-            avg_f1_score = sum(
-                m.get("f1_score", 0) for m in metrics if m.get("f1_score")
-            ) / len([m for m in metrics if m.get("f1_score")])
+            accuracy_values = [
+                m.get("accuracy") for m in metrics if m.get("accuracy") is not None
+            ]
+            avg_accuracy = (
+                sum(accuracy_values) / len(accuracy_values) if accuracy_values else 0
+            )
+
+            f1_values = [
+                m.get("f1_score") for m in metrics if m.get("f1_score") is not None
+            ]
+            avg_f1_score = (
+                sum(f1_values) / len(f1_values) if f1_values else 0
+            )
+
             avg_response_time = sum(
                 m.get("avg_prediction_time_ms", 0) for m in metrics
             ) / len(metrics)
