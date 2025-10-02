@@ -140,7 +140,7 @@ jobs:
       run: |
         uv run black --check app/
         uv run flake8 app/
-        uv run mypy app/ --ignore-missing-imports
+        uv run mypy -p app --ignore-missing-imports
 
     - name: Run frontend linting
       run: |
