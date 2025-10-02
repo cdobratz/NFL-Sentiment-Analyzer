@@ -21,7 +21,7 @@ python-multipart==0.0.6
 # ML and NLP
 transformers==4.35.2
 torch>=2.2.0
-numpy==1.24.3
+numpy==1.26.4
 scikit-learn==1.3.2
 
 # HTTP client and API integrations
@@ -40,6 +40,9 @@ python-dateutil==2.8.2
 
 # WebSocket support
 websockets==12.0
+
+# Build dependencies
+setuptools>=65.0.0
 
 # Testing dependencies (for CI/CD)
 pytest==7.4.3
