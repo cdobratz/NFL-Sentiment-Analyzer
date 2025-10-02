@@ -565,8 +565,7 @@ async def get_schedule(
     
     return {"schedule": schedule}
 
-@ro
-uter.get("/pipeline-status")
+@router.get("/pipeline-status")
 async def get_pipeline_status():
     """Get data ingestion pipeline status"""
     try:

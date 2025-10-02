@@ -1,15 +1,25 @@
 import pytest
 import asyncio
+import os
 from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock
 
+# Set test environment variables before importing app
+os.environ.update({
+    "MONGODB_URL": "mongodb://localhost:27017",
+    "DATABASE_NAME": "nfl_analyzer_test",
+    "REDIS_URL": "redis://localhost:6379/1",
+    "SECRET_KEY": "test-secret-key-for-testing-only",
+    "DEBUG": "true",
+    "TESTING": "true"
+})
 
 # Test settings
 class TestSettings:
     MONGODB_URL = "mongodb://localhost:27017"
     DATABASE_NAME = "nfl_analyzer_test"
     REDIS_URL = "redis://localhost:6379/1"
-    SECRET_KEY = "test-secret-key"
+    SECRET_KEY = "test-secret-key-for-testing-only"
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
