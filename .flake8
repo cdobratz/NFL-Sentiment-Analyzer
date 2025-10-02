@@ -1,6 +1,16 @@
 [flake8]
 max-line-length = 88
-extend-ignore = E203, E501, W503, F401, F841, F811, F541, E402, W291
+extend-ignore = E203, E501
+
+-per-file-ignores =
+-    __init__.py:F401
+-    */migrations/*:E501,F401
+-    */tests/*:F401,F841
+per-file-ignores =
+    __init__.py:F401,F811
+    */migrations/*:E501,F401
+    */tests/*:F401,F841,F811
+    */scripts/*:E402,F401,F841
 exclude = 
     .git,
     __pycache__,
