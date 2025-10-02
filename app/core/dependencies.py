@@ -116,8 +116,7 @@ async def get_current_user_websocket(
     user = await db.users.find_one({"_id": user_id})
     return user
 
-asy
-nc def get_api_key(api_key: Optional[str] = Depends(api_key_header)) -> Optional[APIKey]:
+async def get_api_key(api_key: Optional[str] = Depends(api_key_header)) -> Optional[APIKey]:
     """Validate API key and return APIKey object if valid"""
     if not api_key:
         return None
