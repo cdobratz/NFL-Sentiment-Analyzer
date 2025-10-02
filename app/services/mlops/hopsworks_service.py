@@ -10,14 +10,30 @@ import json
 try:
     import hopsworks
     import hsfs
-    import pandas as pd
 
     HOPSWORKS_AVAILABLE = True
 except ImportError:
     HOPSWORKS_AVAILABLE = False
     hopsworks = None
     hsfs = None
-    pd = None
+
+# Pandas will be imported lazily when needed
+pd = None
+
+
+def _get_pandas():
+    """Lazy import of pandas to avoid import issues."""
+    global pd
+    if pd is None:
+        try:
+            import pandas as pd_module
+
+            pd = pd_module
+        except ImportError:
+            logger.warning("Pandas not available")
+            pd = False  # Mark as unavailable
+    return pd if pd is not False else None
+
 
 from ...models.mlops import FeatureStore
 from ...models.sentiment import SentimentResult, TeamSentiment, PlayerSentiment
@@ -313,7 +329,8 @@ class HopsworksService:
         if not HOPSWORKS_AVAILABLE or not self.feature_store:
             logger.warning("Hopsworks not available, skipping feature insertion")
             return False
-        
+
+        pd = _get_pandas()
         if pd is None:
             logger.warning("Pandas not available, skipping feature insertion")
             return False
@@ -385,7 +402,8 @@ class HopsworksService:
         if not HOPSWORKS_AVAILABLE or not self.feature_store:
             logger.warning("Hopsworks not available, returning None")
             return None
-        
+
+        pd = _get_pandas()
         if pd is None:
             logger.warning("Pandas not available, returning None")
             return None
@@ -513,7 +531,8 @@ class HopsworksService:
         if not HOPSWORKS_AVAILABLE or not self.feature_store:
             logger.warning("Hopsworks not available, returning None")
             return None
-        
+
+        pd = _get_pandas()
         if pd is None:
             logger.warning("Pandas not available, returning None")
             return None
