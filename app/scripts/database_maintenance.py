@@ -23,9 +23,9 @@ from app.core.database_indexes import create_all_indexes
 async def run_migrations(target_version: Optional[str] = None):
     """
     Run pending database migrations up to an optional target version.
-    
+
     Connects to the database, reports current migration status, applies pending migrations (stopping at `target_version` if provided), and prints summaries of applied and failed migrations.
-    
+
     Parameters:
         target_version (Optional[str]): If provided, migrate up only until this migration version; if omitted, apply all pending migrations.
     """
@@ -67,12 +67,12 @@ async def run_migrations(target_version: Optional[str] = None):
 async def rollback_migrations(target_version: str):
     """
     Roll back database migrations to a specified target version.
-    
+
     Parameters:
-    	target_version (str): The migration version to roll back to. The function will connect to the database, attempt to migrate down to this version, and print applied and failed rollback details.
-    
+        target_version (str): The migration version to roll back to. The function will connect to the database, attempt to migrate down to this version, and print applied and failed rollback details.
+
     Notes:
-    	This function connects to the MongoDB instance and ensures disconnection on completion. On error it prints an error message and exits the process with status code 1.
+        This function connects to the MongoDB instance and ensures disconnection on completion. On error it prints an error message and exits the process with status code 1.
     """
     print(f"🔄 Rolling back migrations to version {target_version}...")
 
@@ -102,7 +102,7 @@ async def rollback_migrations(target_version: str):
 async def migration_status():
     """
     Display current migration state and recent migration activity.
-    
+
     Connects to the migration service and prints the current migration version, counts for applied,
     pending, and total migrations. If there are pending migrations, lists each pending migration's
     version and description. If there are applied migrations, shows up to the last five with their
@@ -144,7 +144,7 @@ async def migration_status():
 async def create_indexes():
     """
     Create all configured database indexes and print a per-collection summary.
-    
+
     Connects to the database, executes index creation, prints the number of indexes created for each collection, and ensures the database connection is closed. On error, prints an error message and exits with status 1.
     """
     print("🔄 Creating database indexes...")
@@ -170,7 +170,7 @@ async def create_indexes():
 async def archive_data():
     """
     Archive old sentiment data from the active database into the archival store.
-    
+
     Connects to MongoDB, retrieves pre-archive statistics, runs the archiving process for old sentiment records, and prints a summary including counts archived, deleted from the active collection, and the cutoff date. On error, prints the error and exits the process with status code 1.
     """
     print("🔄 Running data archiving...")
@@ -202,7 +202,7 @@ async def archive_data():
 async def archive_maintenance():
     """
     Run the full archiving maintenance workflow.
-    
+
     Executes the archiving service's maintenance tasks (archiving, deletion, cleanup) and prints summarized result counts. Opens and closes the database connection as needed and exits the process with status 1 on error.
     """
     print("🔄 Running complete archiving maintenance...")
@@ -243,7 +243,7 @@ async def archive_maintenance():
 async def archive_stats():
     """
     Display current archiving statistics including counts, eligibility, thresholds, and date ranges.
-    
+
     Prints total counts for active, archived, deleted, and overall documents; numbers eligible for archiving and deletion; configured archive and deletion thresholds (in days); and, when available, the oldest-to-newest date ranges for active and archived data.
     """
     try:
@@ -283,7 +283,7 @@ async def archive_stats():
 async def cache_stats():
     """
     Display cache statistics for the Redis-backed caching layer.
-    
+
     Connects to Redis, retrieves statistics from the caching service, and prints a summary including connected clients, memory usage, total keys, hit rate, and per-pattern key counts when available.
     """
     try:
@@ -314,10 +314,10 @@ async def cache_stats():
 async def clear_cache(pattern: Optional[str] = None):
     """
     Clear cached sentiment entries either by key pattern or entirely.
-    
+
     If `pattern` is provided, deletes cache keys matching that pattern and reports the number removed.
     If `pattern` is omitted, invalidates the entire sentiment cache.
-    
+
     Parameters:
         pattern (Optional[str]): Key pattern to match cache entries to delete (e.g., "sentiment:*"). Omit to clear all sentiment cache.
     """
@@ -345,7 +345,7 @@ async def clear_cache(pattern: Optional[str] = None):
 def main():
     """
     Entry point for the database maintenance command-line interface that parses user arguments and dispatches to the corresponding maintenance subcommands.
-    
+
     Parses subcommands for migrations, index creation, archiving, and cache operations, then invokes the matching async handler (e.g., migrate, rollback, migration-status, create-indexes, archive, archive-maintenance, archive-stats, cache-stats, cache-clear). If no subcommand or an unknown subcommand is provided, prints help.
     """
     parser = argparse.ArgumentParser(

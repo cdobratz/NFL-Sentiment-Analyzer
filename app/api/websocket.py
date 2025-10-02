@@ -20,7 +20,7 @@ class ConnectionManager:
     def __init__(self):
         """
         Initialize the ConnectionManager.
-        
+
         Create storage for all active WebSocket connections and for user-scoped connections keyed by user ID.
         """
         self.active_connections: List[WebSocket] = []
@@ -29,9 +29,9 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, user_id: str = None):
         """
         Register and accept a new WebSocket connection and track it for broadcasting.
-        
+
         Registers the connection in the manager's global active connections list and, if a user_id is provided, associates the connection with that user's connection list for targeted messaging. Logs the updated total of active connections.
-        
+
         Parameters:
             websocket (WebSocket): The WebSocket connection to accept and track.
             user_id (str, optional): Identifier of the authenticated user to associate this connection with; if omitted the connection is tracked only globally.
@@ -51,9 +51,9 @@ class ConnectionManager:
     def disconnect(self, websocket: WebSocket, user_id: str = None):
         """
         Remove a WebSocket connection from the manager's tracked state.
-        
+
         If `user_id` is provided, also remove the connection from that user's list and delete the user's entry if it becomes empty.
-        
+
         Parameters:
             websocket (WebSocket): The WebSocket connection to remove.
             user_id (str, optional): The associated user ID whose connection list should also be updated.
@@ -81,10 +81,10 @@ class ConnectionManager:
     async def send_to_user(self, message: str, user_id: str):
         """
         Send a text message to every active WebSocket connection associated with a user.
-        
+
         If sending to a connection fails, the failure is logged and the affected connection is removed
         from the manager's tracking.
-        
+
         Parameters:
             message (str): Text payload to send to the user's connections.
             user_id (str): Identifier of the target user whose connections will receive the message.
@@ -105,9 +105,9 @@ class ConnectionManager:
     async def broadcast(self, message: str):
         """
         Send a text message to every active WebSocket connection.
-        
+
         If sending to a connection fails, that connection is recorded and removed from the manager after all send attempts complete.
-        
+
         Parameters:
             message (str): The text payload to send to all connected clients.
         """
@@ -134,9 +134,9 @@ async def websocket_sentiment_endpoint(
 ):
     """
     Manage a WebSocket connection for real-time sentiment updates and client subscriptions.
-    
+
     Accepts an authenticated WebSocket connection, registers it with the connection manager, sends a connection confirmation and recent sentiment data, and handles incoming client messages such as "ping" (responds with "pong") and "subscribe" for team-specific sentiment. On invalid JSON or internal errors, sends an error payload to the client. Ensures the connection is removed from the manager on disconnect or error.
-    
+
     Parameters:
         websocket (WebSocket): The WebSocket connection instance.
         user (dict): Authenticated user document from MongoDB (contains "_id" field).
@@ -248,9 +248,9 @@ async def websocket_sentiment_endpoint(
 async def broadcast_sentiment_update(sentiment_data: Dict[str, Any]):
     """
     Broadcast a sentiment update payload to all connected WebSocket clients.
-    
+
     Constructs a `sentiment_update` message containing the provided sentiment data and the current UTC timestamp, then sends it to all active connections.
-    
+
     Parameters:
         sentiment_data (Dict[str, Any]): The sentiment payload to include in the broadcast.
     """
@@ -267,10 +267,10 @@ async def broadcast_sentiment_update(sentiment_data: Dict[str, Any]):
 async def broadcast_team_sentiment_update(team_id: str, sentiment_data: Dict[str, Any]):
     """
     Broadcasts a team-specific sentiment update to all connected WebSocket clients.
-    
+
     Parameters:
-    	team_id (str): Identifier of the team for which the sentiment update applies.
-    	sentiment_data (Dict[str, Any]): Sentiment payload containing metrics and any relevant metadata.
+        team_id (str): Identifier of the team for which the sentiment update applies.
+        sentiment_data (Dict[str, Any]): Sentiment payload containing metrics and any relevant metadata.
     """
     message = json.dumps(
         {
@@ -288,9 +288,9 @@ async def broadcast_game_prediction_update(
 ):
     """
     Broadcasts a game prediction update to all connected WebSocket clients.
-    
+
     Sends a JSON message containing the update type, the target `game_id`, the provided `prediction_data`, and a UTC timestamp.
-    
+
     Parameters:
         game_id (str): Identifier of the game the prediction applies to.
         prediction_data (dict): SerializabIe payload with prediction details to include in the message.

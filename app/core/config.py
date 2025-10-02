@@ -63,7 +63,7 @@ settings = Settings()
 def get_settings() -> Settings:
     """
     Provide the global Settings instance used by the application.
-    
+
     Returns:
         Settings: The application's Settings instance populated from environment variables and defaults.
     """

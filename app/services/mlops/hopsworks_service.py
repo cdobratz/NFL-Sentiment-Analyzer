@@ -28,7 +28,7 @@ pd = None
 def _get_pandas():
     """
     Lazily import and return the pandas module if available.
-    
+
     Returns:
         module or None: The imported pandas module, or None if pandas is not installed.
     """
@@ -58,7 +58,7 @@ class HopsworksService:
     def __init__(self):
         """
         Initialize the HopsworksService internal state, configuration, and (optionally) a connection.
-        
+
         Reads HOPSWORKS_PROJECT (default "nfl-sentiment-analyzer"), HOPSWORKS_API_KEY, and HOPSWORKS_HOST
         (default "https://c.app.hopsworks.ai") from settings, initializes caches for feature groups and
         feature views, and sets placeholders for project and feature_store. If Hopsworks is not available,
@@ -93,9 +93,9 @@ class HopsworksService:
     def _connect(self):
         """
         Establishes a connection to Hopsworks and sets the service's project and feature_store attributes.
-        
+
         Attempts to log in using the configured API key, project name, and host; on success assigns the connected project to `self.project` and its feature store to `self.feature_store`.
-        
+
         Raises:
             Exception: If the connection or feature store retrieval fails.
         """
@@ -122,12 +122,12 @@ class HopsworksService:
     ) -> Optional[Any]:
         """
         Create and register a feature group that stores sentiment analysis features for teams, players, or games.
-        
+
         Parameters:
             name (str): Feature group name. Defaults to "sentiment_features".
             version (int): Feature group version number. Defaults to 1.
             description (str): Human-readable description of the feature group.
-        
+
         Returns:
             Optional[Any]: The created feature group object, or `None` if the service is unavailable or creation failed.
         """
@@ -240,9 +240,9 @@ class HopsworksService:
     ) -> Optional[Any]:
         """
         Create and register an NFL contextual feature group in the configured Hopsworks feature store.
-        
+
         If successful, the created feature group is cached in the service under the key "<name>_v<version>".
-        
+
         Returns:
             feature_group (Any | None): The created feature group object, or `None` if Hopsworks is unavailable or creation failed.
         """
@@ -339,14 +339,14 @@ class HopsworksService:
     ) -> bool:
         """
         Insert a batch of sentiment feature records into the configured feature group.
-        
+
         Converts the provided list of dictionaries into a pandas DataFrame, ensures required columns exist (adds defaults for missing columns; sets `event_time` to the current UTC time when missing), creates the target feature group if it does not exist, and inserts the rows into the feature store.
-        
+
         Parameters:
             sentiment_data (List[Dict[str, Any]]): Records of sentiment features. Expected keys include "entity_id", "entity_type", "sentiment_score", "confidence", and optionally "event_time".
             feature_group_name (str): Target feature group name.
             version (int): Version number of the feature group.
-        
+
         Returns:
             bool: `True` if the rows were successfully inserted, `False` otherwise.
         """
@@ -411,7 +411,7 @@ class HopsworksService:
     ) -> Optional["pd.DataFrame"]:
         """
         Retrieve sentiment feature records for a specific entity, optionally filtered by an inclusive time range.
-        
+
         Parameters:
             entity_id (str): Identifier of the entity (team, player, or game).
             entity_type (str): Entity category, e.g., "team", "player", or "game".
@@ -419,7 +419,7 @@ class HopsworksService:
             end_time (Optional[datetime]): Inclusive upper bound for event_time filtering; if omitted no upper bound is applied.
             feature_group_name (str): Name of the feature group to query (defaults to "sentiment_features").
             version (int): Version of the feature group to query.
-        
+
         Returns:
             pd.DataFrame: DataFrame containing sentiment feature records that match the provided entity and time filters, or `None` if the service or dependencies are unavailable or an error occurs.
         """
@@ -476,12 +476,12 @@ class HopsworksService:
     ) -> Optional[Any]:
         """
         Create or update a feature view composed from one or more feature groups.
-        
+
         If `feature_groups` is not provided, defaults to ["sentiment_features", "nfl_context_features"].
         Parameters:
             feature_groups (Optional[List[str]]): Names of feature groups to include in the view. If a named feature
                 group cannot be retrieved it will be skipped; the view is not created if no valid groups remain.
-        
+
         Returns:
             The created feature view object, or `None` if creation failed or no valid feature groups were available.
         """
@@ -540,12 +540,12 @@ class HopsworksService:
     ) -> Optional[Tuple["pd.DataFrame", "pd.DataFrame"]]:
         """
         Obtain train and test splits (features and labels) from a named feature view.
-        
+
         Parameters:
             feature_view_name (str): Name of the feature view to read from.
             version (int): Version of the feature view.
             training_dataset_version (Optional[int]): Training dataset version to use (defaults to 1 if not provided).
-        
+
         Returns:
             Optional[Tuple[Tuple[pd.DataFrame, pd.DataFrame], Tuple[pd.DataFrame, pd.DataFrame]]]:
                 A tuple ((X_train, y_train), (X_test, y_test)) where each element is a pandas DataFrame.
@@ -592,7 +592,7 @@ class HopsworksService:
     ) -> Optional[Dict[str, Any]]:
         """
         Compute and return statistics for the specified feature group.
-        
+
         Returns:
             statistics (Dict[str, Any] | None): A dictionary of computed feature statistics keyed by metric name, or `None` if statistics could not be computed.
         """
@@ -621,10 +621,10 @@ class HopsworksService:
     ) -> bool:
         """
         Convert sentiment analysis results into feature records and write them to the feature store.
-        
+
         Parameters:
             sentiment_results (List[SentimentResult]): Sentiment analysis results to convert into feature records.
-        
+
         Returns:
             bool: `True` if all results were processed and stored (or no records required insertion), `False` if an error occurred or storage failed.
         """
@@ -688,7 +688,7 @@ class HopsworksService:
     def get_service_status(self) -> Dict[str, Any]:
         """
         Return current status of the Hopsworks integration service.
-        
+
         Returns:
             status (dict): A dictionary containing:
                 - hopsworks_available (bool): Whether the Hopsworks client libraries are available.

@@ -29,9 +29,9 @@ async def get_users(
 ):
     """
     Return a paginated list of users.
-    
+
     Each returned user has the MongoDB `_id` converted to a string `id` and excludes the `hashed_password` field.
-    
+
     Returns:
         List[UserResponse]: List of user objects with `id` as a string and without `hashed_password`.
     """
@@ -53,10 +53,10 @@ async def get_user(
 ):
     """
     Retrieve a user by ID and return its public representation.
-    
+
     Returns:
         UserResponse: The user's data with `id` as a string and `hashed_password` excluded.
-    
+
     Raises:
         HTTPException: 404 if the user with the given ID is not found.
     """
@@ -78,13 +78,13 @@ async def deactivate_user(
 ):
     """
     Deactivate a user account by ID.
-    
+
     Parameters:
         user_id (str): The user's identifier (MongoDB `_id` as a string).
-    
+
     Returns:
         dict: {"message": "User deactivated successfully"} on success.
-    
+
     Raises:
         HTTPException: 404 if no user with the given `user_id` exists.
     """
@@ -109,13 +109,13 @@ async def activate_user(
 ):
     """
     Activate the user with the given ID.
-    
+
     Parameters:
         user_id (str): The user's MongoDB `_id` as a string.
-    
+
     Returns:
         dict: A success message, e.g. {"message": "User activated successfully"}.
-    
+
     Raises:
         HTTPException: HTTP 404 if no user with the given ID is found.
     """
@@ -140,7 +140,7 @@ async def get_system_health(
 ):
     """
     Gather a comprehensive health report for system services and resources.
-    
+
     Returns:
         dict: A dictionary containing:
             - timestamp (datetime): UTC time of the check.
@@ -255,10 +255,10 @@ async def get_analytics(
 ):
     """
     Compile system analytics across users, sentiment analyses, model performance, API usage, and errors for a recent period.
-    
+
     Parameters:
         days (int): Number of days to include in the analysis (1-30).
-    
+
     Returns:
         dict: Analytics payload containing:
             - "period", "period_start", "period_end", "generated_at" (ISO 8601 timestamps)
@@ -516,12 +516,12 @@ async def retrain_models(
 ):
     """
     Trigger a retraining job for a machine learning model and record the job in the database.
-    
+
     If `request` is omitted, defaults are used: model_name="sentiment_base", trigger_reason="manual_admin_trigger", training_config=None, and auto_deploy=False.
-    
+
     Parameters:
         request (Optional[ModelRetrainingRequest]): Optional retraining request specifying `model_name`, `trigger_reason`, `training_config`, and `auto_deploy`. When omitted, server-default values are applied.
-    
+
     Returns:
         dict: Information about the started retraining job including:
             - `message`: success message,
@@ -530,7 +530,7 @@ async def retrain_models(
             - `model_name`: name of the model being retrained,
             - `status`: job status string,
             - `started_at`: ISO-formatted start timestamp.
-    
+
     Raises:
         HTTPException: Raised with status 500 if triggering the retraining or recording the job fails.
     """
@@ -592,12 +592,12 @@ async def get_ml_jobs(
 ):
     """
     Return ML job history and summary statistics filtered by status and model name.
-    
+
     Parameters:
         limit (int): Maximum number of jobs to return (1-100).
         status (Optional[str]): Filter jobs by their status when provided.
         model_name (Optional[str]): Filter jobs by model name when provided.
-    
+
     Returns:
         dict: A mapping with:
             - "jobs": list of job documents where MongoDB `_id` is converted to string `id`
@@ -646,7 +646,7 @@ async def get_ml_jobs(
 async def get_models(current_admin: dict = Depends(get_current_admin_user)):
     """
     Retrieve available ML models, active deployments, and recent experiments.
-    
+
     Returns:
         result (dict): Dictionary containing:
             - models: list of available model metadata.
@@ -689,13 +689,13 @@ async def get_model_details(
 ):
     """
     Retrieve detailed information for a specific model.
-    
+
     Parameters:
         model_id (str): Identifier of the model to retrieve.
-    
+
     Returns:
         dict: Model details object as returned by the MLOps service.
-    
+
     Raises:
         HTTPException: `404` if the model is not found; `500` if an unexpected error occurs while fetching model details.
     """
@@ -734,11 +734,11 @@ async def get_model_performance(
 ):
     """
     Return aggregated performance metrics for models over a recent time window.
-    
+
     Parameters:
         model_id (Optional[str]): Filter results to a single model by its identifier; if omitted, metrics for all models are returned.
         days (int): Number of past days to include in the analysis (minimum 1, maximum 30).
-    
+
     Returns:
         dict: A dictionary containing:
             - "period": string describing the window (e.g., "7 days").
@@ -776,19 +776,47 @@ async def get_model_performance(
         # Calculate aggregated metrics
         if metrics:
             # Collect numeric values including zeros, excluding None
-            accuracy_values = [m.get("accuracy") for m in metrics if m.get("accuracy") is not None]
-            f1_score_values = [m.get("f1_score") for m in metrics if m.get("f1_score") is not None]
-            response_time_values = [m.get("avg_prediction_time_ms") for m in metrics if m.get("avg_prediction_time_ms") is not None]
-            error_rate_values = [m.get("error_rate") for m in metrics if m.get("error_rate") is not None]
-            
+            accuracy_values = [
+                m.get("accuracy") for m in metrics if m.get("accuracy") is not None
+            ]
+            f1_score_values = [
+                m.get("f1_score") for m in metrics if m.get("f1_score") is not None
+            ]
+            response_time_values = [
+                m.get("avg_prediction_time_ms")
+                for m in metrics
+                if m.get("avg_prediction_time_ms") is not None
+            ]
+            error_rate_values = [
+                m.get("error_rate") for m in metrics if m.get("error_rate") is not None
+            ]
+
             # Calculate averages with division guards
-            avg_accuracy = sum(accuracy_values) / len(accuracy_values) if len(accuracy_values) > 0 else 0
-            avg_f1_score = sum(f1_score_values) / len(f1_score_values) if len(f1_score_values) > 0 else 0
-            avg_response_time = sum(response_time_values) / len(response_time_values) if len(response_time_values) > 0 else 0
-            avg_error_rate = sum(error_rate_values) / len(error_rate_values) if len(error_rate_values) > 0 else 0
+            avg_accuracy = (
+                sum(accuracy_values) / len(accuracy_values)
+                if len(accuracy_values) > 0
+                else 0
+            )
+            avg_f1_score = (
+                sum(f1_score_values) / len(f1_score_values)
+                if len(f1_score_values) > 0
+                else 0
+            )
+            avg_response_time = (
+                sum(response_time_values) / len(response_time_values)
+                if len(response_time_values) > 0
+                else 0
+            )
+            avg_error_rate = (
+                sum(error_rate_values) / len(error_rate_values)
+                if len(error_rate_values) > 0
+                else 0
+            )
             total_predictions = sum(m.get("prediction_count", 0) for m in metrics)
         else:
-            avg_accuracy = avg_f1_score = avg_response_time = total_predictions = avg_error_rate = 0
+            avg_accuracy = avg_f1_score = avg_response_time = total_predictions = (
+                avg_error_rate
+            ) = 0
 
         return {
             "period": f"{days} days",
@@ -821,14 +849,14 @@ async def get_system_alerts(
 ):
     """
     Retrieve system alerts filtered by optional severity and status, returning the most recent alerts and summary statistics.
-    
+
     Alerts are returned sorted by created_at descending and limited by `limit`. Each alert document includes an `id` string (MongoDB _id converted to string) and any datetime fields (`created_at`, `acknowledged_at`, `resolved_at`) are converted to ISO 8601 strings.
-    
+
     Returns:
         dict: A mapping with two keys:
             - "alerts": list of alert documents with `id` and ISO-formatted date fields.
             - "statistics": dict with integer counts `total`, `active`, and `critical`.
-    
+
     Raises:
         HTTPException: With status 500 if retrieving alerts or computing statistics fails.
     """
@@ -883,12 +911,12 @@ async def acknowledge_alert(
 ):
     """
     Mark a system alert as acknowledged.
-    
+
     Sets the alert's status to "acknowledged", records the acknowledgement timestamp, and records the acknowledging admin's id.
-    
+
     Returns:
         dict: A dictionary containing a confirmation message, e.g. {"message": "Alert acknowledged successfully"}.
-    
+
     Raises:
         HTTPException: With status 404 if no alert matches the given `alert_id`.
         HTTPException: With status 500 if an unexpected error occurs while updating the alert.
@@ -932,16 +960,16 @@ async def clear_cache(
 ):
     """
     Clear configured application caches according to the requested cache type.
-    
+
     Parameters:
         cache_type (Optional[str]): Which cache to clear. One of "redis", "mlops", "all", or None to clear all available caches.
-    
+
     Returns:
         dict: {
             "message": Human-readable summary of cleared caches,
             "cleared_caches": List[str] of cache names that were cleared
         }
-    
+
     Raises:
         HTTPException: 503 if no cache services are available; 400 if an invalid cache_type is provided; 500 if an internal error occurs while clearing caches.
     """
@@ -993,10 +1021,10 @@ async def get_scheduled_tasks_status(
 ):
     """
     Get the current status of all scheduled tasks.
-    
+
     Returns:
         dict: Mapping of task IDs to their status details.
-    
+
     Raises:
         HTTPException: If retrieving the scheduled tasks status fails.
     """
@@ -1019,16 +1047,16 @@ async def run_scheduled_task_manually(
 ):
     """
     Execute a scheduled task immediately by task ID.
-    
+
     Parameters:
-    	task_id (str): Identifier of the scheduled task to run.
-    
+        task_id (str): Identifier of the scheduled task to run.
+
     Returns:
-    	result: The value returned by the scheduled tasks service for the executed task.
-    
+        result: The value returned by the scheduled tasks service for the executed task.
+
     Raises:
-    	HTTPException: Raised with status 400 if the task request is invalid (ValueError from the service),
-    		or status 500 for unexpected errors while running the task.
+        HTTPException: Raised with status 400 if the task request is invalid (ValueError from the service),
+                or status 500 for unexpected errors while running the task.
     """
     try:
         result = await scheduled_tasks.run_task_manually(task_id)

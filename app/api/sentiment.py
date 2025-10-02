@@ -48,15 +48,15 @@ async def analyze_sentiment(
 ):
     """
     Analyze a single text for sentiment using NFL-specific context and persist the analysis.
-    
+
     Persists the analysis document to the database and schedules a background task to refresh aggregated sentiment for the related team/player/game.
-    
+
     Parameters:
         sentiment_data (SentimentAnalysisCreate): Input payload containing the text and optional context fields (team_id, player_id, game_id, source, and any contextual metadata).
-    
+
     Returns:
         SentimentResult: Analysis details including `sentiment_score`, `category`, `timestamp`, `model_version`, `processing_time_ms`, `emotion_scores`, `aspect_sentiments`, and `keyword_contributions`.
-    
+
     Raises:
         HTTPException: Raised with status 500 if sentiment processing or persistence fails.
     """
@@ -118,13 +118,13 @@ async def analyze_batch_sentiment(
 ):
     """
     Analyze a batch of input texts, persist individual analyses, and schedule aggregated updates.
-    
+
     Validates a maximum of 100 texts, invokes the sentiment service for batch analysis, inserts per-text documents into the database (including optional user_id when provided), computes aggregated metrics (average sentiment, processing time), and enqueues a background task to refresh aggregated sentiment for the provided team/player/game.
-    
+
     Parameters:
         batch_request (BatchSentimentRequest): Payload containing texts and optional context/entity identifiers.
         current_user (Optional[dict]): Optional authenticated user whose id, if present, will be stored with each analysis.
-    
+
     Returns:
         BatchSentimentResponse: Contains the list of individual analysis results, total_processed, processing_time_ms, model_version, aggregated_sentiment, and sentiment_distribution.
     """
@@ -234,12 +234,12 @@ async def get_team_sentiment(
 ):
     """
     Retrieve aggregated and trend sentiment data for a specific team over a recent time window.
-    
+
     Parameters:
         days (int): Number of days to include in the analysis (1–30).
         sources (Optional[List[DataSource]]): Optional list of data sources to filter results.
         categories (Optional[List[SentimentCategory]]): Optional list of sentiment categories to filter results.
-    
+
     Returns:
         TeamSentiment: Aggregated sentiment information for the team, including current_sentiment, total_mentions,
         last_updated, confidence_score, hourly sentiment_trend entries, sentiment_by_category, sentiment_by_source,
@@ -396,14 +396,14 @@ async def get_player_sentiment(
 ):
     """
     Retrieve aggregated sentiment metrics, category/source breakdowns, and time-series trends for a specific player.
-    
+
     Parameters:
         player_id (str): Unique identifier of the player to query.
         days (int): Number of days to include in the analysis (window ending at now).
         sources (Optional[List[DataSource]]): Optional list of data sources to filter results.
         categories (Optional[List[SentimentCategory]]): Optional list of sentiment categories to filter results.
         db: Database dependency (omitted from detailed docs).
-    
+
     Returns:
         PlayerSentiment: Aggregated sentiment data for the player, including:
             - current_sentiment: Average sentiment score over the requested window.
@@ -566,21 +566,21 @@ async def get_game_sentiment(
 ):
     """
     Retrieve aggregated and per-team sentiment metrics for a specific game.
-    
+
     Constructs and returns a GameSentiment object containing overall game sentiment, per-team sentiment, category breakdowns, mention counts, confidence, and game metadata.
-    
+
     Parameters:
         game_id (str): Unique identifier of the game.
         sources (Optional[List[DataSource]]): Optional list of data sources to filter sentiment records by.
         categories (Optional[List[SentimentCategory]]): Optional list of sentiment categories to filter records by.
-    
+
     Returns:
         GameSentiment: Aggregated sentiment information for the requested game, including:
             - game_id, home_team_id, away_team_id, game_date, week, season
             - current_sentiment, overall_sentiment, home_team_sentiment, away_team_sentiment
             - total_mentions, confidence_score, sentiment_by_category, betting_sentiment, prediction_confidence
             - last_updated timestamp
-    
+
     Raises:
         HTTPException: If the game is not found (404) or if an unexpected error occurs while retrieving or aggregating data (500).
     """
@@ -713,7 +713,7 @@ async def get_sentiment_trends(
 ):
     """
     Retrieve time-bucketed sentiment trends with optional filters.
-    
+
     Parameters:
         team_id (Optional[str]): Filter trends to a specific team.
         player_id (Optional[str]): Filter trends to a specific player.
@@ -723,7 +723,7 @@ async def get_sentiment_trends(
         sources (Optional[List[DataSource]]): If provided, include only data from these sources.
         categories (Optional[List[SentimentCategory]]): If provided, include only these sentiment categories.
         db: Database dependency.
-    
+
     Returns:
         dict: {
             "trends": List[{
@@ -863,12 +863,12 @@ async def get_recent_sentiments(
 ):
     """
     Retrieve recent sentiment analysis records, optionally filtered by team or player.
-    
+
     Parameters:
         limit (int): Maximum number of records to return (1–100).
         team_id (Optional[str]): If provided, return only analyses for this team.
         player_id (Optional[str]): If provided, return only analyses for this player.
-    
+
     Returns:
         List[SentimentAnalysisResponse]: Recent analyses sorted by timestamp descending; each entry includes an `id` field derived from the database `_id`.
     """
@@ -894,10 +894,10 @@ async def aggregate_sentiment(
 ):
     """
     Compute aggregated sentiment metrics for a specified team, player, or game using optional filters and optional time-series trends.
-    
+
     Parameters:
         request (SentimentAggregationRequest): Specifies the target entity (entity_type and entity_id), optional start_date and end_date, optional sources and categories to filter by, and options to include time-based trends (include_trends, trend_interval).
-    
+
     Returns:
         dict: Aggregated results with the following keys:
             - entity_type (str): The requested entity type ("team", "player", or "game").
@@ -910,7 +910,7 @@ async def aggregate_sentiment(
             - source_breakdown (dict): Average sentiment score per source.
             - trends (list): Time-series entries (when requested) each with `timestamp`, `sentiment_score`, and `volume`.
             - generated_at (datetime): UTC timestamp when the aggregation was produced.
-    
+
     Raises:
         HTTPException: With status 500 if an internal error occurs while performing the aggregation.
     """
@@ -1069,12 +1069,12 @@ async def get_sentiment_insights(
 ):
     """
     Produce insights and prioritized recommendations based on recent sentiment data for a given entity.
-    
+
     Parameters:
         entity_type (str): Type of entity to analyze, e.g. "team", "player", or "game".
         entity_id (str): Identifier of the specific entity to analyze.
         days (int): Number of past days to include in the analysis (1–30).
-    
+
     Returns:
         SentimentInsights: Object containing key themes (most frequent categories), top sentiment-driving keywords with their average impact, actionable recommendations derived from average sentiment, and a generation timestamp.
     """
@@ -1180,7 +1180,7 @@ async def update_aggregated_sentiment(
 ):
     """
     Trigger aggregated sentiment recomputation for the provided entity identifiers.
-    
+
     Parameters:
         team_id (Optional[str]): If provided, recompute and store aggregated sentiment for the team with this ID.
         player_id (Optional[str]): If provided, recompute and store aggregated sentiment for the player with this ID.
@@ -1206,9 +1206,9 @@ async def update_aggregated_sentiment(
 async def update_team_sentiment_aggregation(db, team_id: str):
     """
     Recompute and persist aggregated sentiment metrics for the given team.
-    
+
     Performs aggregation of stored sentiment analyses for the specified team and updates the team's aggregated sentiment record in the database.
-    
+
     Parameters:
         team_id (str): The unique identifier of the team whose aggregated sentiment should be updated.
     """
@@ -1220,9 +1220,9 @@ async def update_team_sentiment_aggregation(db, team_id: str):
 async def update_player_sentiment_aggregation(db, player_id: str):
     """
     Recompute and persist aggregated sentiment metrics for a given player.
-    
+
     Recalculates the player's aggregated sentiment data (for example: average sentiment, total mentions, confidence score, and time-based trends) from stored analyses and updates the corresponding aggregation document in the database.
-    
+
     Parameters:
         player_id (str): Unique identifier of the player whose aggregated sentiment should be refreshed.
     """
@@ -1234,9 +1234,9 @@ async def update_player_sentiment_aggregation(db, player_id: str):
 async def update_game_sentiment_aggregation(db, game_id: str):
     """
     Recompute and persist aggregated sentiment metrics for the specified game.
-    
+
     Recalculates aggregated values (e.g., average sentiment, total mentions, confidence, category breakdowns, and trends) for the given game and stores the results in the database; intended to run as a background task after new sentiment records are inserted. This function performs its work via side effects and does not return a value.
-    
+
     Parameters:
         game_id (str): Identifier of the game whose aggregated sentiment should be updated.
     """

@@ -36,7 +36,7 @@ class WandBService:
     def __init__(self):
         """
         Initialize the WandB service configuration, internal state, and optional authentication.
-        
+
         Sets project_name, entity, api_key, current_run (None), and an empty experiment_cache. If the wandb library is available and an API key is configured, attempts to authenticate with W&B; if wandb is unavailable or authentication fails, the service remains in offline/mock mode and logs an appropriate message.
         """
         self.project_name = getattr(settings, "WANDB_PROJECT", "nfl-sentiment-analyzer")
@@ -72,9 +72,9 @@ class WandBService:
     ) -> ExperimentRun:
         """
         Start and register a new experiment run with Weights & Biases (W&B), falling back to a mock run when W&B is unavailable.
-        
+
         When W&B is available, initializes a run, stores it as the current run, and caches an ExperimentRun record; otherwise creates and returns a mock ExperimentRun.
-        
+
         Parameters:
             experiment_name (str): Logical name of the experiment/project-specific run group.
             run_name (Optional[str]): Optional human-readable name for this specific run; if omitted, a run name will be used/generated.
@@ -82,7 +82,7 @@ class WandBService:
             tags (Optional[List[str]]): Tags to attach to the run for filtering and grouping.
             notes (Optional[str]): Freeform notes or description for the run.
             model_type (ModelType): Enum value indicating the model or task type for the run.
-        
+
         Returns:
             ExperimentRun: A record representing the started experiment run (real or mock), including identifiers, status, hyperparameters, timestamps, and metadata.
         """
@@ -141,7 +141,7 @@ class WandBService:
     ):
         """
         Log a batch of scalar metrics to the active experiment run.
-        
+
         Parameters:
             metrics (Dict[str, Union[float, int]]): Mapping of metric names to numeric values.
             step (Optional[int]): Optional step or epoch index to associate with these metrics.
@@ -163,7 +163,7 @@ class WandBService:
     ):
         """
         Log standard and custom model performance metrics to the service.
-        
+
         Parameters:
             performance_metrics (ModelPerformanceMetrics): Object containing standard metrics (accuracy, precision, recall, f1_score, auc_roc, prediction_count, avg_prediction_time_ms, error_rate, throughput_per_second, data_drift_score, prediction_drift_score) and a dictionary of `custom_metrics` to include.
             step (Optional[int]): Optional step index (for example, training epoch or evaluation step) to associate with the logged metrics.
@@ -193,9 +193,9 @@ class WandBService:
     async def log_hyperparameters(self, hyperparameters: Dict[str, Any]):
         """
         Record hyperparameters for the currently active experiment.
-        
+
         If a W&B run is active, updates the run configuration with the provided hyperparameters; if no active run or W&B is unavailable, the call is a no-op.
-        
+
         Parameters:
             hyperparameters (Dict[str, Any]): Mapping of hyperparameter names to their values to be recorded with the experiment.
         """
@@ -220,14 +220,14 @@ class WandBService:
     ):
         """
         Upload a file or directory as an artifact to Weights & Biases and attach optional descriptive metadata.
-        
+
         Parameters:
             artifact_path (str): Filesystem path to the artifact; may be a file or a directory. If the path does not exist, the artifact is not uploaded.
             artifact_name (str): Name to register the artifact under in W&B.
             artifact_type (str): Category/type for the artifact (for example, `"model"` or `"dataset"`).
             description (Optional[str]): Optional human-readable description for the artifact.
             metadata (Optional[Dict[str, Any]]): Optional key/value metadata to attach to the artifact.
-        
+
         Notes:
             If W&B is unavailable or there is no active run, the method performs no upload and returns immediately.
         """
@@ -260,7 +260,7 @@ class WandBService:
     async def log_model_metadata(self, model_metadata: ModelMetadata):
         """
         Record model metadata with the service and, when W&B is available, log a tabular representation to Weights & Biases.
-        
+
         Parameters:
             model_metadata (ModelMetadata): Object containing model identifiers, training metrics, hyperparameters, custom metrics, tags, and description. The metadata is saved via hyperparameters under the "model_metadata" key and, if a W&B run is active, additionally logged as a two-column table ("metric", "value").
         """
@@ -308,11 +308,11 @@ class WandBService:
     ) -> Optional[ExperimentRun]:
         """
         Finalize the active experiment: record final metrics if provided, update its status and timing, finish the run, and return the updated ExperimentRun.
-        
+
         Parameters:
             status (ExperimentStatus): Final status to set for the experiment.
             final_metrics (Optional[Dict[str, Any]]): Metrics to log and merge into the experiment's recorded metrics.
-        
+
         Returns:
             Optional[ExperimentRun]: The updated ExperimentRun from the internal cache if present; otherwise `None`.
         """
@@ -409,14 +409,14 @@ class WandBService:
     ) -> Dict[str, Any]:
         """
         Aggregate run details and selected metric values for a set of W&B runs.
-        
+
         Retrieves each run's id, name, state, summary, and config and collects the requested metric values across runs.
         Runs that cannot be fetched are skipped and logged.
-        
+
         Parameters:
             run_ids (List[str]): List of W&B run IDs to include in the comparison.
             metrics (Optional[List[str]]): Specific metric names to collect for each run; if omitted, metric comparison will be empty.
-        
+
         Returns:
             Dict[str, Any]: A dictionary with keys:
                 - "runs": list of run summaries (each with `id`, `name`, `state`, `summary`, `config`),
@@ -481,7 +481,7 @@ class WandBService:
     ) -> ExperimentRun:
         """
         Create and cache a mock ExperimentRun used when W&B is unavailable.
-        
+
         Returns:
             ExperimentRun: A mock run with a generated UUID run_id, status set to RUNNING, started_at set to the current UTC time, and stored in the service's experiment_cache.
         """
@@ -509,11 +509,11 @@ class WandBService:
     ) -> str:
         """
         Create a hyperparameter sweep in Weights & Biases and return its sweep identifier.
-        
+
         Parameters:
             sweep_config (Dict[str, Any]): Configuration dictionary for the sweep following W&B's sweep schema.
             project (Optional[str]): Project name to create the sweep in; if omitted, the service's default project is used.
-        
+
         Returns:
             str: The sweep ID returned by W&B. Returns "mock_sweep_id" when W&B is unavailable and "error_sweep_id" if sweep creation fails.
         """
@@ -538,7 +538,7 @@ class WandBService:
     def get_service_status(self) -> Dict[str, Any]:
         """
         Return a snapshot of the WandB service's current status.
-        
+
         Returns:
             status (Dict[str, Any]): A dictionary with the following keys:
                 - "wandb_available" (bool): Whether the wandb library is available.

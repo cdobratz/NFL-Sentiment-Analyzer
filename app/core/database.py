@@ -12,7 +12,7 @@ class DatabaseManager:
     def __init__(self):
         """
         Initialize a DatabaseManager with all client and database slots unset.
-        
+
         Attributes:
             mongodb_client (Optional[AsyncIOMotorClient]): MongoDB async client instance or None until connected.
             redis_client (Optional[redis.Redis]): Redis client instance or None until connected.
@@ -25,9 +25,9 @@ class DatabaseManager:
     async def connect_mongodb(self):
         """
         Establishes and verifies a connection to MongoDB Atlas and stores the client and database on the instance.
-        
+
         Sets self.mongodb_client to an AsyncIOMotorClient connected using settings.mongodb_url and sets self.db to the database named by settings.database_name.
-        
+
         Raises:
             Exception: If the connection or ping verification fails, the original exception is re-raised.
         """
@@ -44,7 +44,7 @@ class DatabaseManager:
     async def connect_redis(self):
         """
         Establishes a Redis client from settings.redis_url and assigns it to self.redis_client.
-        
+
         On success, self.redis_client is a connected redis client. On failure, the error is logged, self.redis_client is set to None, and the exception is not raised.
         """
         try:
@@ -62,7 +62,7 @@ class DatabaseManager:
     async def disconnect(self):
         """
         Close any active MongoDB and Redis client connections managed by this instance.
-        
+
         If a client is not set, it is ignored. This method does not return a value.
         """
         if self.mongodb_client:
@@ -73,7 +73,7 @@ class DatabaseManager:
     def get_database(self):
         """
         Return the configured MongoDB database handle.
-        
+
         Returns:
             Optional[pymongo.database.Database]: The MongoDB database instance, or `None` if no connection has been established.
         """
@@ -82,7 +82,7 @@ class DatabaseManager:
     def get_redis(self):
         """
         Return the configured Redis client used by this manager.
-        
+
         Returns:
             redis.Redis | None: The Redis client instance if connected, otherwise `None`.
         """
@@ -96,7 +96,7 @@ db_manager = DatabaseManager()
 async def get_database():
     """
     Provide the current MongoDB database instance for dependency injection.
-    
+
     Returns:
         The active MongoDB database handle, or `None` if no connection has been established.
     """
@@ -106,7 +106,7 @@ async def get_database():
 async def get_redis():
     """
     Retrieve the shared Redis client used by the application.
-    
+
     Returns:
         redis_client (redis.Redis | None): The Redis client instance or `None` if Redis is unavailable.
     """

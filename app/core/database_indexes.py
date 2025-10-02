@@ -14,9 +14,9 @@ class DatabaseIndexes:
     def get_sentiment_analyses_indexes() -> List[IndexModel]:
         """
         Index specifications for the sentiment_analyses collection.
-        
+
         Includes primary query indexes (team/player/game with timestamp), source/category/sentiment filters, compound indexes for common multi-field queries, confidence and sentiment score indexes, a text search index on the text field, processing metadata indexes, and time-based partitioning helpers.
-        
+
         Returns:
             List[IndexModel]: A list of IndexModel objects to create on the sentiment_analyses collection.
         """
@@ -68,12 +68,12 @@ class DatabaseIndexes:
     def get_team_sentiment_indexes() -> List[IndexModel]:
         """
         Return index specifications for the aggregated team sentiment collection.
-        
+
         Provides IndexModel definitions including a unique index on `team_id`,
         sorting/filtering indexes for `current_sentiment`, `last_updated`, `total_mentions`,
         and `confidence_score`, and descending category-specific indexes for
         `sentiment_by_category.performance`, `sentiment_by_category.injury`, and `sentiment_by_category.trade`.
-        
+
         Returns:
             List[IndexModel]: IndexModel objects to apply to the `team_sentiment` collection.
         """
@@ -95,9 +95,9 @@ class DatabaseIndexes:
     def get_player_sentiment_indexes() -> List[IndexModel]:
         """
         Provide MongoDB index definitions for the player_sentiment collection.
-        
+
         Includes a unique primary index on player_id, compound indexes for team and position queries combined with sentiment sorting, and several single-field indexes for common sorting and filtering (current_sentiment, last_updated, total_mentions, fantasy_sentiment, performance_sentiment).
-        
+
         Returns:
             List[IndexModel]: A list of IndexModel objects to create on the player_sentiment collection.
         """
@@ -137,14 +137,14 @@ class DatabaseIndexes:
     def get_teams_indexes() -> List[IndexModel]:
         """
         Return IndexModel definitions for the teams collection.
-        
+
         Provides a list of index specifications used by the teams collection:
         - unique `_id` index
         - unique `abbreviation` index
         - `name` index for name-based lookups
         - compound `conference` + `division` index for grouping queries
         - text index on `aliases` and `keywords` for full-text search
-        
+
         Returns:
             List[IndexModel]: The index models to create on the teams collection.
         """
@@ -163,9 +163,9 @@ class DatabaseIndexes:
     def get_players_indexes() -> List[IndexModel]:
         """
         Index definitions for the players collection.
-        
+
         Includes a unique primary key, team-and-position and position/status query indexes, a fantasy-relevance index, and a text search index on name and aliases.
-        
+
         Returns:
             List[IndexModel]: IndexModel objects to create for the players collection.
         """
@@ -186,7 +186,7 @@ class DatabaseIndexes:
     def get_games_indexes() -> List[IndexModel]:
         """
         Provide index specifications for the games collection.
-        
+
         Returns:
             A list of IndexModel objects defining indexes for the games collection: primary key on `_id`; time-based indexes (`game_date`, `season` + `week`); team-based queries (`home_team_id`, `away_team_id` paired with `game_date`); status and game type combined with `game_date`; and indexes for `primetime` and `rivalry_game` paired with `game_date`.
         """
@@ -211,9 +211,9 @@ class DatabaseIndexes:
 async def create_all_indexes(db: AsyncIOMotorDatabase) -> Dict[str, List[str]]:
     """
     Create indexes for all application collections used by sentiment and related entities.
-    
+
     Creates the index sets for the following collections: sentiment_analysis, team_sentiment, player_sentiment, game_sentiment, teams, players, and games, and returns the per-collection results.
-    
+
     Returns:
         results (Dict[str, List[str]]): Mapping from collection name to the list of created index names.
     """
@@ -267,7 +267,7 @@ async def create_all_indexes(db: AsyncIOMotorDatabase) -> Dict[str, List[str]]:
 async def drop_all_indexes(db: AsyncIOMotorDatabase) -> Dict[str, bool]:
     """
     Drop all non-default indexes for the module's MongoDB collections, keeping each collection's default `_id` index.
-    
+
     Returns:
         results (Dict[str, bool]): Mapping from collection name to `True` if indexes were dropped successfully, `False` if an error occurred (errors are printed when they occur).
     """

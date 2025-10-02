@@ -54,16 +54,16 @@ async def create_api_key(
 ):
     """
     Create a new API key with the provided name, scopes, expiration, rate limit, and metadata.
-    
+
     Parameters:
-    	request (CreateAPIKeyRequest): Payload containing name, scopes, optional expires_in_days, rate_limit, and metadata.
-    
+        request (CreateAPIKeyRequest): Payload containing name, scopes, optional expires_in_days, rate_limit, and metadata.
+
     Returns:
-    	CreateAPIKeyResponse: Contains the newly created API key value (shown only once) and associated key metadata (APIKeyResponse).
-    
+        CreateAPIKeyResponse: Contains the newly created API key value (shown only once) and associated key metadata (APIKeyResponse).
+
     Raises:
-    	ValidationError: If one or more requested scopes are invalid.
-    	HTTPException: On unexpected server-side failures (status 500).
+        ValidationError: If one or more requested scopes are invalid.
+        HTTPException: On unexpected server-side failures (status 500).
     """
     try:
         # Validate scopes
@@ -113,7 +113,7 @@ async def create_api_key(
 async def list_api_keys(current_user: dict = Depends(get_current_admin_user)):
     """
     Retrieve all API keys and their associated metadata.
-    
+
     Returns:
         List[APIKeyResponse]: A list of APIKeyResponse objects representing each API key and its usage/metadata. The actual secret key values are not included.
     """
@@ -150,13 +150,13 @@ async def get_api_key(
 ):
     """
     Retrieve metadata for the API key identified by `key_id`.
-    
+
     Parameters:
         key_id (str): The unique identifier of the API key to retrieve.
-    
+
     Returns:
         APIKeyResponse: The API key's metadata (id, name, scopes, status, timestamps, usage, rate limit, creator, and metadata) excluding the secret key.
-    
+
     Raises:
         NotFoundError: If no API key with `key_id` exists.
     """
@@ -196,15 +196,15 @@ async def get_api_key_usage(
 ):
     """
     Retrieve usage statistics for the API key identified by `key_id`.
-    
+
     Returns detailed usage metrics such as total requests, average daily usage, last usage timestamp, and rate limit information.
-    
+
     Parameters:
         key_id (str): Identifier of the API key to query.
-    
+
     Returns:
         dict: Usage statistics including keys like `total_requests`, `average_daily_usage`, `last_used_at`, and `rate_limit`.
-    
+
     Raises:
         NotFoundError: If no API key with `key_id` exists.
         HTTPException: If an internal error occurs while retrieving usage.
@@ -232,15 +232,15 @@ async def revoke_api_key(
 ):
     """
     Revoke the API key identified by `key_id`, disabling it permanently.
-    
+
     Attempts to revoke the key and returns a confirmation payload on success. This operation is irreversible and requires an admin user.
-    
+
     Parameters:
         key_id (str): Identifier of the API key to revoke.
-    
+
     Returns:
         dict: Confirmation containing `message`, `key_id`, `revoked_by` (admin user id), and `revoked_at` (ISO 8601 UTC timestamp).
-    
+
     Raises:
         NotFoundError: If no API key with `key_id` exists.
         HTTPException: For unexpected failures during revocation (results in a 500 response).

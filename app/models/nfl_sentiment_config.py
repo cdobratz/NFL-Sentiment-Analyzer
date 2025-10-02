@@ -346,7 +346,7 @@ class NFLSentimentConfig:
     def __init__(self):
         """
         Initialize the NFLSentimentConfig with default components.
-        
+
         Creates and assigns the following attributes:
         - self.keywords: an NFLSentimentKeywords instance with categorized keyword sets.
         - self.weights: an NFLSentimentWeights instance with category, position, source, and time-decay weights.
@@ -361,16 +361,16 @@ class NFLSentimentConfig:
     ) -> float:
         """
         Compute the sentiment weight for a given keyword within the specified category.
-        
+
         Looks up the category's base weight from CATEGORY_WEIGHTS (defaults to 1.0 if missing) and applies
         a multiplier based on the keyword's category: positive or negative performance keywords multiply
         the base weight by 1.2, injury-related keywords multiply the base weight by 0.9, otherwise the
         base weight is returned unchanged.
-        
+
         Parameters:
             keyword (str): The keyword to evaluate.
             category (str): Category key used to retrieve the base weight from CATEGORY_WEIGHTS (default "general").
-        
+
         Returns:
             float: The weighted sentiment score for the keyword.
         """
@@ -389,7 +389,7 @@ class NFLSentimentConfig:
     def get_all_keywords(self) -> Set[str]:
         """
         Collects all configured NFL-related keywords across categories.
-        
+
         Returns:
             all_keywords (Set[str]): A set containing every keyword from POSITIVE_PERFORMANCE, NEGATIVE_PERFORMANCE,
             INJURY_KEYWORDS, TRADE_KEYWORDS, COACHING_KEYWORDS, BETTING_KEYWORDS, and FANTASY_KEYWORDS.
@@ -407,12 +407,12 @@ class NFLSentimentConfig:
     def categorize_text(self, text: str) -> str:
         """
         Determine the most relevant NFL-related category for the given text based on keyword occurrences.
-        
+
         Counts occurrences of category-specific keywords case-insensitively and selects the category with the highest count.
-        
+
         Parameters:
             text (str): Input text to classify (case-insensitive).
-        
+
         Returns:
             str: One of "performance", "injury", "trade", "coaching", "betting", "fantasy", or "general" if no category keywords are present.
         """

@@ -38,7 +38,7 @@ logger = setup_logging()
 async def start_monitoring():
     """
     Run performance checks periodically in a background loop.
-    
+
     Performs performance_monitor.run_checks() once every 60 seconds; logs any exceptions and continues running.
     """
     while True:
@@ -54,7 +54,7 @@ async def start_monitoring():
 async def lifespan(app: FastAPI):
     """
     Manage application startup and shutdown lifecycle for the FastAPI app.
-    
+
     On startup, connects to MongoDB and Redis, starts the data processing pipeline,
     starts the scheduled tasks service, and launches the performance monitoring
     background task. On shutdown, cancels the monitoring task, stops the data
@@ -127,11 +127,11 @@ setup_openapi_docs(app)
 async def add_security_headers(request: Request, call_next):
     """
     Attach common security-related HTTP headers to the response.
-    
+
     Parameters:
         request (Request): Incoming FastAPI request.
         call_next (Callable): ASGI-compatible callable that takes the request and returns a Response.
-    
+
     Returns:
         Response: The downstream response augmented with security headers (Content-Type sniffing protection, frame options, XSS protection, referrer policy, permissions policy, and Strict-Transport-Security in non-debug mode).
     """
@@ -187,7 +187,7 @@ app.include_router(analytics.router)
 async def root():
     """
     Provide basic API information for the root endpoint.
-    
+
     Returns:
         dict: Mapping with keys:
             - `message`: human-readable API name.
@@ -210,7 +210,7 @@ async def root():
 async def legacy_health_check():
     """
     Provide a legacy health status response for compatibility.
-    
+
     Returns:
         dict: Health payload with keys:
             - `status` (str): "healthy" or other health indicator.

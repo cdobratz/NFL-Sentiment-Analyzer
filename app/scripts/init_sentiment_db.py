@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 async def initialize_sentiment_database():
     """
     Prepare the MongoDB database used for sentiment analysis.
-    
+
     Creates the required indexes, verifies expected collections and prints their document counts (or indicates collections that will be created on first insert), tests the database connection and closes the client.
     """
 

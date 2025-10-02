@@ -36,7 +36,7 @@ class ModelRetrainingService:
     def __init__(self):
         """
         Initialize the ModelRetrainingService by creating service clients, in-memory stores, and default retraining triggers.
-        
+
         Sets up:
         - database handle placeholder (`self.db`)
         - external service clients (`hf_service`, `wandb_service`, `hopsworks_service`, `deployment_service`)
@@ -69,7 +69,7 @@ class ModelRetrainingService:
     async def initialize(self):
         """
         Initialize internal services and in-memory state for model retraining.
-        
+
         Acquires a database handle, initializes the deployment service, and loads retraining configurations and baseline metrics into memory. On failure, the error is logged.
         """
         try:
@@ -95,9 +95,9 @@ class ModelRetrainingService:
     ) -> ModelRetrainingConfig:
         """
         Create and persist a retraining configuration for the specified model.
-        
+
         This generates a unique configuration, populates timestamps and defaults, stores the configuration in persistent storage and the service's in-memory map, and returns the saved configuration.
-        
+
         Parameters:
             model_name: Name of the model the configuration applies to.
             performance_threshold: Minimum performance score (e.g., accuracy or F1) that will trigger retraining when recent metrics fall below this value.
@@ -108,7 +108,7 @@ class ModelRetrainingService:
             approval_required: If True, require manual approval before deploying a retrained model.
             approvers: Optional list of user IDs allowed to approve deployments.
             training_config: Optional dictionary of training parameters and overrides to use for retraining.
-        
+
         Returns:
             ModelRetrainingConfig: The created and persisted retraining configuration, including generated `config_id`, timestamps, and applied defaults.
         """
@@ -145,10 +145,10 @@ class ModelRetrainingService:
     async def check_retraining_triggers(self, model_name: str) -> Dict[str, Any]:
         """
         Determine whether any retraining triggers are activated for the specified model.
-        
+
         Parameters:
             model_name (str): Name of the model to evaluate retraining triggers for.
-        
+
         Returns:
             dict: A dictionary describing trigger evaluation results. On success the dictionary contains:
                 - `should_retrain` (bool): `true` if one or more triggers are activated, `false` otherwise.
@@ -213,16 +213,16 @@ class ModelRetrainingService:
     ) -> ExperimentRun:
         """
         Initiates a retraining experiment for the given model and schedules its execution in the background.
-        
+
         Registers the experiment with the tracking service, schedules the asynchronous retraining workflow, updates and persists the retraining configuration's last_triggered timestamp, and returns the created ExperimentRun.
-        
+
         Parameters:
             training_config (Optional[Dict[str, Any]]): Optional overrides for the stored training configuration; keys provided here replace or extend the saved training configuration.
             auto_deploy (Optional[bool]): If provided, overrides the config's auto-deploy setting for this run; if omitted, the stored config's auto_deploy value is used.
-        
+
         Returns:
             ExperimentRun: The experiment run object representing the scheduled retraining job.
-        
+
         Raises:
             ValueError: If no retraining configuration exists for the specified model.
         """
@@ -287,11 +287,11 @@ class ModelRetrainingService:
     ):
         """
         Record a model's performance metrics, persist them, and initiate retraining when configured triggers are met.
-        
+
         Parameters:
             model_name (str): The name/identifier of the model whose metrics are being reported.
             performance_metrics (ModelPerformanceMetrics): Observed performance metrics for the model; used to update in-memory history and persisted to storage.
-        
+
         Notes:
             - Appends the metric to an in-memory rolling history (keeps the most recent 100 entries).
             - Persists the metric to the service's performance metrics store.
@@ -333,10 +333,10 @@ class ModelRetrainingService:
     async def get_retraining_status(self, run_id: str) -> Optional[Dict[str, Any]]:
         """
         Retrieve the serialized status for a retraining run.
-        
+
         Parameters:
             run_id (str): Identifier of the retraining run to query.
-        
+
         Returns:
             Optional[Dict[str, Any]]: A dictionary with the retraining run status (keys include `run_id`, `experiment_name`, `run_name`, `status`, `started_at`, `completed_at`, `duration_minutes`, `metrics`, `tags`, `notes`) if the run is found, `None` otherwise.
         """
@@ -366,12 +366,12 @@ class ModelRetrainingService:
     ) -> List[Dict[str, Any]]:
         """
         Get a list of retraining job status records optionally filtered by model and status.
-        
+
         Parameters:
             model_name (Optional[str]): If provided, only include jobs whose experiment name matches the model (uses "{model_name}_retraining" pattern).
             status (Optional[ExperimentStatus]): If provided, only include jobs with this status.
             limit (int): Maximum number of jobs to return.
-        
+
         Returns:
             List[Dict[str, Any]]: Retraining job status dictionaries ordered by `started_at` descending (most recent first). Each dictionary includes keys such as `run_id`, `experiment_name`, `run_name`, `status`, `started_at`, `completed_at`, `duration_minutes`, `metrics`, `tags`, and `notes`.
         """
@@ -425,9 +425,9 @@ class ModelRetrainingService:
     ):
         """
         Execute the asynchronous retraining workflow for a configured experiment run.
-        
+
         Performs end-to-end retraining: updates run status, obtains training data, fine-tunes a base model using the provided training configuration, evaluates and logs metrics, persists the experiment run, optionally deploys the retrained model when criteria are met, finishes the experiment in W&B, and cleans up the active job entry. On error the run is marked failed, results are persisted, the W&B experiment is finished with failure, and the active job is removed.
-        
+
         Parameters:
             experiment_run (ExperimentRun): The experiment run object to update with status, timestamps, metrics, and duration.
             config (ModelRetrainingConfig): Retraining configuration for the target model (includes model_name and trigger/metadata).
@@ -541,13 +541,13 @@ class ModelRetrainingService:
     ) -> bool:
         """
         Determine whether recent model performance has fallen below the configured performance threshold.
-        
+
         This inspects up to the last five recorded performance metrics for the given model and compares the average accuracy and average F1 score to the `performance_threshold` on the provided `config`.
-        
+
         Parameters:
             model_name (str): Name of the model whose recent performance is evaluated.
             config (ModelRetrainingConfig): Retraining configuration containing `performance_threshold`.
-        
+
         Returns:
             bool: `true` if the average accuracy or average F1 score over recent measurements is less than the configured threshold, `false` otherwise.
         """
@@ -582,10 +582,10 @@ class ModelRetrainingService:
     ) -> bool:
         """
         Determine whether the most recent recorded data drift for a model exceeds the configured threshold.
-        
+
         Parameters:
             config (ModelRetrainingConfig): Retraining configuration whose `data_drift_threshold` is used for comparison.
-        
+
         Returns:
             True if the latest `data_drift_score` is present and greater than `config.data_drift_threshold`, False otherwise.
         """
@@ -607,12 +607,12 @@ class ModelRetrainingService:
     async def _check_time_based_trigger(self, config: ModelRetrainingConfig) -> bool:
         """
         Determine whether a configured time-based retraining trigger should fire.
-        
+
         Parameters:
             config (ModelRetrainingConfig): Retraining configuration object; the method inspects
                 `config.time_based_trigger` to see if a time-based trigger is configured and
                 `config.last_triggered` to compute elapsed time since the last trigger.
-        
+
         Returns:
             true if a time-based trigger is configured and either `last_triggered` is missing or
             more than seven days have passed since `last_triggered`, `false` otherwise.
@@ -638,13 +638,13 @@ class ModelRetrainingService:
     ) -> bool:
         """
         Determine whether the configured data volume threshold for a model has been reached.
-        
+
         Checks the count of new records since the config's last_triggered timestamp (or created_at if never triggered) and compares it to config.data_volume_trigger.
-        
+
         Parameters:
             model_name (str): Name of the model whose new data is being counted.
             config (ModelRetrainingConfig): Retraining configuration containing `data_volume_trigger`, `last_triggered`, and `created_at`.
-        
+
         Returns:
             bool: `true` if the number of new records since the baseline timestamp is greater than or equal to `config.data_volume_trigger`, `false` otherwise.
         """
@@ -668,9 +668,9 @@ class ModelRetrainingService:
     ) -> Optional[Tuple[List[Dict], List[Dict]]]:
         """
         Retrieve training and validation datasets for the specified model.
-        
+
         Attempts to obtain prepared training data for model_name and returns a (training, validation) tuple when available. If no data source is available or an error occurs, returns None.
-        
+
         Returns:
             A tuple (training_data, validation_data) where each is a list of records with at least `text`, `label`, and `score` keys, or `None` if no training data could be retrieved.
         """
@@ -714,7 +714,7 @@ class ModelRetrainingService:
     ) -> Dict[str, float]:
         """
         Compute and attach evaluation metrics for a retrained model.
-        
+
         Updates the provided ModelMetadata instance with evaluation results and returns the computed metrics. The returned dictionary contains:
         - "accuracy": model accuracy (0.0 to 1.0)
         - "precision": precision score (0.0 to 1.0)
@@ -722,10 +722,10 @@ class ModelRetrainingService:
         - "f1_score": F1 score (0.0 to 1.0)
         - "training_loss": training loss (non-negative float)
         - "validation_loss": validation loss (non-negative float)
-        
+
         Parameters:
             model_metadata (ModelMetadata): Mutable metadata object for the retrained model; this function will populate accuracy, precision, recall, f1_score, and custom_metrics on it.
-        
+
         Returns:
             Dict[str, float]: A mapping of metric names to their numeric values. Returns an empty dict if evaluation fails.
         """
@@ -760,10 +760,10 @@ class ModelRetrainingService:
     ) -> bool:
         """
         Decides whether a retrained model meets criteria for deployment.
-        
+
         Parameters:
             evaluation_metrics (Dict[str, float]): Evaluation results for the retrained model; expected keys include `"accuracy"` and `"f1_score"`.
-        
+
         Returns:
             bool: `True` if `accuracy` is greater than or equal to 0.8 and `f1_score` is greater than or equal to 0.75, `False` otherwise.
         """
@@ -778,7 +778,7 @@ class ModelRetrainingService:
     ):
         """
         Deploys a retrained model to the staging environment and records deployment details to Weights & Biases.
-        
+
         Parameters:
             model_metadata (ModelMetadata): Metadata for the retrained model to deploy (model identifiers, version, storage path, etc.).
             experiment_run (ExperimentRun): The retraining experiment run associated with this deployment, used for contextual logging and tracking.
@@ -810,11 +810,11 @@ class ModelRetrainingService:
     async def _get_new_data_count(self, model_name: str, since: datetime) -> int:
         """
         Count new labeled data records for a model since a given timestamp.
-        
+
         Parameters:
             model_name (str): Name of the model whose new data is being counted.
             since (datetime): Inclusive lower-bound timestamp to count records from.
-        
+
         Returns:
             int: Number of sentiment result records with timestamp >= `since`. Returns 0 if the database is unavailable or an error occurs.
         """
@@ -834,10 +834,10 @@ class ModelRetrainingService:
     ) -> Dict[str, Any]:
         """
         Convert an ExperimentRun into a serializable retraining status dictionary.
-        
+
         Parameters:
             experiment_run (ExperimentRun): The experiment run to format.
-        
+
         Returns:
             Dict[str, Any]: A dictionary with keys:
                 - run_id: Unique identifier for the run.
@@ -881,7 +881,7 @@ class ModelRetrainingService:
     async def _store_experiment_run(self, experiment_run: ExperimentRun):
         """
         Upsert the given experiment run into the database's experiment_runs collection keyed by `run_id`.
-        
+
         If no database connection is configured, no action is taken. Any errors during storage are logged and not propagated.
         """
         if self.db:
@@ -897,11 +897,11 @@ class ModelRetrainingService:
     async def _store_performance_metrics(self, metrics: ModelPerformanceMetrics):
         """
         Persist model performance metrics to the configured database.
-        
+
         If a database client is available on the service (`self.db`), the provided
         metrics are inserted into the `performance_metrics` collection. If no
         database is configured, the function returns without side effects.
-        
+
         Parameters:
             metrics (ModelPerformanceMetrics): The performance metrics to store, typically
                 containing model name, timestamp, and metric values.
@@ -915,7 +915,7 @@ class ModelRetrainingService:
     async def _load_retraining_configs(self):
         """
         Load enabled retraining configurations from the database into the in-memory cache.
-        
+
         When a database connection exists, this method reads documents from the `retraining_configs`
         collection that have `enabled` set to True, constructs ModelRetrainingConfig objects for
         each document, and stores them in `self.retraining_configs` keyed by `config_id`.
@@ -935,7 +935,7 @@ class ModelRetrainingService:
     async def _load_baseline_metrics(self):
         """
         Populate the in-memory baseline_metrics map with the most recent performance metrics for each model retrieved from the database.
-        
+
         If no database connection exists, the method does nothing. On success, self.baseline_metrics will map each model_id to a ModelPerformanceMetrics instance representing that model's latest recorded metrics.
         """
         if self.db:

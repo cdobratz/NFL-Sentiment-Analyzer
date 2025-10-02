@@ -80,7 +80,7 @@ async def api_info():
 async def list_endpoints():
     """
     Return a structured listing of all API endpoints with authentication and rate-limit metadata.
-    
+
     Returns:
         dict: A dictionary containing:
             - endpoints (list): Groups of endpoints; each group is a dict with:
@@ -296,7 +296,7 @@ async def list_endpoints():
 async def list_api_scopes():
     """
     List available API key scopes and the endpoints each scope permits.
-    
+
     Returns:
         dict: Payload containing:
             - scopes: list of scope descriptors (each has `scope`, `description`, `endpoints`).

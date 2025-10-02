@@ -28,11 +28,11 @@ security = HTTPBearer()
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Check whether a plaintext password matches a stored hashed password.
-    
+
     Parameters:
         plain_password (str): The plaintext password to verify.
         hashed_password (str): The stored hashed password to compare against.
-    
+
     Returns:
         bool: True if the plaintext password matches the hashed password, False otherwise.
     """
@@ -42,7 +42,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     """
     Create a bcrypt hash of the given plaintext password.
-    
+
     Returns:
         Hashed password string suitable for storage.
     """
@@ -52,11 +52,11 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
     Create a JSON Web Token (JWT) containing the provided payload and an expiration claim.
-    
+
     Parameters:
         data (dict): Claims to include in the token payload. The function copies this dict and adds an "exp" (expiration) claim.
         expires_delta (timedelta | None): Optional time delta from now after which the token expires. If omitted, the default expiry from settings.access_token_expire_minutes is used.
-    
+
     Returns:
         str: The encoded JWT as a string.
     """
@@ -78,7 +78,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 async def authenticate_user(email: str, password: str, db):
     """
     Validate the provided email and password and retrieve the corresponding user.
-    
+
     Returns:
         The user document if the credentials are valid, `False` otherwise.
     """
@@ -94,12 +94,12 @@ async def authenticate_user(email: str, password: str, db):
 async def register(user_data: UserCreate, db=Depends(get_database)):
     """
     Register a new user, ensuring unique email and username, and return the created user.
-    
+
     Creates a new user record with a hashed password, default active state and preferences, stores it in the database, and returns a UserResponse that includes the assigned user id.
-    
+
     Raises:
         HTTPException: If the provided email is already registered or the username is already taken.
-    
+
     Returns:
         UserResponse: The created user's data including the assigned `id`.
     """
@@ -140,10 +140,10 @@ async def login(
 ):
     """
     Authenticate provided credentials and issue a JWT access token for the authenticated user.
-    
+
     Raises:
         HTTPException: 401 Unauthorized if the email/username or password is incorrect.
-    
+
     Returns:
         dict: {
             "access_token": str,    # JWT encoded access token
@@ -180,7 +180,7 @@ async def login(
 async def get_profile(current_user: dict = Depends(get_current_user)):
     """
     Retrieve the authenticated user's profile.
-    
+
     Returns:
         UserResponse: UserResponse containing id, email, username, role, is_active, created_at, last_login (may be None), and preferences.
     """
@@ -200,7 +200,7 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
 async def refresh_token(current_user: dict = Depends(get_current_user)):
     """
     Issue a new access token for the authenticated user.
-    
+
     Returns:
         dict: {
             "access_token": JWT access token string,
@@ -228,9 +228,9 @@ async def logout(
 ):
     """
     Log out the current user and, if a Redis client is available, add the bearer token to a Redis blacklist until its expiration.
-    
+
     Attempts to decode the provided bearer token to determine its expiration and, when present and in the future, stores a blacklist key in Redis with a TTL equal to the token's remaining lifetime. Failures to blacklist do not prevent logout.
-    
+
     Returns:
         dict: A message indicating successful logout, e.g. {"message": "Successfully logged out"}.
     """
@@ -264,13 +264,13 @@ async def update_profile(
 ):
     """
     Update the authenticated user's email and/or username.
-    
+
     Parameters:
         profile_data (dict): Payload containing fields to update; only "email" and "username" are permitted.
-    
+
     Returns:
         UserResponse: Representation of the updated user including id, email, username, role, is_active, created_at, last_login, and preferences.
-    
+
     Raises:
         HTTPException: 400 Bad Request if no allowed fields are provided, if the provided email is already registered by another user, or if the provided username is already taken.
     """
@@ -330,14 +330,14 @@ async def change_password(
 ):
     """
     Change the current user's password.
-    
+
     Parameters:
         password_data (dict): Payload containing 'currentPassword' (the user's existing password)
-            and 'newPassword' (the password to set). 
-    
+            and 'newPassword' (the password to set).
+
     Raises:
         HTTPException: 400 if required fields are missing or if the current password is incorrect.
-    
+
     Returns:
         dict: A success message object, e.g. {"message": "Password changed successfully"}.
     """

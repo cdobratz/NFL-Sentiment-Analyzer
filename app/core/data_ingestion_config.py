@@ -35,7 +35,7 @@ class DataIngestionConfig:
     def __post_init__(self):
         """
         Populate default values after initialization.
-        
+
         If `twitter_keywords` was not provided, set a curated list of NFL- and football-related search terms. If `betting_sportsbooks` was not provided, set a default list of common sportsbooks.
         """
         if self.twitter_keywords is None:

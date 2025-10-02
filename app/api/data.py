@@ -23,15 +23,15 @@ async def get_teams(
 ):
     """
     Retrieve NFL teams matching optional conference and division filters.
-    
+
     Filters:
     - `conference`: matched after converting to uppercase.
     - `division`: matched after converting to title case.
-    
+
     Parameters:
     - include_stats: When true, each team will include a `current_stats` field with the team's current-season aggregated statistics.
     - include_sentiment: When true, each team will include a `current_sentiment` field summarizing recent sentiment.
-    
+
     Returns:
     A list of Team models; each item may include `current_stats` and/or `current_sentiment` when those options are enabled.
     """
@@ -65,10 +65,10 @@ async def get_teams(
 async def _get_team_stats(db, team_id: str) -> Dict[str, Any]:
     """
     Compute aggregate statistics for a team's current-season completed games.
-    
+
     Parameters:
         team_id (str): Team document `_id` to compute stats for.
-    
+
     Returns:
         dict: Aggregated statistics with keys:
             - `wins`: Number of games the team won this season.
@@ -124,10 +124,10 @@ async def _get_team_stats(db, team_id: str) -> Dict[str, Any]:
 async def _get_team_sentiment(db, team_id: str) -> Dict[str, Any]:
     """
     Compute recent sentiment metrics for a team based on sentiment analyses from the last 7 days.
-    
+
     Parameters:
         team_id (str): The team's document `_id` in the database.
-    
+
     Returns:
         dict: {
             "average_sentiment": float,  # average sentiment score rounded to 3 decimals; +1=positive, -1=negative, 0=neutral
@@ -184,13 +184,13 @@ async def _get_team_sentiment(db, team_id: str) -> Dict[str, Any]:
 async def get_team(team_id: str, db=Depends(get_database)):
     """
     Retrieve a team by its unique identifier and return it as a Team model.
-    
+
     Parameters:
         team_id (str): The team's unique identifier.
-    
+
     Returns:
         Team: The team model constructed from the database document.
-    
+
     Raises:
         HTTPException: Raised with status 404 if no team with the given ID exists.
     """
@@ -223,7 +223,7 @@ async def get_players(
 ):
     """
     Retrieve a list of NFL players matching optional filters, optionally enriched with current-season stats and recent sentiment.
-    
+
     Parameters:
         team_id (Optional[str]): Filter players by team ID.
         position (Optional[str]): Filter by position (case-insensitive; stored as uppercase).
@@ -232,7 +232,7 @@ async def get_players(
         include_stats (bool): If true, include `current_stats` for each player.
         include_sentiment (bool): If true, include `current_sentiment` for each player.
         limit (int): Maximum number of players to return (1–200).
-    
+
     Returns:
         List[Player]: Players matching the query. Each Player may include `current_stats` and/or `current_sentiment` when requested.
     """
@@ -270,9 +270,9 @@ async def get_players(
 async def _get_player_stats(db, player_id: str) -> Dict[str, Any]:
     """
     Return placeholder current-season statistics for a player.
-    
+
     This provides a temporary structure until a real stats source is integrated.
-    
+
     Returns:
         dict: A mapping containing:
             - games_played (int): Number of games played this season.
@@ -287,7 +287,7 @@ async def _get_player_stats(db, player_id: str) -> Dict[str, Any]:
 async def _get_player_sentiment(db, player_id: str) -> Dict[str, Any]:
     """
     Compute recent sentiment metrics for a player based on sentiment analyses from the last 7 days.
-    
+
     Returns:
         result (Dict[str, Any]): A dictionary containing:
             - average_sentiment (float): Average sentiment mapped to [-1.0, 1.0] and rounded to 3 decimals.
@@ -340,13 +340,13 @@ async def _get_player_sentiment(db, player_id: str) -> Dict[str, Any]:
 async def get_player(player_id: str, db=Depends(get_database)):
     """
     Retrieve a single player by its ID.
-    
+
     Parameters:
         player_id (str): The player's identifier.
-    
+
     Returns:
         Player: The Player model constructed from the database document.
-    
+
     Raises:
         HTTPException: 404 if no player with the given ID exists.
     """
@@ -377,7 +377,7 @@ async def get_games(
 ):
     """
     Retrieve games matching the provided filters, optionally enriched with team data, predictions, and sentiment.
-    
+
     Parameters:
         week (Optional[int]): Filter by NFL week.
         season (Optional[int]): Filter by season year.
@@ -389,7 +389,7 @@ async def get_games(
         include_sentiment (bool): If True, include a sentiment summary for each game.
         limit (int): Maximum number of games to return (1-100).
         db: Database dependency (omitted from detailed docs).
-    
+
     Returns:
         List[GameResponse]: A list of game response objects matching the filters. Each item may include embedded `home_team` and `away_team` data; when requested, `predictions` and `sentiment_summary` fields are added.
     """
@@ -443,9 +443,9 @@ async def get_games(
 async def _get_game_predictions(db, game_id: str) -> List[Dict[str, Any]]:
     """
     Retrieve prediction documents for a given game, ordered from newest to oldest.
-    
+
     Each returned dictionary represents a prediction document and includes an `id` field containing the stringified original `_id`.
-    
+
     Returns:
         List[Dict[str, Any]]: Prediction documents for the specified game with `id` added.
     """
@@ -462,7 +462,7 @@ async def _get_game_predictions(db, game_id: str) -> List[Dict[str, Any]]:
 async def _get_game_sentiment(db, game_id: str) -> Dict[str, Any]:
     """
     Compute a 7-day sentiment summary for the specified game.
-    
+
     Returns:
         dict: Summary containing:
             - overall_sentiment (float): Average sentiment score for mentions of either team over the last 7 days, rounded to 3 decimals.
@@ -530,10 +530,10 @@ async def _get_game_sentiment(db, game_id: str) -> Dict[str, Any]:
 async def get_game(game_id: str, db=Depends(get_database)):
     """
     Retrieve a single game by its ID and include embedded home and away team models when available.
-    
+
     Returns:
         GameResponse: The game data with `home_team` and `away_team` fields populated as `Team` models when those teams exist.
-    
+
     Raises:
         HTTPException: Raised with status 404 if no game with the given `game_id` is found.
     """
@@ -574,7 +574,7 @@ async def get_betting_lines(
 ):
     """
     Retrieve current betting lines with optional historical movements and team information.
-    
+
     Parameters:
         game_id (str | None): Filter lines for a specific game by its ID.
         sportsbook (str | None): Filter lines by sportsbook identifier.
@@ -583,7 +583,7 @@ async def get_betting_lines(
         include_history (bool): If true and `game_id` is provided, include historical line movements.
         include_team_info (bool): If true, attach basic home/away team info (name, abbreviation, city).
         db: Database dependency (omitted from parameter docs as a provided dependency).
-    
+
     Returns:
         dict: If `include_history` and `game_id` are provided, returns:
             {
@@ -689,11 +689,11 @@ async def _get_historical_betting_lines(
 ) -> List[Dict[str, Any]]:
     """
     Retrieve historical betting line movements for a game.
-    
+
     Parameters:
         game_id (str): Identifier of the game to fetch historical lines for.
         sportsbook (Optional[str]): If provided, filter historical lines to this sportsbook.
-    
+
     Returns:
         List[Dict[str, Any]]: Historical betting line documents (each has `_id` converted to `id`), ordered by `processed_at` ascending.
     """
@@ -716,12 +716,12 @@ async def _get_raw_betting_lines(
 ) -> List[Dict[str, Any]]:
     """
     Retrieve recent raw betting lines ingested in the last 24 hours, optionally filtered by sportsbook.
-    
+
     Parameters:
         sportsbook (Optional[str]): If provided, only return lines from this sportsbook.
         week (Optional[int]): Currently ignored; included for API compatibility.
         season (Optional[int]): Currently ignored; included for API compatibility.
-    
+
     Returns:
         List[Dict[str, Any]]: List of raw betting line documents. Each document includes an `id`
         field (string) derived from the original `_id`.
@@ -753,12 +753,12 @@ async def get_schedule(
 ):
     """
     Retrieve the upcoming and in-progress NFL schedule, optionally filtered by week, season, or team.
-    
+
     Parameters:
         week (Optional[int]): If provided, restrict results to the given week.
         season (Optional[int]): If provided, restrict results to the given season (year).
         team_id (Optional[str]): If provided, return games where the team is home or away.
-    
+
     Returns:
         dict: A mapping with key `"schedule"` containing a list of game documents. Each game document has its database `_id` converted to string as the `id` field.
     """
@@ -785,10 +785,10 @@ async def get_schedule(
 async def get_pipeline_status():
     """
     Retrieve current status of the data ingestion pipeline.
-    
+
     Returns:
         result (dict): A mapping with keys "status" (typically "success") and "data" containing pipeline statistics.
-    
+
     Raises:
         HTTPException: Raised with status code 500 if pipeline statistics cannot be retrieved.
     """
@@ -810,18 +810,18 @@ async def trigger_data_collection(
 ):
     """
     Trigger manual collection and processing of data from a specified source.
-    
+
     Parameters:
         source (str): Data source to collect from; accepted values (case-insensitive): 'twitter', 'espn', or 'betting'.
         db: Database dependency (injected); omitted from detailed description as it's a standard dependency.
-    
+
     Returns:
         dict: Result object containing:
             - `status` (str): "success" on successful collection.
             - `source` (str): The requested source.
             - `collection_stats` (Any): Statistics returned by the processing step.
             - `timestamp` (str): ISO-formatted timestamp when the collection completed.
-    
+
     Raises:
         HTTPException: Raises a 400 Bad Request if `source` is not one of the accepted values.
         HTTPException: Raises a 500 Internal Server Error if collection or processing fails.
@@ -877,10 +877,10 @@ async def get_data_summary(
 ):
     """
     Summarize collected raw data and sentiment counts over the past N days.
-    
+
     Parameters:
         days (int): Number of days to include in the summary (minimum 1, maximum 30).
-    
+
     Returns:
         dict: Summary containing:
             - period (str): period label like "last_7_days".
@@ -889,7 +889,7 @@ async def get_data_summary(
             - data_collected (dict): counts for 'tweets', 'news_articles', 'games', 'betting_lines', and 'sentiment_analyses'.
             - sentiment_by_source (dict): mapping of sentiment source -> mention count.
             - sentiment_breakdown (dict): mapping of sentiment label -> count.
-    
+
     Raises:
         HTTPException: with status 500 if an error occurs while retrieving the summary.
     """
@@ -974,13 +974,13 @@ async def get_recent_sentiment(
 ):
     """
     Retrieve recent sentiment analyses within a sliding window of past hours, optionally filtered by source and sentiment.
-    
+
     Parameters:
         hours (int): Number of past hours to include in the search (1–168).
         source (Optional[str]): Optional data source to filter results (e.g., "twitter", "espn").
         sentiment_type (Optional[str]): Optional sentiment filter; one of "positive", "negative", or "neutral".
         limit (int): Maximum number of results to return (1–500).
-    
+
     Returns:
         dict: {
             "period_hours": int,                 # the requested hours window
@@ -988,7 +988,7 @@ async def get_recent_sentiment(
             "sentiment_analyses": list,          # list of sentiment analysis documents from the database; each doc includes an added "id" field (string) derived from the original "_id"
             "filters": dict                      # echo of applied filters: {"source": source, "sentiment_type": sentiment_type}
         }
-    
+
     Raises:
         HTTPException: If retrieval from the database fails, raises a 500 HTTPException with a retrieval error detail.
     """
@@ -1035,11 +1035,11 @@ async def get_trending_topics(
 ):
     """
     Retrieve trending NFL keywords and teams from recent sentiment analyses.
-    
+
     Parameters:
         hours (int): Time window in hours to analyze for trends.
         min_mentions (int): Minimum number of mentions required for an item to be included.
-    
+
     Returns:
         dict: {
             "period_hours": int,           # analyzed hours window

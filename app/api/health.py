@@ -27,9 +27,9 @@ class HealthChecker:
     async def check_mongodb(self) -> Dict[str, Any]:
         """
         Evaluate MongoDB connectivity and basic server health.
-        
+
         Performs a connectivity check and retrieves basic server status metrics.
-        
+
         Returns:
             dict: A dictionary describing MongoDB health. Keys:
                 - "status": `"healthy"` when checks succeed, `"unhealthy"` otherwise.
@@ -65,7 +65,7 @@ class HealthChecker:
     async def check_redis(self) -> Dict[str, Any]:
         """
         Check Redis connectivity and return a structured health payload.
-        
+
         Returns:
             dict: Health information for Redis. On success contains:
                 - `status`: "healthy"
@@ -83,7 +83,7 @@ class HealthChecker:
 
             # Test connection
             redis_client = db_manager.get_redis()
-            
+
             # Run blocking Redis methods in thread pool
             await asyncio.to_thread(redis_client.ping)
             info = await asyncio.to_thread(redis_client.info)
@@ -105,7 +105,7 @@ class HealthChecker:
     async def check_external_apis(self) -> Dict[str, Any]:
         """
         Check connectivity to external APIs used by the application.
-        
+
         Returns:
             results (Dict[str, Any]): Mapping of external service identifiers to their health details.
                 Each value contains a `status` field with one of: `"healthy"`, `"stopped"`, or `"unhealthy"`.
@@ -127,9 +127,9 @@ class HealthChecker:
     async def check_ml_services(self) -> Dict[str, Any]:
         """
         Verifies availability of ML services used by the application.
-        
+
         Performs a live test of the sentiment analysis service and reports its health and test outcome.
-        
+
         Returns:
             result (Dict[str, Any]): A mapping with key "sentiment_service" containing:
                 - "status": "healthy" or "unhealthy".
@@ -155,7 +155,7 @@ class HealthChecker:
     def get_system_metrics(self) -> Dict[str, Any]:
         """
         Collect current system resource metrics for CPU, memory, and the root filesystem disk.
-        
+
         Returns:
             dict: A mapping with keys:
                 - "cpu": dict with "usage_percent" (float) and "count" (int).
@@ -200,7 +200,7 @@ health_checker = HealthChecker()
 async def basic_health_check():
     """
     Return a minimal health status for the service.
-    
+
     Returns:
         dict: Health payload containing:
             - status (str): "healthy" or other overall status string.
@@ -220,9 +220,9 @@ async def basic_health_check():
 async def detailed_health_check():
     """
     Perform a comprehensive health check across database, cache, external APIs, ML services, and system metrics.
-    
+
     Runs MongoDB, Redis, external API, and ML-service checks concurrently, collects system metrics, and aggregates results into a structured payload describing each component and overall status. If any component check raises an exception or indicates an unhealthy state, the overall status is set accordingly.
-    
+
     Returns:
         dict: Health report with keys:
             - status: overall health string, one of "healthy", "degraded", or "unhealthy".
@@ -231,7 +231,7 @@ async def detailed_health_check():
             - check_duration_ms: total duration of checks in milliseconds (rounded).
             - components: mapping with keys "mongodb", "redis", "external_apis", and "ml_services" containing each component's result or an error object.
             - system_metrics: CPU, memory, and disk usage metrics collected from the host.
-    
+
     Raises:
         HTTPException: with status code 503 and the health payload when overall status is "unhealthy".
     """
@@ -312,9 +312,9 @@ async def detailed_health_check():
 async def readiness_check():
     """
     Perform a Kubernetes readiness probe by verifying critical dependencies.
-    
+
     Checks MongoDB and Redis health; if both are healthy returns a payload with status "ready" and an ISO8601 UTC timestamp. If any check fails, raises HTTPException with status code 503 and a detail object containing status "not_ready", an error message, and a timestamp.
-    
+
     Returns:
         dict: {"status": "ready", "timestamp": "<ISO8601 UTC time>Z"}
     """
@@ -345,7 +345,7 @@ async def readiness_check():
 async def liveness_check():
     """
     Return liveness information for the service (Kubernetes liveness probe).
-    
+
     Returns:
         health (dict): Dictionary with keys:
             - status (str): "alive".
@@ -363,9 +363,9 @@ async def liveness_check():
 async def metrics_endpoint():
     """
     Expose system and application metrics in Prometheus text format.
-    
+
     Collects CPU, memory, and disk metrics from the health checker and formats them as Prometheus-compatible gauge lines, plus an application info metric with the current version.
-    
+
     Returns:
         prometheus_text (str): Prometheus-formatted metrics payload as a single string ending with a newline.
     """
@@ -412,9 +412,9 @@ async def get_rate_limit_status(
 ):
     """
     Return the current rate limit status for the requesting client (by API key, authenticated user, or IP).
-    
+
     Provides the rate limit details computed for the client, an ISO 8601 UTC timestamp, and the inferred client type.
-    
+
     Returns:
         dict: A payload containing:
             - rate_limits: Mapping of rate-limit windows to status/usage details for the client.

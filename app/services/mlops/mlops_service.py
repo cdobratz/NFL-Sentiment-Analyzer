@@ -43,7 +43,7 @@ class MLOpsService:
         # Initialize component services
         """
         Initialize the MLOpsService by creating and wiring its internal service components.
-        
+
         Creates instances of HuggingFaceModelService, WandBService, HopsworksService, ModelDeploymentService,
         and ModelRetrainingService, and initializes internal status flags (`initialized` set to False and
         an empty `services_status` dictionary).
@@ -61,7 +61,7 @@ class MLOpsService:
     async def initialize(self):
         """
         Initialize internal MLOps components and populate service status.
-        
+
         Initializes the deployment and retraining services, updates the service-status snapshot using
         cache/info from HuggingFace, Weights & Biases, and Hopsworks, and sets the instance's
         `initialized` flag to True.
@@ -103,7 +103,7 @@ class MLOpsService:
     ) -> ModelMetadata:
         """
         Register a new model and create a default retraining configuration.
-        
+
         Parameters:
             model_name (str): Human-friendly name for the model.
             model_path (str): Filesystem or storage path to the model artifacts.
@@ -112,7 +112,7 @@ class MLOpsService:
             metrics (Optional[Dict[str, float]]): Initial performance metrics to attach to the model.
             description (Optional[str]): Short description of the model.
             tags (Optional[List[str]]): List of tags for categorization and search.
-        
+
         Returns:
             ModelMetadata: Metadata for the newly registered model, including its generated `model_id`.
         """
@@ -153,14 +153,14 @@ class MLOpsService:
     ) -> ModelDeployment:
         """
         Deploys the specified model version to the given environment using the configured deployment strategy.
-        
+
         Parameters:
             model_id: Identifier of the model to deploy.
             model_version: Version of the model to deploy.
             environment: Target environment for deployment (e.g., "production", "staging").
             strategy: Deployment strategy to apply.
             traffic_percentage: Percentage of traffic to route to this deployment (0-100).
-        
+
         Returns:
             ModelDeployment: The created deployment object.
         """
@@ -206,7 +206,7 @@ class MLOpsService:
     ) -> str:
         """
         Create an A/B test that routes traffic between two deployed models.
-        
+
         Parameters:
             test_name (str): Human-readable name for the A/B test.
             model_a_id (str): Identifier of the control model.
@@ -215,7 +215,7 @@ class MLOpsService:
             model_b_version (str): Version of the treatment model.
             traffic_split (float): Percentage of incoming traffic routed to model B (0-100).
             duration_days (int): Duration of the A/B test in days.
-        
+
         Returns:
             ab_test_id (str): Identifier of the created A/B test.
         """
@@ -301,10 +301,10 @@ class MLOpsService:
     async def log_metrics(self, metrics: Dict[str, float], step: Optional[int] = None):
         """
         Log provided metrics to the active experiment run.
-        
+
         Parameters:
-        	metrics (Dict[str, float]): Mapping of metric names to numeric values.
-        	step (Optional[int]): Optional step or iteration number associated with these metrics.
+                metrics (Dict[str, float]): Mapping of metric names to numeric values.
+                step (Optional[int]): Optional step or iteration number associated with these metrics.
         """
         try:
             await self.wandb_service.log_metrics(metrics, step=step)
@@ -315,7 +315,7 @@ class MLOpsService:
     async def finish_experiment(self, final_metrics: Optional[Dict[str, Any]] = None):
         """
         Finish the current experiment and optionally log final metrics.
-        
+
         Parameters:
             final_metrics (Optional[Dict[str, Any]]): Final metrics to record with the experiment before finishing.
         """
@@ -332,10 +332,10 @@ class MLOpsService:
     ) -> bool:
         """
         Update the feature store with a list of sentiment analysis results.
-        
+
         Parameters:
             sentiment_results (List[SentimentResult]): Sentiment analysis results to be persisted as features in the feature store.
-        
+
         Returns:
             bool: `True` if the feature store was updated successfully, `False` otherwise.
         """
@@ -365,12 +365,12 @@ class MLOpsService:
     ) -> Optional[Any]:
         """
         Retrieve training features from the feature store for a given feature view.
-        
+
         Parameters:
             feature_view_name (str): Name of the feature view to query.
             start_time (Optional[datetime]): Optional inclusive start time to filter the retrieved records.
             end_time (Optional[datetime]): Optional inclusive end time to filter the retrieved records.
-        
+
         Returns:
             training_data (Any | None): The training dataset retrieved from the feature store, or `None` if retrieval failed.
         """
@@ -432,12 +432,12 @@ class MLOpsService:
     ) -> ExperimentRun:
         """
         Trigger a manual retraining run for a model.
-        
+
         Parameters:
             model_name (str): Name of the model to retrain.
             reason (str): Reason for initiating retraining.
             config (Optional[Dict[str, Any]]): Optional training configuration overrides.
-        
+
         Returns:
             ExperimentRun: The experiment run for the retraining job
         """
@@ -465,12 +465,12 @@ class MLOpsService:
     ) -> Dict[str, Any]:
         """
         Predicts sentiment for the given text using the specified model.
-        
+
         Parameters:
             text (str): Text to analyze.
             model_name (str): Model identifier to use for prediction; defaults to "sentiment_base".
             model_version (Optional[str]): Specific model version to use, if any.
-        
+
         Returns:
             Dict[str, Any]: A dictionary containing the sentiment prediction and related metadata.
         """
@@ -494,13 +494,13 @@ class MLOpsService:
     ) -> List[Dict[str, Any]]:
         """
         Perform sentiment predictions for a list of texts using a specified model.
-        
+
         Parameters:
             texts (List[str]): Input texts to analyze.
             model_name (str): Model identifier to use for predictions.
             model_version (Optional[str]): Specific model version to target, if any.
             batch_size (int): Number of texts processed per inference batch.
-        
+
         Returns:
             List[Dict[str, Any]]: A list of prediction dictionaries corresponding to the input texts.
         """
@@ -523,14 +523,14 @@ class MLOpsService:
     async def get_service_status(self) -> Dict[str, Any]:
         """
         Return the current status of the MLOps service and its subservices.
-        
+
         When the service is initialized, the `services` entry is augmented with up-to-date status for `huggingface`, `wandb`, and `hopsworks`. The returned dictionary always includes:
         - `initialized` (bool)
         - `services` (dict)
         - `timestamp` (UTC ISO 8601 string)
-        
+
         On failure, returns `{"initialized": False, "error": "<message>"}`.
-        
+
         Returns:
             status (Dict[str, Any]): A dictionary containing the service status as described above.
         """
@@ -558,7 +558,7 @@ class MLOpsService:
     async def list_models(self) -> List[Dict[str, Any]]:
         """
         Lists available sentiment-analysis models from the HuggingFace service.
-        
+
         Returns:
             A list of model metadata dictionaries for available models; an empty list if none or on error.
         """
@@ -576,10 +576,10 @@ class MLOpsService:
     async def get_model_info(self, model_id: str) -> Dict[str, Any]:
         """
         Retrieve detailed metadata for a model by its identifier.
-        
+
         Parameters:
             model_id (str): Identifier of the model to retrieve.
-        
+
         Returns:
             dict: A dictionary containing model information; an empty dict if retrieval fails.
         """
@@ -596,10 +596,10 @@ class MLOpsService:
     ) -> List[Dict[str, Any]]:
         """
         List active model deployments, optionally filtered by environment.
-        
+
         Parameters:
             environment (Optional[str]): Environment to filter deployments by.
-        
+
         Returns:
             List of deployments represented as dictionaries.
         """
@@ -619,11 +619,11 @@ class MLOpsService:
     ) -> List[Dict[str, Any]]:
         """
         List experiment runs for a given experiment name.
-        
+
         Parameters:
             experiment_name (Optional[str]): Name of the experiment to filter by. If omitted, returns runs across experiments.
             limit (int): Maximum number of experiment runs to return.
-        
+
         Returns:
             List[Dict[str, Any]]: A list of experiment run records; returns an empty list if no runs are found or an error occurs.
         """

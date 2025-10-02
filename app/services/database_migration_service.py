@@ -20,11 +20,11 @@ class Migration:
     def __init__(self, version: str, description: str):
         """
         Initialize the migration with its semantic version identifier and human-readable description.
-        
+
         Parameters:
             version (str): Unique version identifier for the migration (e.g., "001", "2025-01-15-001").
             description (str): Short human-readable summary of what the migration does.
-        
+
         Notes:
             The `applied_at` attribute is initialized to `None` and will be set to a `datetime` when the migration is applied.
         """
@@ -35,13 +35,13 @@ class Migration:
     async def up(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Apply this migration's changes to the given database.
-        
+
         Parameters:
             db (AsyncIOMotorDatabase): The database instance the migration should modify.
-        
+
         Returns:
             bool: `True` if the migration was applied successfully, `False` otherwise.
-        
+
         Raises:
             NotImplementedError: If the base class method is not overridden by a subclass.
         """
@@ -50,10 +50,10 @@ class Migration:
     async def down(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Perform the rollback for this migration.
-        
+
         Returns:
             bool: `True` if the rollback succeeded, `False` otherwise.
-        
+
         Raises:
             NotImplementedError: Always raised by the base implementation; subclasses must override this method.
         """
@@ -66,7 +66,7 @@ class DatabaseMigrationService:
     def __init__(self, db: Optional[AsyncIOMotorDatabase] = None):
         """
         Initialize the DatabaseMigrationService and register built-in migrations.
-        
+
         Parameters:
             db (Optional[AsyncIOMotorDatabase]): An existing async MongoDB database instance to use; if omitted, the service will obtain the database lazily.
         """
@@ -78,7 +78,7 @@ class DatabaseMigrationService:
     async def get_database(self) -> AsyncIOMotorDatabase:
         """
         Return the cached database instance, creating and caching it on first access.
-        
+
         Returns:
             AsyncIOMotorDatabase: The connected database instance.
         """
@@ -89,7 +89,7 @@ class DatabaseMigrationService:
     def _register_migrations(self):
         """
         Populate the service with the ordered list of built-in migration instances.
-        
+
         This assigns an ordered list of Migration objects to self.migrations representing the predefined migration sequence (versions "001" through "005").
         """
         self.migrations = [
@@ -105,7 +105,7 @@ class DatabaseMigrationService:
     async def get_applied_migrations(self) -> List[Dict[str, Any]]:
         """
         Return applied migration documents ordered by their application time.
-        
+
         Returns:
             List[Dict[str, Any]]: Applied migration documents sorted by `applied_at` in ascending order (oldest first).
         """
@@ -118,7 +118,7 @@ class DatabaseMigrationService:
     async def get_pending_migrations(self) -> List[Migration]:
         """
         Return registered migrations not yet recorded as applied.
-        
+
         Returns:
             List[Migration]: Migration instances whose `version` is not present in the applied migrations collection.
         """
@@ -130,10 +130,10 @@ class DatabaseMigrationService:
     async def apply_migration(self, migration: Migration) -> bool:
         """
         Apply a single registered migration and record its outcome in the migrations collection.
-        
+
         Parameters:
             migration (Migration): The migration instance to apply.
-        
+
         Returns:
             bool: `True` if the migration was applied successfully and recorded, `False` otherwise.
         """
@@ -182,7 +182,7 @@ class DatabaseMigrationService:
     async def rollback_migration(self, migration: Migration) -> bool:
         """
         Rollback the provided migration and remove its applied record if successful.
-        
+
         Returns:
             bool: `True` if the migration was rolled back and its record was removed from the migrations collection, `False` otherwise.
         """
@@ -213,11 +213,11 @@ class DatabaseMigrationService:
     async def migrate_up(self, target_version: Optional[str] = None) -> Dict[str, Any]:
         """
         Apply pending migrations in sequence, optionally stopping at a target version.
-        
+
         Parameters:
             target_version (Optional[str]): If provided, only migrations with version less than or equal
                 to this value will be applied.
-        
+
         Returns:
             result (Dict[str, Any]): Summary of the migration run containing:
                 - `applied`: list of applied migrations as dicts with `version` and `description`.
@@ -251,12 +251,12 @@ class DatabaseMigrationService:
     async def migrate_down(self, target_version: str) -> Dict[str, Any]:
         """
         Rollback applied migrations with versions greater than the given target version.
-        
+
         Migrations are processed in reverse-applied order and the operation stops on the first failure.
-        
+
         Parameters:
             target_version (str): Version threshold; any applied migration with a version greater than this value will be rolled back.
-        
+
         Returns:
             dict: A summary with keys:
                 - "rolled_back" (List[Dict[str, str]]): Successfully rolled back migrations as objects with "version" and "description".
@@ -306,7 +306,7 @@ class DatabaseMigrationService:
     async def get_migration_status(self) -> Dict[str, Any]:
         """
         Return the current migration status for the migration service.
-        
+
         Returns:
             status (Dict[str, Any]): A dictionary with migration metadata:
                 - current_version: The version string of the last applied migration, or None if none applied.
@@ -340,10 +340,10 @@ class InitialSchemaMigration(Migration):
     async def up(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Create initial collections and base indexes required by the application.
-        
+
         Parameters:
             db (AsyncIOMotorDatabase): Database instance to modify.
-        
+
         Returns:
             bool: `True` if the migration completed successfully and the required collections and indexes were ensured, `False` if an error occurred.
         """
@@ -376,7 +376,7 @@ class InitialSchemaMigration(Migration):
     async def down(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Rolls back the initial schema by dropping all custom indexes.
-        
+
         Returns:
             True if indexes were dropped successfully, False otherwise.
         """
@@ -395,9 +395,9 @@ class EnhancedSentimentModelMigration(Migration):
     async def up(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Add enhanced sentiment model fields to sentiment_analysis documents that are missing them.
-        
+
         Sets `nfl_context`, `sentiment_weights`, `emotion_scores`, `aspect_sentiments`, and `keyword_contributions` to empty objects on any document where `nfl_context` does not exist.
-        
+
         Returns:
             `true` if the migration succeeded, `false` otherwise.
         """
@@ -427,7 +427,7 @@ class EnhancedSentimentModelMigration(Migration):
     async def down(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Removes enhanced sentiment model fields from all documents in the sentiment_analysis collection.
-        
+
         Returns:
             True if the fields were removed without error, False otherwise.
         """
@@ -460,9 +460,9 @@ class AggregatedSentimentMigration(Migration):
     async def up(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Create aggregated sentiment collections and ensure time-series indexes exist.
-        
+
         Creates the hourly/daily aggregated collections and adds indexes for entity_id, timestamp, and sentiment_score if they are not already present.
-        
+
         Returns:
             bool: `True` if all collections and indexes were created or already present, `False` on error.
         """
@@ -502,7 +502,7 @@ class AggregatedSentimentMigration(Migration):
     async def down(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Remove aggregated sentiment collections created by this migration.
-        
+
         Returns:
             True if all target collections were dropped successfully, False otherwise.
         """
@@ -531,10 +531,10 @@ class AnalyticsIndexesMigration(Migration):
     async def up(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Create analytics-oriented indexes on the `sentiment_analysis`, `team_sentiment`, and `player_sentiment` collections.
-        
+
         Parameters:
             db (AsyncIOMotorDatabase): MongoDB database instance to apply index changes to.
-        
+
         Returns:
             bool: `True` if all indexes were created successfully, `False` otherwise.
         """
@@ -570,9 +570,9 @@ class AnalyticsIndexesMigration(Migration):
     async def down(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Indicate that analytics-oriented indexes are not removed automatically and that manual index cleanup may be required.
-        
+
         This method does not perform any automatic index removal; it logs a warning advising manual cleanup. It returns success unless an unexpected error occurs during execution.
-        
+
         Returns:
             bool: `True` if the rollback is treated as successful (no automated index removal performed), `False` if an error occurred.
         """
@@ -594,9 +594,9 @@ class CachingOptimizationMigration(Migration):
     async def up(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Adds cache-related fields and indexes to sentiment collections to enable caching.
-        
+
         This migration updates the team_sentiment, player_sentiment, and game_sentiment collections by adding the fields `cache_version` (set to 1), `cache_updated_at` (set to current UTC timestamp), and `cache_ttl` (set to 300 seconds) where they are missing, and creates indexes on `cache_updated_at` (descending) and `cache_version` (ascending).
-        
+
         Returns:
             True if the migration completed successfully, False otherwise.
         """
@@ -639,9 +639,9 @@ class CachingOptimizationMigration(Migration):
     async def down(self, db: AsyncIOMotorDatabase) -> bool:
         """
         Remove cache-related fields from team, player, and game sentiment collections.
-        
+
         This migration rollback unsets `cache_version`, `cache_updated_at`, and `cache_ttl` from the following collections: `team_sentiment`, `player_sentiment`, and `game_sentiment`.
-        
+
         Returns:
             True if all targeted documents were updated successfully, False otherwise.
         """
@@ -680,7 +680,7 @@ migration_service = DatabaseMigrationService()
 async def get_migration_service() -> DatabaseMigrationService:
     """
     Provide the module-level DatabaseMigrationService singleton.
-    
+
     Returns:
         DatabaseMigrationService: The singleton service instance used to manage and run database schema migrations.
     """

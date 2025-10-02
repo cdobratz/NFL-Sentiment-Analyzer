@@ -21,10 +21,10 @@ async def get_current_user(
 ):
     """
     Authenticate the request's Bearer JWT (including a Redis blacklist check) and return the corresponding user document.
-    
+
     Returns:
         The user document retrieved from the database.
-    
+
     Raises:
         HTTPException: 401 Unauthorized when the token is missing, invalid, blacklisted, or the user does not exist.
     """
@@ -66,10 +66,10 @@ async def get_current_user(
 async def get_current_admin_user(current_user: dict = Depends(get_current_user)):
     """
     Ensure the current authenticated user has the "admin" role.
-    
+
     Returns:
         dict: The authenticated user's document.
-    
+
     Raises:
         HTTPException: If the user's role is not "admin" (403 Forbidden).
     """
@@ -86,7 +86,7 @@ async def get_optional_user(
 ):
     """
     Return the authenticated user dict when valid credentials are provided, otherwise None.
-    
+
     Returns:
         Optional[dict]: The user document from the database if authentication succeeds, `None` otherwise.
     """
@@ -107,12 +107,12 @@ async def get_current_user_websocket(
 ):
     """
     Resolve the authenticated user for a WebSocket connection using a JWT provided in the connection's query parameters.
-    
+
     Checks the token against a Redis-backed blacklist and decodes the JWT to obtain the user identifier, then returns the matching user document from the database.
-    
+
     Parameters:
         token (Optional[str]): JWT provided as the `token` query parameter used to authenticate the WebSocket connection.
-    
+
     Returns:
         The user document from the database if the token is valid and the user exists, `None` otherwise.
     """
@@ -148,7 +148,7 @@ async def get_api_key(
 ) -> Optional[APIKey]:
     """
     Validate the provided API key header and return the corresponding APIKey when valid.
-    
+
     Returns:
         APIKey or None: The validated APIKey object if the header contains a valid key, `None` if no key was provided or validation failed.
     """
@@ -162,10 +162,10 @@ async def get_api_key(
 async def require_api_key(api_key: APIKey = Depends(get_api_key)) -> APIKey:
     """
     Enforces presence of a valid API key for an endpoint.
-    
+
     Returns:
         APIKey: The validated API key.
-    
+
     Raises:
         AuthenticationError: If no valid API key is provided.
     """
@@ -177,10 +177,10 @@ async def require_api_key(api_key: APIKey = Depends(get_api_key)) -> APIKey:
 def require_api_scope(required_scope: APIKeyScope):
     """
     Create a dependency that enforces an API key has the specified scope.
-    
+
     Parameters:
         required_scope (APIKeyScope): The scope that an API key must include to be accepted.
-    
+
     Returns:
         Callable: A dependency function that validates the current API key includes `required_scope` and returns the `APIKey` when validation succeeds. Raises `AuthorizationError` if the API key is missing the required scope.
     """
@@ -188,12 +188,12 @@ def require_api_scope(required_scope: APIKeyScope):
     async def check_scope(api_key: APIKey = Depends(require_api_key)) -> APIKey:
         """
         Enforces that the provided API key includes the required scope.
-        
+
         Raises AuthorizationError if the API key does not have the required scope.
-        
+
         Parameters:
             api_key (APIKey): The API key to validate (injected dependency).
-        
+
         Returns:
             APIKey: The validated API key when it contains the required scope.
         """
@@ -214,9 +214,9 @@ async def get_current_user_or_api_key(
 ) -> Union[dict, APIKey]:
     """
     Authenticate the request by returning an API key or a user object obtained from a JWT.
-    
+
     Prefers a valid `APIKey` when present; if no API key is provided, requires JWT credentials and returns the associated user document. Raises `AuthenticationError` if neither an API key nor JWT credentials are present.
-    
+
     Returns:
         `APIKey` when an API key is present, otherwise the user document (`dict`) resolved from the JWT.
     """
@@ -235,13 +235,13 @@ async def get_current_user_or_api_key(
 def require_user_or_api_scope(required_scope: APIKeyScope):
     """
     Create a dependency that allows access when either an authenticated user or an API key with a specific scope is present.
-    
+
     Parameters:
         required_scope (APIKeyScope): The API key scope required when an API key is used for authentication.
-    
+
     Returns:
         Callable: A dependency function that accepts either a user dict or an APIKey and returns the authenticated object when authorization succeeds.
-    
+
     Raises:
         AuthorizationError: If an APIKey is provided but does not include the required scope.
     """
@@ -253,13 +253,13 @@ def require_user_or_api_scope(required_scope: APIKeyScope):
         # If it's an API key, check scope
         """
         Ensure the authenticated principal has the required API key scope when applicable.
-        
+
         Parameters:
             auth (Union[dict, APIKey]): Authenticated principal, either a user dictionary or an `APIKey` instance.
-        
+
         Returns:
             Union[dict, APIKey]: The original `auth` object when authorization checks pass.
-        
+
         Raises:
             AuthorizationError: If `auth` is an `APIKey` that does not include the required scope.
         """

@@ -111,12 +111,21 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
+    - name: Install uv for Snyk scan
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "latest"
+
+    - name: Generate requirements.txt for Snyk
+      run: |
+        uv export --format requirements-txt --output-file requirements.txt
+
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/python@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        args: --severity-threshold=high
+        args: --severity-threshold=high --file=requirements.txt
 
   build:
     needs: [test, security-scan]

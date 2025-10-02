@@ -68,7 +68,7 @@ class MetricsCollector:
     def __init__(self):
         """
         Initialize the MetricsCollector and its internal in-memory storage.
-        
+
         Creates empty containers used to store collected metrics and current counter/gauge values:
         - metrics: mapping from metric name to a list of Metric samples.
         - counters: current numeric values for counter metrics keyed by name.
@@ -83,12 +83,12 @@ class MetricsCollector:
     ):
         """
         Increment the named counter metric and record a timestamped Metric entry.
-        
+
         Parameters:
             name (str): Metric name to increment.
             value (float): Amount to add to the counter (default 1.0).
             labels (Dict[str, str], optional): Key/value labels to associate with the metric.
-        
+
         Notes:
             - Creates or updates an internal counter keyed by `name` and `labels`.
             - Appends a Metric with the updated counter value and current UTC timestamp.
@@ -116,7 +116,7 @@ class MetricsCollector:
     def set_gauge(self, name: str, value: float, labels: Dict[str, str] = None):
         """
         Set the current value of a named gauge metric and record it in the collector.
-        
+
         Parameters:
             name (str): Metric name.
             value (float): Gauge value to set.
@@ -141,11 +141,11 @@ class MetricsCollector:
     def get_metrics(self, name: str, since: Optional[datetime] = None) -> List[Metric]:
         """
         Retrieve stored metrics for a given metric name, optionally only those recorded at or after a given timestamp.
-        
+
         Parameters:
             name (str): The metric name to look up.
             since (Optional[datetime]): If provided, only metrics with timestamp >= this value are returned.
-        
+
         Returns:
             List[Metric]: A list of Metric instances matching the name and optional time filter.
         """
@@ -161,10 +161,10 @@ class MetricsCollector:
     ) -> Optional[float]:
         """
         Retrieve the most recent value recorded for the metric with the given name, optionally filtered by exact label matches.
-        
+
         Parameters:
             labels (Dict[str, str], optional): Exact label key/value pairs to match against metric labels. If provided, only metrics whose labels equal this mapping are considered.
-        
+
         Returns:
             Optional[float]: The latest metric value if any matching metric exists, `None` otherwise.
         """
@@ -185,7 +185,7 @@ class AlertManager:
     def __init__(self):
         """
         Initialize the AlertManager internal state.
-        
+
         Sets up:
         - alerts: list of stored Alert objects.
         - alert_handlers: list of callables to be invoked when alerts are created.
@@ -198,7 +198,7 @@ class AlertManager:
     def add_alert_handler(self, handler: Callable[[Alert], None]):
         """
         Register a callable to be invoked whenever a new Alert is created.
-        
+
         Parameters:
             handler (Callable[[Alert], None]): A function or coroutine that accepts a single Alert argument; registered handlers will be executed (awaited if a coroutine) for each created alert.
         """
@@ -207,7 +207,7 @@ class AlertManager:
     def add_alert_rule(self, rule: Dict[str, Any]):
         """
         Registers an alert rule to be stored by the alert manager for later evaluation.
-        
+
         Parameters:
             rule (Dict[str, Any]): A dictionary describing the rule's conditions and associated metadata or actions.
         """
@@ -223,12 +223,12 @@ class AlertManager:
     ) -> Alert:
         """
         Create a new Alert, record it in the manager, log its creation, and dispatch it to all registered handlers.
-        
+
         The created Alert will include a generated identifier and timestamp and is appended to the manager's alert list; registered handlers are invoked for processing.
-        
+
         Parameters:
             metadata (Dict[str, Any], optional): Additional context to attach to the Alert; defaults to an empty dict if omitted.
-        
+
         Returns:
             Alert: The created Alert object with id, type, severity, title, message, timestamp, and metadata.
         """
@@ -267,10 +267,10 @@ class AlertManager:
     async def _run_handler(self, handler: Callable, alert: Alert):
         """
         Execute the given alert handler, supporting both coroutine functions and regular callables.
-        
+
         Parameters:
-        	handler (Callable): The handler to invoke; may be an async function or a regular callable that accepts an Alert.
-        	alert (Alert): The alert object to pass to the handler.
+                handler (Callable): The handler to invoke; may be an async function or a regular callable that accepts an Alert.
+                alert (Alert): The alert object to pass to the handler.
         """
         if asyncio.iscoroutinefunction(handler):
             await handler(alert)
@@ -280,10 +280,10 @@ class AlertManager:
     def resolve_alert(self, alert_id: str):
         """
         Mark the specified alert as resolved and record its resolution timestamp.
-        
+
         Parameters:
             alert_id (str): Identifier of the alert to resolve; the first matching unresolved alert will be marked resolved.
-        
+
         Notes:
             If an unresolved alert with the given id is found, its `resolved` flag is set to True and `resolved_at` is set to the current UTC time. A business event "alert_resolved" is logged with `alert_id` and the resolution time in seconds. If no matching unresolved alert exists, the function does nothing.
         """
@@ -308,12 +308,12 @@ class AlertManager:
     ) -> List[Alert]:
         """
         List active (unresolved) alerts sorted by timestamp from newest to oldest.
-        
+
         If `severity` is provided, only alerts with that severity are returned.
-        
+
         Parameters:
             severity (Optional[AlertSeverity]): If set, filters results to alerts matching this severity.
-        
+
         Returns:
             List[Alert]: Unresolved alerts sorted by timestamp in descending order (newest first).
         """
@@ -333,7 +333,7 @@ class PerformanceMonitor:
     ):
         """
         Create a PerformanceMonitor that runs checks using a MetricsCollector and an AlertManager.
-        
+
         Initializes the monitor with references to the provided MetricsCollector and AlertManager and establishes default thresholds:
         - `error_rate_threshold`: 0.05 (5%),
         - `response_time_threshold`: 2000 (milliseconds),
@@ -354,7 +354,7 @@ class PerformanceMonitor:
     async def check_error_rate(self):
         """
         Evaluate recent API traffic for elevated error rate and create an alert when it exceeds the configured threshold.
-        
+
         Checks API request and error metrics from the last 5 minutes; if there are requests and the error rate is greater than the configured `error_rate_threshold`, creates an ERROR_RATE alert with HIGH severity and metadata containing the error rate, total request count, and error count.
         """
         try:
@@ -448,7 +448,7 @@ class PerformanceMonitor:
     async def run_checks(self):
         """
         Run all configured performance checks concurrently and wait for them to finish.
-        
+
         This schedules error rate, response time, and system resource checks to run in parallel and waits for their completion; exceptions raised by individual checks are captured and not propagated.
         """
         await asyncio.gather(
@@ -469,7 +469,7 @@ performance_monitor = PerformanceMonitor(metrics_collector, alert_manager)
 async def log_alert_handler(alert: Alert):
     """
     Log an Alert to the application logger including severity, title, message, and structured context.
-    
+
     Parameters:
         alert (Alert): Alert to log; logged fields include severity, title, message, id, type, and metadata.
     """

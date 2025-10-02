@@ -42,7 +42,7 @@ async def get_sentiment_metrics(
 ):
     """
     Retrieve aggregated sentiment metrics for the specified entity and optional filters.
-    
+
     Parameters:
         entity_type (str): Entity type — "team", "player", or "game".
         entity_id (Optional[str]): Specific entity ID to filter metrics.
@@ -50,7 +50,7 @@ async def get_sentiment_metrics(
         end_date (Optional[datetime]): End datetime for the analysis range (inclusive).
         sources (Optional[List[DataSource]]): Data sources to include.
         categories (Optional[List[SentimentCategory]]): Sentiment categories to include.
-    
+
     Returns:
         dict: Aggregated sentiment metrics keyed by metric name, with associated values and metadata.
     """
@@ -73,7 +73,8 @@ async def get_sentiment_metrics(
     except Exception as e:
         # Convert unexpected exceptions to 500 with generic message
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while retrieving metrics"
+            status_code=500,
+            detail="An unexpected error occurred while retrieving metrics",
         )
 
 
@@ -87,13 +88,13 @@ async def get_sentiment_trends(
 ):
     """
     Retrieve time-series sentiment trends for a specific entity.
-    
+
     Parameters:
         entity_type (str): Type of the entity (e.g., "team", "player").
         entity_id (str): Identifier of the entity to fetch trends for.
         period (str): Time window for the trends (e.g., "1h", "24h", "7d", "30d").
         interval (str): Aggregation interval for the time series ("minute", "hour", "day").
-    
+
     Returns:
         trends_response (dict): Dictionary with key "trends" mapping to a list of trend dictionaries.
     """
@@ -111,7 +112,8 @@ async def get_sentiment_trends(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while retrieving trends"
+            status_code=500,
+            detail="An unexpected error occurred while retrieving trends",
         )
 
 
@@ -125,18 +127,18 @@ async def get_sentiment_leaderboards(
 ):
     """
     Return sentiment leaderboards for a specified leaderboard type and entity scope.
-    
+
     Retrieves a ranked leaderboard of entities based on the chosen sentiment metric.
-    
+
     Parameters:
         leaderboard_type (str): Leaderboard to retrieve. Allowed values: "most_positive", "most_negative", "most_volatile", "most_mentioned".
         entity_type (str): Entity scope for the leaderboard (e.g., "team" or "player").
         limit (int): Maximum number of results to return.
         time_period (str): Time window to consider (e.g., "1h", "24h", "7d").
-    
+
     Returns:
         dict: A dictionary with a "leaderboard" key containing a list of leaderboard entries (ranked entities with associated sentiment metrics).
-    
+
     Raises:
         HTTPException: With status 400 if `leaderboard_type` is invalid; with status 500 if an error occurs while retrieving the leaderboard.
     """
@@ -161,7 +163,8 @@ async def get_sentiment_leaderboards(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while retrieving leaderboard"
+            status_code=500,
+            detail="An unexpected error occurred while retrieving leaderboard",
         )
 
 
@@ -176,12 +179,12 @@ async def get_historical_comparison(
 ):
     """
     Retrieve historical sentiment comparisons for an entity across the given periods.
-    
+
     Parameters:
-    	periods (List[str], optional): List of period identifiers to compare (e.g., "7d", "30d", "90d"). Defaults to ["7d", "30d", "90d"].
-    
+        periods (List[str], optional): List of period identifiers to compare (e.g., "7d", "30d", "90d"). Defaults to ["7d", "30d", "90d"].
+
     Returns:
-    	comparison (dict): Mapping from period string to comparison data for that period (aggregated sentiment metrics and related summary).
+        comparison (dict): Mapping from period string to comparison data for that period (aggregated sentiment metrics and related summary).
     """
     try:
         comparison = await analytics_service.get_historical_comparison(
@@ -194,7 +197,8 @@ async def get_historical_comparison(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while retrieving comparison"
+            status_code=500,
+            detail="An unexpected error occurred while retrieving comparison",
         )
 
 
@@ -207,10 +211,10 @@ async def get_sentiment_insights(
 ):
     """
     Return advanced sentiment insights and actionable recommendations for the specified entity.
-    
+
     Parameters:
         analysis_period (str): Analysis window to evaluate (e.g., "1d", "7d", "30d").
-    
+
     Returns:
         dict: A dictionary containing analysis results and recommended actions for the entity.
     """
@@ -227,7 +231,8 @@ async def get_sentiment_insights(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while generating insights"
+            status_code=500,
+            detail="An unexpected error occurred while generating insights",
         )
 
 
@@ -243,7 +248,7 @@ async def export_analytics_data(
 ):
     """
     Export analytics data in the requested format and return it as a downloadable stream.
-    
+
     Parameters:
         data_type (str): Type of data to export. Must be one of: "metrics", "trends", "leaderboard".
         export_format (str): Output format. Must be "json" or "csv".
@@ -251,7 +256,7 @@ async def export_analytics_data(
         entity_id (Optional[str]): Optional entity id filter; required when `data_type` is "trends".
         start_date (Optional[datetime]): Optional start of the date range to export.
         end_date (Optional[datetime]): Optional end of the date range to export.
-    
+
     Returns:
         StreamingResponse: A response streaming the exported file with an appropriate Content-Type
         and a Content-Disposition attachment filename (JSON or CSV).
@@ -320,7 +325,9 @@ async def export_analytics_data(
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=500, detail="An unexpected error occurred while exporting data")
+        raise HTTPException(
+            status_code=500, detail="An unexpected error occurred while exporting data"
+        )
 
 
 # Cache management endpoints (admin only)
@@ -333,12 +340,12 @@ async def get_cache_stats(
 ):
     """
     Retrieve cache statistics for the application (admin only).
-    
+
     Requires the current user to have the "admin" role.
-    
+
     Returns:
         dict: A mapping of cache statistics.
-    
+
     Raises:
         HTTPException: 403 if the current user is not an admin.
         HTTPException: 500 if an error occurs while retrieving cache statistics.
@@ -355,7 +362,8 @@ async def get_cache_stats(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while retrieving cache stats"
+            status_code=500,
+            detail="An unexpected error occurred while retrieving cache stats",
         )
 
 
@@ -369,15 +377,15 @@ async def invalidate_cache(
 ):
     """
     Invalidate cached analytics entries by pattern, by specific entity, or all sentiment cache (admin only).
-    
+
     Parameters:
         pattern (str | None): Cache key pattern to delete; when provided, deletes matching keys and returns the number removed.
         entity_type (str | None): Entity type to invalidate (requires `entity_id`); when provided with `entity_id`, invalidates that entity's cache.
         entity_id (str | None): Identifier of the entity to invalidate (requires `entity_type`).
-    
+
     Returns:
         dict: A message describing what was invalidated (e.g., number of entries deleted, specific entity invalidated, or all sentiment cache invalidated).
-    
+
     Raises:
         HTTPException: 403 if the current user is not an admin; 500 for internal errors encountered while invalidating cache.
     """
@@ -405,7 +413,8 @@ async def invalidate_cache(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while invalidating cache"
+            status_code=500,
+            detail="An unexpected error occurred while invalidating cache",
         )
 
 
@@ -419,7 +428,7 @@ async def get_archiving_stats(
 ):
     """
     Retrieve data archiving statistics (admin only).
-    
+
     Returns:
         dict: Archiving statistics (e.g., counts, timestamps, and related metadata).
     """
@@ -435,7 +444,8 @@ async def get_archiving_stats(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while retrieving archiving stats"
+            status_code=500,
+            detail="An unexpected error occurred while retrieving archiving stats",
         )
 
 
@@ -446,13 +456,13 @@ async def run_data_archiving(
 ):
     """
     Run the data archiving process; restricted to admin users.
-    
+
     Invokes the archiving service to archive old sentiment data and returns the service result.
-    
+
     Raises:
         HTTPException: 403 if the current user is not an admin.
         HTTPException: 500 if an error occurs while running the archiving process.
-    
+
     Returns:
         dict: Result of the archiving operation as returned by the archiving service.
     """
@@ -468,7 +478,8 @@ async def run_data_archiving(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while running archiving"
+            status_code=500,
+            detail="An unexpected error occurred while running archiving",
         )
 
 
@@ -479,9 +490,9 @@ async def run_archive_maintenance(
 ):
     """
     Run the full data archiving maintenance cycle.
-    
+
     Requires the current user to have the "admin" role.
-    
+
     Returns:
         result (dict): Result of the maintenance operation.
     """
@@ -497,7 +508,8 @@ async def run_archive_maintenance(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while running maintenance"
+            status_code=500,
+            detail="An unexpected error occurred while running maintenance",
         )
 
 
@@ -510,10 +522,10 @@ async def restore_archived_data(
 ):
     """
     Restore archived analytics data for the given inclusive date range; requires admin role.
-    
+
     Returns:
         The result returned by the archiving service describing the restore operation.
-    
+
     Raises:
         HTTPException: 403 if the current user is not an admin.
         HTTPException: 500 if an error occurs while restoring archived data.
@@ -529,7 +541,9 @@ async def restore_archived_data(
     except APIError as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=500, detail="An unexpected error occurred while restoring data")
+        raise HTTPException(
+            status_code=500, detail="An unexpected error occurred while restoring data"
+        )
 
 
 # Database migration endpoints (admin only)
@@ -542,10 +556,10 @@ async def get_migration_status(
 ):
     """
     Retrieve the current database migration status (admin only).
-    
+
     Returns:
         Migration status information as returned by the migration service (typically a dict or structured status object).
-    
+
     Raises:
         HTTPException: 403 if the current user is not an admin; 500 if an error occurs while retrieving status.
     """
@@ -561,7 +575,8 @@ async def get_migration_status(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while retrieving migration status"
+            status_code=500,
+            detail="An unexpected error occurred while retrieving migration status",
         )
 
 
@@ -573,15 +588,15 @@ async def run_migrations(
 ):
     """
     Run database migrations to the specified target version.
-    
+
     Applies pending migrations up to `target_version` (or to the latest if `target_version` is omitted) and returns the migration service's result.
-    
+
     Parameters:
         target_version (str | None): Target migration version to apply; if omitted, migrations are applied up to the latest version.
-    
+
     Returns:
         dict: Result returned by the migration service describing the outcome of the migration run.
-    
+
     Raises:
         HTTPException: 403 if the current user is not an admin.
         HTTPException: 500 if an error occurs while running migrations.
@@ -598,7 +613,8 @@ async def run_migrations(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while running migrations"
+            status_code=500,
+            detail="An unexpected error occurred while running migrations",
         )
 
 
@@ -610,10 +626,10 @@ async def rollback_migrations(
 ):
     """
     Rollback the database schema to the specified migration version (admin only).
-    
+
     Parameters:
         target_version (str): Target migration version to roll back to; interpretation depends on migration system (e.g., a revision id or timestamp).
-    
+
     Returns:
         result: Result object or message returned by the migration service describing the outcome of the rollback.
     """
@@ -629,5 +645,6 @@ async def rollback_migrations(
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="An unexpected error occurred while rolling back migrations"
+            status_code=500,
+            detail="An unexpected error occurred while rolling back migrations",
         )

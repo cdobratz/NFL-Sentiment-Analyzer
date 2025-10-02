@@ -27,10 +27,10 @@ class CachingService:
     def __init__(self, redis_client: Optional[redis.Redis] = None):
         """
         Initialize the caching service with an optional Redis client and default TTL values.
-        
+
         Parameters:
             redis_client (Optional[redis.Redis]): An existing Redis client to use for operations. If omitted or None, the service will obtain a client lazily when needed.
-        
+
         Attributes set:
             redis_client: Stored Redis client or None.
             default_ttl: Default time-to-live in seconds (300).
@@ -45,7 +45,7 @@ class CachingService:
     async def get_redis_client(self) -> Optional[redis.Redis]:
         """
         Get the Redis client, initializing and caching it if not already set.
-        
+
         @returns Redis client instance, or `None` if a client could not be obtained.
         """
         if not self.redis_client:
@@ -55,12 +55,12 @@ class CachingService:
     def _serialize_data(self, data: Any) -> str:
         """
         Serialize an object for storage in Redis.
-        
+
         Produces a string containing either JSON-encoded data for dicts, lists, or objects exposing a `dict()` method (e.g., Pydantic models), or a hex-encoded pickle for other Python objects.
-        
+
         Parameters:
             data: The object to serialize. Pydantic-like models, dicts, and lists are encoded as JSON.
-        
+
         Returns:
             str: A JSON string for dict/list/Pydantic-like objects, or a hex-encoded pickle string for other types.
         """
@@ -76,13 +76,13 @@ class CachingService:
     def _deserialize_data(self, data: str, data_type: str = "json") -> Any:
         """
         Deserialize a Redis-stored string into its original Python object.
-        
+
         Parameters:
             data (str): String retrieved from Redis. Expected to be JSON text when `data_type` is "json",
                 or a hex-encoded pickle representation for other `data_type` values.
             data_type (str): Format of `data`. Use "json" to parse JSON; any other value treats `data`
                 as a hex-encoded pickle.
-        
+
         Returns:
             Any: The deserialized Python object, or `None` if deserialization fails.
         """
@@ -100,12 +100,12 @@ class CachingService:
     ) -> bool:
         """
         Store a value in Redis under the given key with an optional time-to-live (TTL).
-        
+
         Parameters:
-        	ttl (int, optional): Time-to-live in seconds for the cached key; if omitted, the service's default_ttl is used.
-        
+                ttl (int, optional): Time-to-live in seconds for the cached key; if omitted, the service's default_ttl is used.
+
         Returns:
-        	True if the value was stored successfully, False if the Redis client is unavailable or an error occurred.
+                True if the value was stored successfully, False if the Redis client is unavailable or an error occurred.
         """
         try:
             redis_client = await self.get_redis_client()
@@ -124,10 +124,10 @@ class CachingService:
     async def get_cache(self, key: str, data_type: str = "json") -> Optional[Any]:
         """
         Retrieve and deserialize a cached value by key.
-        
+
         Parameters:
             data_type (str): Format used when deserializing cached data; `"json"` to JSON-decode, any other value to unpickle from a hex-encoded pickle.
-        
+
         Returns:
             The deserialized cached value if the key exists, `None` otherwise.
         """
@@ -147,10 +147,10 @@ class CachingService:
     async def delete_cache(self, key: str) -> bool:
         """
         Remove a specific key from the Redis cache.
-        
+
         Parameters:
             key (str): The cache key to remove.
-        
+
         Returns:
             `true` if the delete was performed (Redis client was available and the command was issued), `false` if Redis was unavailable or an error occurred.
         """
@@ -168,10 +168,10 @@ class CachingService:
     async def delete_pattern(self, pattern: str) -> int:
         """
         Delete all Redis keys that match the given pattern.
-        
+
         Parameters:
             pattern (str): Glob-style pattern used to match Redis keys (for example, "team_sentiment:*").
-        
+
         Returns:
             int: Number of keys deleted.
         """
@@ -191,7 +191,7 @@ class CachingService:
     async def exists(self, key: str) -> bool:
         """
         Determine whether a cache entry exists for the given key.
-        
+
         @returns `true` if a cache entry with the key exists, `false` otherwise.
         """
         try:
@@ -207,7 +207,7 @@ class CachingService:
     async def get_ttl(self, key: str) -> int:
         """
         Retrieve the remaining time-to-live (TTL) in seconds for a Redis key.
-        
+
         Returns:
             Remaining TTL in seconds. Redis may return:
               - a non-negative integer for seconds remaining,
@@ -231,12 +231,12 @@ class CachingService:
     ) -> bool:
         """
         Cache sentiment data for a team under a dedicated Redis key.
-        
+
         Parameters:
             team_id (str): Identifier of the team used to construct the cache key.
             sentiment (TeamSentiment): Team sentiment object to store; will be serialized for Redis.
             ttl (Optional[int]): Time-to-live in seconds for the cached entry; if omitted, the service's long_ttl is used.
-        
+
         Returns:
             true if the value was stored successfully, false otherwise.
         """
@@ -246,7 +246,7 @@ class CachingService:
     async def get_team_sentiment(self, team_id: str) -> Optional[Dict]:
         """
         Retrieve cached sentiment data for a team.
-        
+
         Returns:
             dict: Cached team sentiment data if present, `None` otherwise.
         """
@@ -258,14 +258,14 @@ class CachingService:
     ) -> bool:
         """
         Cache sentiment for a player in Redis under the key "player_sentiment:{player_id}".
-        
+
         Parameters:
-        	player_id (str): Player identifier used to form the cache key.
-        	sentiment (PlayerSentiment): Sentiment object to store.
-        	ttl (Optional[int]): Time-to-live in seconds; if omitted, uses the service's long_ttl.
-        
+                player_id (str): Player identifier used to form the cache key.
+                sentiment (PlayerSentiment): Sentiment object to store.
+                ttl (Optional[int]): Time-to-live in seconds; if omitted, uses the service's long_ttl.
+
         Returns:
-        	bool: `true` if the value was stored successfully, `false` otherwise.
+                bool: `true` if the value was stored successfully, `false` otherwise.
         """
         key = f"player_sentiment:{player_id}"
         return await self.set_cache(key, sentiment, ttl or self.long_ttl)
@@ -273,7 +273,7 @@ class CachingService:
     async def get_player_sentiment(self, player_id: str) -> Optional[Dict]:
         """
         Retrieve cached sentiment for a player.
-        
+
         Returns:
             dict: Sentiment data for the player if present, `None` otherwise.
         """
@@ -285,12 +285,12 @@ class CachingService:
     ) -> bool:
         """
         Cache sentiment for a specific game in Redis under key "game_sentiment:{game_id}".
-        
+
         Parameters:
             game_id (str): Identifier of the game.
             sentiment (GameSentiment): Sentiment payload to store; will be serialized for caching.
             ttl (Optional[int]): Time-to-live in seconds; uses the service's long_ttl when omitted.
-        
+
         Returns:
             bool: `True` if the value was stored successfully, `False` otherwise.
         """
@@ -300,7 +300,7 @@ class CachingService:
     async def get_game_sentiment(self, game_id: str) -> Optional[Dict]:
         """
         Retrieve cached sentiment data for a game.
-        
+
         Returns:
             Cached game sentiment dictionary if present, `None` otherwise.
         """
@@ -317,16 +317,16 @@ class CachingService:
     ) -> bool:
         """
         Cache sentiment trend objects for a specific entity and time period.
-        
+
         Parameters:
-        	entity_type (str): Entity category (e.g., "team", "player", "game").
-        	entity_id (str): Unique identifier of the entity.
-        	trends (List[SentimentTrend]): Ordered list of sentiment trend entries to cache.
-        	period (str): Time window label for the trends (default: "24h").
-        	ttl (Optional[int]): Cache time-to-live in seconds; uses the service default when omitted.
-        
+                entity_type (str): Entity category (e.g., "team", "player", "game").
+                entity_id (str): Unique identifier of the entity.
+                trends (List[SentimentTrend]): Ordered list of sentiment trend entries to cache.
+                period (str): Time window label for the trends (default: "24h").
+                ttl (Optional[int]): Cache time-to-live in seconds; uses the service default when omitted.
+
         Returns:
-        	`true` if the cache was set successfully, `false` otherwise.
+                `true` if the cache was set successfully, `false` otherwise.
         """
         key = f"sentiment_trends:{entity_type}:{entity_id}:{period}"
         return await self.set_cache(key, trends, ttl or self.default_ttl)
@@ -336,12 +336,12 @@ class CachingService:
     ) -> Optional[List]:
         """
         Retrieve cached sentiment trends for a specific entity and period.
-        
+
         Parameters:
             entity_type (str): Entity category (e.g., "team", "player", "game").
             entity_id (str): Identifier of the entity.
             period (str): Time range identifier for the trends (defaults to "24h").
-        
+
         Returns:
             A list of sentiment trend entries for the entity and period, or `None` if no cached value exists.
         """
@@ -353,12 +353,12 @@ class CachingService:
     ) -> bool:
         """
         Cache analytics query results under a key derived from the query hash.
-        
+
         Parameters:
             query_hash (str): Hash identifying the analytics query.
             data (Dict): Analytics result data to store in cache.
             ttl (Optional[int]): Time-to-live in seconds; when omitted, uses the service's `long_ttl`.
-        
+
         Returns:
             `true` if the data was stored successfully, `false` otherwise.
         """
@@ -368,12 +368,12 @@ class CachingService:
     async def get_analytics_data(self, query_hash: str) -> Optional[Dict]:
         """
         Retrieve cached analytics results for a given query hash.
-        
+
         Parameters:
-        	query_hash (str): Unique hash identifying the analytics query.
-        
+                query_hash (str): Unique hash identifying the analytics query.
+
         Returns:
-        	analytics (Optional[Dict]): The cached analytics result dictionary if present, `None` if not found.
+                analytics (Optional[Dict]): The cached analytics result dictionary if present, `None` if not found.
         """
         key = f"analytics:{query_hash}"
         return await self.get_cache(key)
@@ -383,12 +383,12 @@ class CachingService:
     ) -> bool:
         """
         Cache leaderboard entries for a specific leaderboard type.
-        
+
         Parameters:
             leaderboard_type (str): Identifier for the leaderboard (e.g., "top_players", "most_improved").
             data (List[Dict]): List of leaderboard entries to store; each entry is a dictionary of leaderboard fields.
             ttl (Optional[int]): Time-to-live in seconds to override the default cache duration.
-        
+
         Returns:
             bool: `true` if the data was successfully stored in cache, `false` otherwise.
         """
@@ -398,10 +398,10 @@ class CachingService:
     async def get_leaderboard(self, leaderboard_type: str) -> Optional[List]:
         """
         Retrieve cached leaderboard for the given leaderboard type.
-        
+
         Parameters:
             leaderboard_type (str): Identifier for the leaderboard (for example, "top_players" or "team_rankings").
-        
+
         Returns:
             Optional[List]: The cached leaderboard as a list of entries, or `None` if no cached value exists.
         """
@@ -411,11 +411,11 @@ class CachingService:
     async def invalidate_entity_cache(self, entity_type: str, entity_id: str):
         """
         Invalidate cached entries related to a specific entity by deleting matching Redis keys.
-        
+
         Parameters:
             entity_type (str): The type of entity (e.g., "team", "player", "game") used in cache key prefixes.
             entity_id (str): The identifier of the entity whose related cache entries should be removed.
-        
+
         Description:
             Deletes keys matching patterns for the entity, including:
               - "<entity_type>_sentiment:<entity_id>"
@@ -434,7 +434,7 @@ class CachingService:
     async def invalidate_all_sentiment_cache(self):
         """
         Invalidate all sentiment-related cache entries.
-        
+
         Deletes Redis keys that match patterns for team, player, and game sentiments, sentiment trends, analytics results, and leaderboards.
         """
         patterns = [
@@ -452,7 +452,7 @@ class CachingService:
     async def get_cache_stats(self) -> Dict[str, Any]:
         """
         Collect Redis cache and keyspace statistics relevant to sentiment caching.
-        
+
         Returns:
             stats (Dict[str, Any]): Dictionary containing:
                 - connected_clients (int): Number of connected Redis clients.
@@ -506,7 +506,7 @@ caching_service = CachingService()
 async def get_caching_service() -> CachingService:
     """
     Provide the shared CachingService singleton for dependency injection.
-    
+
     @returns The module-level CachingService instance used by the application.
     """
     return caching_service

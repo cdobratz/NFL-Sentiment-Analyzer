@@ -48,13 +48,13 @@ class RateLimiter:
     def __init__(self, max_requests: int, time_window: int):
         """
         Initialize the rate limiter with limits and prepare internal request history.
-        
+
         Parameters:
-        	max_requests (int): Maximum number of requests allowed within the rolling time window.
-        	time_window (int): Time window length in seconds used to count recent requests.
-        
+                max_requests (int): Maximum number of requests allowed within the rolling time window.
+                time_window (int): Time window length in seconds used to count recent requests.
+
         Attributes:
-        	requests (List[float]): Internal list of request timestamps (initialized empty) used to track recent requests.
+                requests (List[float]): Internal list of request timestamps (initialized empty) used to track recent requests.
         """
         self.max_requests = max_requests
         self.time_window = time_window
@@ -63,7 +63,7 @@ class RateLimiter:
     async def acquire(self):
         """
         Enforces the rate limit by delaying until a new request is allowed and records the request timestamp.
-        
+
         If the number of recorded requests within the last time_window seconds has reached max_requests,
         this method sleeps until the oldest recorded request falls outside the time window. After any
         necessary wait, the current time is appended to the internal request history. The time_window is
@@ -93,7 +93,7 @@ class DataIngestionService:
     def __init__(self):
         """
         Initialize the DataIngestionService internal state and per-source rate limiters.
-        
+
         Sets up:
         - session: optional aiohttp.ClientSession, initialized to None.
         - rate_limiters: mapping from DataSource to RateLimiter instances with configured limits:
@@ -115,7 +115,7 @@ class DataIngestionService:
     async def start(self):
         """
         Start the data ingestion service.
-        
+
         If no HTTP session exists, create an aiohttp.ClientSession, mark the service as running, and record a startup log message.
         """
         if not self.session:
@@ -126,7 +126,7 @@ class DataIngestionService:
     async def stop(self):
         """
         Stop the data ingestion service and release associated network resources.
-        
+
         Sets the service running flag to False and closes the internal aiohttp ClientSession if one exists.
         """
         self.is_running = False
@@ -139,11 +139,11 @@ class DataIngestionService:
     ) -> List[RawDataItem]:
         """
         Collect recent NFL-related tweets matching the provided keywords.
-        
+
         Parameters:
             keywords (List[str]): Keywords or phrases used to build the Twitter search query.
             max_results (int): Maximum number of tweets to request (capped at 100 by the Twitter API).
-        
+
         Returns:
             List[RawDataItem]: RawDataItem objects representing tweets that matched the query.
         """
@@ -190,10 +190,10 @@ class DataIngestionService:
     def _process_twitter_data(self, data: Dict) -> List[RawDataItem]:
         """
         Convert a Twitter API v2 response into a list of RawDataItem objects representing tweets.
-        
+
         Parameters:
             data (Dict): Parsed JSON response from Twitter API v2. Expected to contain a "data" list of tweet objects and an "includes" object with a "users" list for author enrichment.
-        
+
         Returns:
             List[RawDataItem]: A list of normalized tweet items; each item contains tweet id, text, created_at, author details (id, name, username, verified, followers_count), public metrics, context annotations, a processing timestamp, and metadata (language and source).
         """
@@ -236,10 +236,10 @@ class DataIngestionService:
     ) -> List[RawDataItem]:
         """
         Retrieve ESPN NFL data, including scoreboard game data and news articles.
-        
+
         Parameters:
             game_ids (Optional[List[str]]): If provided, restrict scoreboard retrieval to these ESPN game IDs; if omitted, fetch the current week's scoreboard.
-        
+
         Returns:
             List[RawDataItem]: Aggregated list of RawDataItem objects representing ESPN games and news.
         """
@@ -259,7 +259,7 @@ class DataIngestionService:
     async def _fetch_espn_scoreboard(self) -> List[RawDataItem]:
         """
         Fetch the current NFL scoreboard data from ESPN and convert it into RawDataItem objects.
-        
+
         Returns:
             List[RawDataItem]: A list of processed scoreboard items; returns an empty list if the request fails or an error occurs.
         """
@@ -280,10 +280,10 @@ class DataIngestionService:
     def _process_espn_scoreboard(self, data: Dict) -> List[RawDataItem]:
         """
         Convert an ESPN scoreboard JSON response into a list of normalized game RawDataItem objects.
-        
+
         Parameters:
             data (Dict): Parsed ESPN scoreboard payload expected to contain an "events" list where each event includes keys used for game construction such as "id", "name", "shortName", "date", "status", "competitions", and optional "season" and "week" objects.
-        
+
         Returns:
             List[RawDataItem]: A list of RawDataItem instances with data_type "game", populated content (id, name, short_name, date, status, competitions, season, week) and metadata (source, season_type, week_number) for each event in the scoreboard.
         """
@@ -319,7 +319,7 @@ class DataIngestionService:
     async def _fetch_espn_news(self) -> List[RawDataItem]:
         """
         Fetch current NFL news articles from ESPN and normalize them for ingestion.
-        
+
         Returns:
             List[RawDataItem]: A list of normalized news items parsed from the ESPN response. Returns an empty list if the request fails or the API responds with a non-200 status.
         """
@@ -340,13 +340,13 @@ class DataIngestionService:
     def _process_espn_news(self, data: Dict) -> List[RawDataItem]:
         """
         Convert an ESPN news API response into a list of standardized RawDataItem objects.
-        
+
         Parameters:
             data (Dict): ESPN news API response dictionary expected to contain an "articles" key
                 whose value is a list of article dictionaries. Each article dictionary may include
                 keys: "id", "headline", "description", "story", "published", "categories",
                 "links", "images", and "type".
-        
+
         Returns:
             List[RawDataItem]: A list of RawDataItem objects with source set to DataSource.ESPN,
                 data_type "news", content populated from each article (fields: id, headline,
@@ -383,10 +383,10 @@ class DataIngestionService:
     ) -> List[RawDataItem]:
         """
         Retrieve betting lines from the specified sportsbooks.
-        
+
         Parameters:
             sportsbooks (Optional[List[str]]): Optional list of sportsbook identifiers to fetch; supported values are "draftkings" and "mgm". If omitted, both DraftKings and MGM are fetched.
-        
+
         Returns:
             List[RawDataItem]: RawDataItem objects representing betting lines retrieved from the requested sportsbooks.
         """
@@ -406,9 +406,9 @@ class DataIngestionService:
     async def _fetch_draftkings_lines(self) -> List[RawDataItem]:
         """
         Return mock betting lines attributed to DraftKings.
-        
+
         The returned items are normalized RawDataItem objects with data_type "betting_line" and metadata indicating DraftKings as the sportsbook. This is a mock implementation used when a public DraftKings API is not available.
-        
+
         Returns:
             List[RawDataItem]: A list of betting line items containing game identifiers, teams, odds, and last_updated timestamps.
         """
@@ -450,9 +450,9 @@ class DataIngestionService:
     async def _fetch_mgm_lines(self) -> List[RawDataItem]:
         """
         Return a list of betting-line RawDataItem objects representing MGM sportsbook lines (mock data).
-        
+
         Each returned item has data_type "betting_line" and content containing keys such as `game_id`, `home_team`, `away_team`, `spread`, `over_under`, `home_moneyline`, `away_moneyline`, and `last_updated`. Metadata includes the originating sportsbook.
-         
+
         Returns:
             List[RawDataItem]: Mocked betting-line items from MGM.
         """
@@ -492,10 +492,10 @@ class DataIngestionService:
     async def process_raw_data(self, raw_items: List[RawDataItem]) -> Dict[str, int]:
         """
         Process a list of RawDataItem objects by storing them into the database and collecting processing statistics.
-        
+
         Parameters:
             raw_items (List[RawDataItem]): Items to deduplicate, route to the appropriate storage handlers, and persist.
-        
+
         Returns:
             stats (Dict[str, int]): Counts of processing outcomes with keys:
                 - "processed": total items successfully handled
@@ -551,10 +551,10 @@ class DataIngestionService:
     async def _is_duplicate(self, db, item: RawDataItem) -> bool:
         """
         Determine whether a RawDataItem with the same unique identifier already exists in the database.
-        
+
         Parameters:
             item (RawDataItem): The raw data item whose unique identifier (derived from its type and content) will be used to look up existing records.
-        
+
         Returns:
             True if a matching item exists in the corresponding collection, False otherwise.
         """
@@ -581,9 +581,9 @@ class DataIngestionService:
     async def _store_tweet(self, db, item: RawDataItem):
         """
         Insert a tweet RawDataItem into the database's raw_tweets collection.
-        
+
         Constructs a document from the item's content (uses content["id"] as `unique_id`, and includes text, created_at, author, metrics, context_annotations), attaches processed_at from the item's timestamp and the item's metadata, and inserts the document into db.raw_tweets.
-        
+
         Parameters:
             item (RawDataItem): Raw tweet item whose content must include keys `id`, `text`, `created_at`, `author`, `metrics`, and `context_annotations`.
         """
@@ -604,7 +604,7 @@ class DataIngestionService:
     async def _store_news(self, db, item: RawDataItem):
         """
         Persist the given news RawDataItem into the database's raw_news collection.
-        
+
         Parameters:
             db: Database handle exposing a `raw_news` collection into which the document will be inserted.
             item (RawDataItem): News item whose content will be stored. The item's content `id` is used as the document `unique_id` and `timestamp` is recorded as `processed_at`.
@@ -626,7 +626,7 @@ class DataIngestionService:
     async def _store_game_data(self, db, item: RawDataItem):
         """
         Store a single game's standardized data into the raw_games collection in the database.
-        
+
         Parameters:
             db: Database handle exposing a `raw_games` collection with an `insert_one` coroutine.
             item (RawDataItem): RawDataItem whose `content` contains the game's fields `id`, `name`, `date`, `status`, and `competitions`; optional `season` and `week` may be present.
@@ -649,10 +649,10 @@ class DataIngestionService:
     async def _store_betting_line(self, db, item: RawDataItem):
         """
         Create and insert a betting-line document into the raw_betting_lines collection.
-        
+
         Parameters:
             item (RawDataItem): Raw betting-line item whose content is used to build the stored document. Expected content keys include `game_id`, `home_team`, `away_team`, `spread`, `over_under`, `home_moneyline`, `away_moneyline`, and `last_updated`. The item's `metadata` should include `sportsbook`. The stored document will include a `unique_id` formed by concatenating the `game_id` and the item's source, plus `processed_at` set to the item's timestamp.
-        
+
         """
         document = {
             "unique_id": f"{item.content.get('game_id')}_{item.source}",
