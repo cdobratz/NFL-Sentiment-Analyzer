@@ -5,7 +5,7 @@ Enhanced sentiment analysis service with NFL-specific features.
 import re
 import time
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 import logging
 
@@ -294,9 +294,6 @@ class SentimentAnalysisService:
 
         # Trade aspect
         if nfl_context.trade_related:
-            trade_score = self._count_keywords(
-                text, self.nfl_config.keywords.TRADE_KEYWORDS
-            )
             aspects["trade"] = 0.0  # Neutral by default
 
         return aspects

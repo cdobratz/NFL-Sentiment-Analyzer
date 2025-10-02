@@ -36,9 +36,9 @@ class NFLSentimentEngine:
     def __init__(self):
         """
         Initialize the NFLSentimentEngine and its core state.
-        
+
         Sets up configuration and the sentiment analysis service, records the engine's model version, and initializes performance counters used to track total analyses and cumulative processing time.
-        
+
         Attributes:
             nfl_config (NFLSentimentConfig): NFL-specific configuration and keyword mappings.
             sentiment_service (SentimentAnalysisService): Service used to perform base sentiment analysis.
@@ -65,7 +65,7 @@ class NFLSentimentEngine:
     ) -> SentimentResult:
         """
         Analyze a single text and enrich the sentiment result using NFL-specific context for team, player, and game.
-        
+
         Parameters:
             text (str): The text to analyze.
             team_context (Optional[str]): Team identifier or name to bias context extraction.
@@ -73,7 +73,7 @@ class NFLSentimentEngine:
             game_context (Optional[str]): Game identifier to bias context extraction.
             source (DataSource): Origin of the text (e.g., user input, social media).
             include_detailed_analysis (bool): If True, include NFL-specific aspect-level sentiment breakdowns.
-        
+
         Returns:
             SentimentResult: Sentiment result augmented with extracted NFL context, recalculated confidence score, and optional detailed aspect sentiments.
         """
@@ -127,7 +127,7 @@ class NFLSentimentEngine:
     ) -> BatchSentimentResponse:
         """
         Analyze a list of texts using NFL-aware context and return aggregated batch results.
-        
+
         Parameters:
             texts (List[str]): Texts to analyze (maximum 100).
             team_context (Optional[str]): Optional team identifier or name to bias context extraction.
@@ -136,11 +136,11 @@ class NFLSentimentEngine:
             source (DataSource): Origin of the texts; used for metadata and source-specific handling.
             include_detailed_analysis (bool): If True, include per-result NFL-specific aspect breakdowns.
             max_concurrent (int): Maximum number of concurrent analyses to run per processing chunk.
-        
+
         Returns:
             BatchSentimentResponse: Aggregated batch response containing per-text SentimentResult items,
             total_processed, processing_time_ms, model_version, aggregated_sentiment, and sentiment_distribution.
-        
+
         Raises:
             ValueError: If more than 100 texts are provided.
         """
@@ -205,11 +205,11 @@ class NFLSentimentEngine:
     ) -> Dict[str, List[str]]:
         """
         Retrieve categorized NFL keyword lists relevant to a specified team, player, or game.
-        
+
         Parameters:
             entity_type (str): One of "team", "player", or "game" indicating the entity category.
             entity_id (str): Identifier or name of the entity used to select entity-specific keywords.
-        
+
         Returns:
             Dict[str, List[str]]: Mapping of keyword category names to lists of keywords. Always includes:
                 - "positive": positive performance keywords
@@ -253,12 +253,12 @@ class NFLSentimentEngine:
     ) -> float:
         """
         Estimate a confidence score for a sentiment result using NFL-specific cues and text characteristics.
-        
+
         Parameters:
             text (str): The original text being analyzed.
             sentiment_score (float): The sentiment score produced by the sentiment model (used as contextual input).
             nfl_context (NFLContext): Extracted NFL context (team/player/position mentions, game situation, etc.) to inform confidence.
-        
+
         Returns:
             float: Confidence value between 0.0 and 0.95, where higher values indicate greater confidence in the sentiment result.
         """
@@ -301,7 +301,7 @@ class NFLSentimentEngine:
     def get_performance_metrics(self) -> Dict[str, Any]:
         """
         Return a snapshot of the engine's runtime and capability metrics.
-        
+
         Returns:
             metrics (Dict[str, Any]): Dictionary containing:
                 - total_analyses (int): Number of analyses performed.
@@ -337,7 +337,7 @@ class NFLSentimentEngine:
     ) -> NFLContext:
         """
         Builds an NFLContext derived from the given text and optional entity hints.
-        
+
         Parses the input text (and merges any provided team/player/game hints) to populate NFL-specific context fields used by the engine. The returned NFLContext may contain:
         - team_mentions: list of teams mentioned or implied.
         - position_mentions: list of player positions detected.
@@ -345,13 +345,13 @@ class NFLSentimentEngine:
         - trade_related: `True` if trade-related keywords are present.
         - game_situation: a detected game situation label (if any).
         - performance_metrics: map of performance indicator keys (e.g., "yards", "touchdowns") to a numeric presence score.
-        
+
         Parameters:
             text (str): The text to analyze for NFL context signals.
             team_context (Optional[str]): Optional team identifier to include if not detected in text.
             player_context (Optional[str]): Optional player identifier to consider when building context.
             game_context (Optional[str]): Optional game identifier or hint to influence detected situation.
-        
+
         Returns:
             NFLContext: An object populated with detected NFL-related context fields.
         """
@@ -408,11 +408,11 @@ class NFLSentimentEngine:
     ) -> SentimentResult:
         """
         Enrich the given SentimentResult with NFL-specific confidence and optional detailed aspect sentiments.
-        
+
         Parameters:
             result (SentimentResult): The sentiment result to enhance; its `confidence` and `aspect_sentiments` may be updated.
             include_detailed_analysis (bool): If True, compute and merge NFL-specific aspect sentiment scores into `result.aspect_sentiments`.
-        
+
         Returns:
             SentimentResult: The same `result` instance with updated NFL-derived `confidence` and, if requested, augmented `aspect_sentiments`.
         """
@@ -439,14 +439,14 @@ class NFLSentimentEngine:
     ) -> Dict[str, float]:
         """
         Compute NFL-specific aspect sentiment scores found in the text.
-        
+
         Identifies and scores topic-level sentiments such as performance, coaching, fantasy, injury, and trade.
         Scores are floats where higher values indicate more positive sentiment (roughly in the range -1.0 to 1.0). Only aspects detected in the input are included in the returned mapping.
-        
+
         Parameters:
             text (str): The text to analyze for aspect mentions.
             nfl_context (Optional[NFLContext]): Extracted NFL context (e.g., injury or trade flags) used to set certain aspect scores when applicable.
-        
+
         Returns:
             Dict[str, float]: Mapping from aspect name to sentiment score. Possible keys include "performance", "coaching", "fantasy", "injury", and "trade".
         """
@@ -498,7 +498,7 @@ class NFLSentimentEngine:
     def _calculate_aggregated_sentiment(self, results: List[SentimentResult]) -> float:
         """
         Compute an aggregated sentiment score for a batch by weighting each result's sentiment by its confidence.
-        
+
         Returns:
             aggregated_sentiment (float): Weighted average of `sentiment_score` using `confidence` as weights; 0.0 if input is empty or all confidences are zero.
         """
@@ -516,10 +516,10 @@ class NFLSentimentEngine:
     ) -> Dict[SentimentLabel, int]:
         """
         Compute the count of each sentiment label in a list of sentiment results.
-        
+
         Parameters:
             results (List[SentimentResult]): List of sentiment analysis results to aggregate.
-        
+
         Returns:
             Dict[SentimentLabel, int]: Mapping from each SentimentLabel (POSITIVE, NEGATIVE, NEUTRAL) to its occurrence count.
         """
