@@ -658,9 +658,7 @@ async def get_model_performance(
             avg_error_rate = sum(error_rate_values) / len(error_rate_values) if len(error_rate_values) > 0 else 0
             total_predictions = sum(m.get("prediction_count", 0) for m in metrics)
         else:
-            avg_accuracy = avg_f1_score = avg_response_time = total_predictions = (
-                avg_error_rate
-            ) = 0
+            avg_accuracy = avg_f1_score = avg_response_time = total_predictions = avg_error_rate = 0
 
         return {
             "period": f"{days} days",

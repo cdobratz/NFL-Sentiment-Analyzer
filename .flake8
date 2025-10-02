@@ -11,7 +11,7 @@ exclude =
     .pytest_cache,
     *.egg-info
 per-file-ignores =
-    __init__.py:F401
+    __init__.py:F401,F811
     */migrations/*:E501,F401
-    */tests/*:F401,F841
-    */scripts/*:E402
+    */tests/*:F401,F841,F811
+    */scripts/*:E402,F401,F841
