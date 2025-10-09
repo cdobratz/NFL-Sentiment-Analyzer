@@ -112,7 +112,7 @@ class DatabaseMigrationService:
         db = await self.get_database()
         collection = db[self.migrations_collection]
 
-        cursor = collection.find({}).sort("applied_at", 1)
+        cursor = collection.find({"status": "applied"}).sort("applied_at", 1)
         return await cursor.to_list(length=None)
 
     async def get_pending_migrations(self) -> List[Migration]:
@@ -403,7 +403,7 @@ class EnhancedSentimentModelMigration(Migration):
         """
         try:
             # Add new fields to existing sentiment documents
-            collection = db.sentiment_analysis
+            collection = db.sentiment_analyses
 
             # Update documents that don't have the new fields
             await collection.update_many(

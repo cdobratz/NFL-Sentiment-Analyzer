@@ -93,8 +93,9 @@ class HuggingFaceModelService:
             if model_version:
                 model_kwargs["revision"] = model_version
 
-            # Create sentiment analysis pipeline
-            sentiment_pipeline = pipeline(
+            # Create sentiment analysis pipeline (run in thread to avoid blocking)
+            sentiment_pipeline = await asyncio.to_thread(
+                pipeline,
                 "sentiment-analysis",
                 model=model_name,
                 tokenizer=model_name,
@@ -105,8 +106,10 @@ class HuggingFaceModelService:
             # Cache the loaded model
             self.models_cache[cache_key] = sentiment_pipeline
 
-            # Load and cache tokenizer separately for advanced usage
-            tokenizer = AutoTokenizer.from_pretrained(model_name, **model_kwargs)
+            # Load and cache tokenizer separately for advanced usage (run in thread)
+            tokenizer = await asyncio.to_thread(
+                AutoTokenizer.from_pretrained, model_name, **model_kwargs
+            )
             self.tokenizers_cache[cache_key] = tokenizer
 
             logger.info(f"Successfully loaded model: {model_name}")
@@ -395,10 +398,14 @@ class HuggingFaceModelService:
             # In practice, you'd use transformers.Trainer or similar
             logger.info(f"Starting fine-tuning of {base_model}")
 
-            # Load base model and tokenizer
-            tokenizer = AutoTokenizer.from_pretrained(base_model)
-            model = AutoModelForSequenceClassification.from_pretrained(
-                base_model, num_labels=3  # positive, negative, neutral
+            # Load base model and tokenizer (run in thread to avoid blocking)
+            tokenizer = await asyncio.to_thread(
+                AutoTokenizer.from_pretrained, base_model
+            )
+            model = await asyncio.to_thread(
+                AutoModelForSequenceClassification.from_pretrained,
+                base_model, 
+                num_labels=3  # positive, negative, neutral
             )
 
             # Prepare training configuration

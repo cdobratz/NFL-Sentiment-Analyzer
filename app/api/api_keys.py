@@ -4,7 +4,7 @@ API key management endpoints for administrators.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 from ..core.dependencies import get_current_admin_user
@@ -21,7 +21,7 @@ class CreateAPIKeyRequest(BaseModel):
     scopes: List[APIKeyScope]
     expires_in_days: Optional[int] = None
     rate_limit: int = 1000
-    metadata: dict = {}
+    metadata: dict = Field(default_factory=dict)
 
 
 class APIKeyResponse(BaseModel):
@@ -76,7 +76,7 @@ async def create_api_key(
         key, api_key_obj = await api_key_manager.create_api_key(
             name=request.name,
             scopes=request.scopes,
-            created_by=current_user["_id"],
+            created_by=str(current_user["_id"]),
             expires_in_days=request.expires_in_days,
             rate_limit=request.rate_limit,
             metadata=request.metadata,
@@ -246,7 +246,7 @@ async def revoke_api_key(
         HTTPException: For unexpected failures during revocation (results in a 500 response).
     """
     try:
-        success = await api_key_manager.revoke_api_key(key_id, current_user["_id"])
+        success = await api_key_manager.revoke_api_key(key_id, str(current_user["_id"]))
 
         if not success:
             raise NotFoundError("API key", key_id)
@@ -254,7 +254,7 @@ async def revoke_api_key(
         return {
             "message": "API key revoked successfully",
             "key_id": key_id,
-            "revoked_by": current_user["_id"],
+            "revoked_by": str(current_user["_id"]),
             "revoked_at": datetime.utcnow().isoformat(),
         }
 

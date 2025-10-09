@@ -21,8 +21,8 @@ async def initialize_sentiment_database():
 
     try:
         # Connect to MongoDB
-        client = AsyncIOMotorClient(settings.MONGODB_URL)
-        db = client[settings.DATABASE_NAME]
+        client = AsyncIOMotorClient(settings.mongodb_url)
+        db = client[settings.database_name]
 
         print("🗄️  Initializing NFL Sentiment Analysis Database")
         print("=" * 50)

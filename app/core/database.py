@@ -1,5 +1,5 @@
 import pymongo
-import redis
+import redis.asyncio as redis_asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
 import logging
@@ -48,11 +48,11 @@ class DatabaseManager:
         On success, self.redis_client is a connected redis client. On failure, the error is logged, self.redis_client is set to None, and the exception is not raised.
         """
         try:
-            self.redis_client = redis.from_url(
+            self.redis_client = redis_asyncio.from_url(
                 settings.redis_url, decode_responses=True
             )
             # Test connection
-            self.redis_client.ping()
+            await self.redis_client.ping()
             logger.info("Successfully connected to Redis!")
         except Exception as e:
             logger.error(f"Error connecting to Redis: {e}")
@@ -68,7 +68,7 @@ class DatabaseManager:
         if self.mongodb_client:
             self.mongodb_client.close()
         if self.redis_client:
-            self.redis_client.close()
+            await self.redis_client.close()
 
     def get_database(self):
         """

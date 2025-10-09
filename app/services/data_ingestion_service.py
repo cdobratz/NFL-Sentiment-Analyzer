@@ -9,12 +9,14 @@ This service handles real-time data collection from multiple sources:
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, Any
 import aiohttp
 import json
 from dataclasses import dataclass
 from enum import Enum
+
+from ..models.sentiment import DataSource
 
 from ..core.config import settings
 from ..core.database import get_database
@@ -23,12 +25,7 @@ from ..models.nfl import Team, Player, Game, BettingLine
 logger = logging.getLogger(__name__)
 
 
-class DataSource(str, Enum):
-    TWITTER = "twitter"
-    ESPN = "espn"
-    DRAFTKINGS = "draftkings"
-    MGM = "mgm"
-    NEWS = "news"
+
 
 
 @dataclass
@@ -59,6 +56,7 @@ class RateLimiter:
         self.max_requests = max_requests
         self.time_window = time_window
         self.requests = []
+        self._requests_lock = asyncio.Lock()
 
     async def acquire(self):
         """
@@ -69,22 +67,27 @@ class RateLimiter:
         necessary wait, the current time is appended to the internal request history. The time_window is
         interpreted in seconds.
         """
-        now = datetime.now()
-        # Remove old requests outside the time window
-        self.requests = [
-            req_time
-            for req_time in self.requests
-            if (now - req_time).seconds < self.time_window
-        ]
+        async with self._requests_lock:
+            now = datetime.now(timezone.utc)
+            
+            # Remove old requests outside the time window
+            self.requests = [
+                req_time
+                for req_time in self.requests
+                if (now - req_time).total_seconds() < self.time_window
+            ]
 
-        if len(self.requests) >= self.max_requests:
-            # Wait until we can make another request
-            oldest_request = min(self.requests)
-            wait_time = self.time_window - (now - oldest_request).seconds
-            if wait_time > 0:
-                await asyncio.sleep(wait_time)
-
-        self.requests.append(now)
+            if len(self.requests) >= self.max_requests:
+                # Wait until we can make another request
+                oldest_request = min(self.requests)
+                wait_time = max(0, self.time_window - (now - oldest_request).total_seconds())
+                
+                if wait_time > 0:
+                    await asyncio.sleep(wait_time)
+                    # Update now after sleeping
+                    now = datetime.now(timezone.utc)
+            
+            self.requests.append(now)
 
 
 class DataIngestionService:
@@ -172,6 +175,10 @@ class DataIngestionService:
         }
 
         try:
+            # Lazily create session if it doesn't exist
+            if not self.session:
+                self.session = aiohttp.ClientSession()
+            
             async with self.session.get(
                 url, headers=headers, params=params
             ) as response:
@@ -184,7 +191,7 @@ class DataIngestionService:
                     )
                     return []
         except Exception as e:
-            logger.error(f"Error collecting Twitter data: {e}")
+            logger.exception(f"Error collecting Twitter data: {e}")
             return []
 
     def _process_twitter_data(self, data: Dict) -> List[RawDataItem]:
@@ -266,6 +273,10 @@ class DataIngestionService:
         url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
 
         try:
+            # Lazily create session if it doesn't exist
+            if not self.session:
+                self.session = aiohttp.ClientSession()
+            
             async with self.session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -274,7 +285,7 @@ class DataIngestionService:
                     logger.error(f"ESPN Scoreboard API error: {response.status}")
                     return []
         except Exception as e:
-            logger.error(f"Error fetching ESPN scoreboard: {e}")
+            logger.exception(f"Error fetching ESPN scoreboard: {e}")
             return []
 
     def _process_espn_scoreboard(self, data: Dict) -> List[RawDataItem]:
@@ -326,6 +337,10 @@ class DataIngestionService:
         url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/news"
 
         try:
+            # Lazily create session if it doesn't exist
+            if not self.session:
+                self.session = aiohttp.ClientSession()
+            
             async with self.session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -334,7 +349,7 @@ class DataIngestionService:
                     logger.error(f"ESPN News API error: {response.status}")
                     return []
         except Exception as e:
-            logger.error(f"Error fetching ESPN news: {e}")
+            logger.exception(f"Error fetching ESPN news: {e}")
             return []
 
     def _process_espn_news(self, data: Dict) -> List[RawDataItem]:
@@ -558,7 +573,14 @@ class DataIngestionService:
         Returns:
             True if a matching item exists in the corresponding collection, False otherwise.
         """
-        collection_name = f"raw_{item.data_type}s"
+        # Use explicit mapping to avoid incorrect pluralization
+        collection_mapping = {
+            "tweet": "raw_tweets",
+            "news": "raw_news", 
+            "game": "raw_games",
+            "betting_line": "raw_betting_lines"
+        }
+        collection_name = collection_mapping.get(item.data_type, f"raw_{item.data_type}s")
 
         # Create a unique identifier based on source and content
         if item.data_type == "tweet":

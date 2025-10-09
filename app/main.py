@@ -45,6 +45,9 @@ async def start_monitoring():
         try:
             await performance_monitor.run_checks()
             await asyncio.sleep(60)  # Run checks every minute
+        except asyncio.CancelledError:
+            # Re-raise cancellation to allow proper shutdown
+            raise
         except Exception as e:
             logger.error(f"Performance monitoring error: {e}")
             await asyncio.sleep(60)

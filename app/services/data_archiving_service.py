@@ -94,8 +94,23 @@ class DataArchivingService:
                 if len(batch) >= self.batch_size:
                     # Insert batch into archive
                     if batch:
-                        await archive_collection.insert_many(batch)
-                        archived_count += len(batch)
+                        try:
+                            await archive_collection.insert_many(batch, ordered=False)
+                            archived_count += len(batch)
+                        except Exception as e:
+                            # Handle duplicate key errors for idempotency
+                            if "duplicate key" in str(e).lower() or "11000" in str(e):
+                                # Count only successfully inserted documents
+                                existing_ids = set()
+                                for doc in batch:
+                                    existing = await archive_collection.find_one({"_id": doc["_id"]})
+                                    if not existing:
+                                        archived_count += 1
+                                    else:
+                                        existing_ids.add(doc["_id"])
+                                logger.info(f"Skipped {len(existing_ids)} duplicate documents in batch")
+                            else:
+                                raise
 
                         # Delete from active collection
                         ids_to_delete = [doc["_id"] for doc in batch]
@@ -104,13 +119,29 @@ class DataArchivingService:
                         )
                         deleted_count += result.deleted_count
 
+                        batch_count = len(batch)
                         batch = []
-                        logger.info(f"Archived batch of {len(batch)} documents")
+                        logger.info(f"Archived batch of {batch_count} documents")
 
             # Process remaining documents
             if batch:
-                await archive_collection.insert_many(batch)
-                archived_count += len(batch)
+                try:
+                    await archive_collection.insert_many(batch, ordered=False)
+                    archived_count += len(batch)
+                except Exception as e:
+                    # Handle duplicate key errors for idempotency
+                    if "duplicate key" in str(e).lower() or "11000" in str(e):
+                        # Count only successfully inserted documents
+                        existing_ids = set()
+                        for doc in batch:
+                            existing = await archive_collection.find_one({"_id": doc["_id"]})
+                            if not existing:
+                                archived_count += 1
+                            else:
+                                existing_ids.add(doc["_id"])
+                        logger.info(f"Skipped {len(existing_ids)} duplicate documents in final batch")
+                    else:
+                        raise
 
                 ids_to_delete = [doc["_id"] for doc in batch]
                 result = await active_collection.delete_many(
@@ -172,8 +203,23 @@ class DataArchivingService:
                 if len(batch) >= self.batch_size:
                     # Insert into deleted collection
                     if batch:
-                        await deleted_collection.insert_many(batch)
-                        moved_to_deleted += len(batch)
+                        try:
+                            await deleted_collection.insert_many(batch, ordered=False)
+                            moved_to_deleted += len(batch)
+                        except Exception as e:
+                            # Handle duplicate key errors for idempotency
+                            if "duplicate key" in str(e).lower() or "11000" in str(e):
+                                # Count only successfully inserted documents
+                                existing_ids = set()
+                                for doc in batch:
+                                    existing = await deleted_collection.find_one({"_id": doc["_id"]})
+                                    if not existing:
+                                        moved_to_deleted += 1
+                                    else:
+                                        existing_ids.add(doc["_id"])
+                                logger.info(f"Skipped {len(existing_ids)} duplicate documents in deleted batch")
+                            else:
+                                raise
 
                         # Delete from archive
                         ids_to_delete = [doc["_id"] for doc in batch]
@@ -182,13 +228,29 @@ class DataArchivingService:
                         )
                         deleted_count += result.deleted_count
 
+                        batch_count = len(batch)
                         batch = []
-                        logger.info(f"Deleted batch of {len(batch)} archived documents")
+                        logger.info(f"Deleted batch of {batch_count} archived documents")
 
             # Process remaining documents
             if batch:
-                await deleted_collection.insert_many(batch)
-                moved_to_deleted += len(batch)
+                try:
+                    await deleted_collection.insert_many(batch, ordered=False)
+                    moved_to_deleted += len(batch)
+                except Exception as e:
+                    # Handle duplicate key errors for idempotency
+                    if "duplicate key" in str(e).lower() or "11000" in str(e):
+                        # Count only successfully inserted documents
+                        existing_ids = set()
+                        for doc in batch:
+                            existing = await deleted_collection.find_one({"_id": doc["_id"]})
+                            if not existing:
+                                moved_to_deleted += 1
+                            else:
+                                existing_ids.add(doc["_id"])
+                        logger.info(f"Skipped {len(existing_ids)} duplicate documents in final deleted batch")
+                    else:
+                        raise
 
                 ids_to_delete = [doc["_id"] for doc in batch]
                 result = await archive_collection.delete_many(
@@ -345,8 +407,9 @@ class DataArchivingService:
                             {"_id": {"$in": ids_to_remove}}
                         )
 
+                        batch_count = len(batch)
                         batch = []
-                        logger.info(f"Restored batch of {len(batch)} documents")
+                        logger.info(f"Restored batch of {batch_count} documents")
 
             # Process remaining documents
             if batch:

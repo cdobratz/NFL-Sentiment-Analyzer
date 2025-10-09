@@ -7,7 +7,7 @@ import json
 import pickle
 from typing import Any, Dict, List, Optional, Union
 from datetime import datetime, timedelta
-import redis
+import redis.asyncio as redis
 import logging
 from app.core.database import get_redis
 from app.models.sentiment import (
@@ -49,20 +49,18 @@ class CachingService:
         @returns Redis client instance, or `None` if a client could not be obtained.
         """
         if not self.redis_client:
-            self.redis_client = await get_redis()
+            self.redis_client = get_redis()
         return self.redis_client
 
     def _serialize_data(self, data: Any) -> str:
         """
-        Serialize an object for storage in Redis.
-
-        Produces a string containing either JSON-encoded data for dicts, lists, or objects exposing a `dict()` method (e.g., Pydantic models), or a hex-encoded pickle for other Python objects.
+        Serialize an object for storage in Redis using safe JSON serialization.
 
         Parameters:
             data: The object to serialize. Pydantic-like models, dicts, and lists are encoded as JSON.
 
         Returns:
-            str: A JSON string for dict/list/Pydantic-like objects, or a hex-encoded pickle string for other types.
+            str: A JSON string for all supported data types.
         """
         if hasattr(data, "dict"):
             # Pydantic model
@@ -70,8 +68,12 @@ class CachingService:
         elif isinstance(data, (dict, list)):
             return json.dumps(data, default=str)
         else:
-            # Use pickle for complex objects
-            return pickle.dumps(data).hex()
+            # Convert other objects to JSON-serializable format
+            try:
+                return json.dumps(data, default=str)
+            except (TypeError, ValueError):
+                # For non-serializable objects, convert to string representation
+                return json.dumps(str(data))
 
     def _deserialize_data(self, data: str, data_type: str = "json") -> Any:
         """
@@ -90,7 +92,15 @@ class CachingService:
             if data_type == "json":
                 return json.loads(data)
             else:
-                return pickle.loads(bytes.fromhex(data))
+                # Safe JSON deserialization instead of pickle
+                try:
+                    # Decode hex string to bytes, then to UTF-8 text
+                    decoded_bytes = bytes.fromhex(data)
+                    decoded_text = decoded_bytes.decode('utf-8')
+                    return json.loads(decoded_text)
+                except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as decode_error:
+                    logger.error(f"Error decoding cached data: {decode_error}")
+                    return None
         except Exception as e:
             logger.error(f"Error deserializing data: {e}")
             return None
@@ -115,7 +125,7 @@ class CachingService:
             serialized_data = self._serialize_data(data)
             ttl = ttl or self.default_ttl
 
-            redis_client.setex(key, ttl, serialized_data)
+            await redis_client.setex(key, ttl, serialized_data)
             return True
         except Exception as e:
             logger.error(f"Error setting cache for key {key}: {e}")
@@ -136,8 +146,11 @@ class CachingService:
             if not redis_client:
                 return None
 
-            data = redis_client.get(key)
+            data = await redis_client.get(key)
             if data:
+                # Decode bytes to string if needed
+                if isinstance(data, bytes):
+                    data = data.decode('utf-8')
                 return self._deserialize_data(data, data_type)
             return None
         except Exception as e:
@@ -159,7 +172,7 @@ class CachingService:
             if not redis_client:
                 return False
 
-            redis_client.delete(key)
+            await redis_client.delete(key)
             return True
         except Exception as e:
             logger.error(f"Error deleting cache for key {key}: {e}")
@@ -180,9 +193,12 @@ class CachingService:
             if not redis_client:
                 return 0
 
-            keys = redis_client.keys(pattern)
+            # Use SCAN instead of KEYS to avoid blocking
+            keys = []
+            async for key in redis_client.scan_iter(match=pattern):
+                keys.append(key)
             if keys:
-                return redis_client.delete(*keys)
+                return await redis_client.delete(*keys)
             return 0
         except Exception as e:
             logger.error(f"Error deleting cache pattern {pattern}: {e}")
@@ -199,7 +215,7 @@ class CachingService:
             if not redis_client:
                 return False
 
-            return bool(redis_client.exists(key))
+            return bool(await redis_client.exists(key))
         except Exception as e:
             logger.error(f"Error checking cache existence for key {key}: {e}")
             return False
@@ -219,7 +235,7 @@ class CachingService:
             if not redis_client:
                 return -1
 
-            return redis_client.ttl(key)
+            return await redis_client.ttl(key)
         except Exception as e:
             logger.error(f"Error getting TTL for key {key}: {e}")
             return -1
@@ -469,7 +485,7 @@ class CachingService:
             if not redis_client:
                 return {}
 
-            info = redis_client.info()
+            info = await redis_client.info()
 
             # Count keys by pattern
             key_counts = {}
@@ -483,7 +499,10 @@ class CachingService:
             ]
 
             for pattern in patterns:
-                keys = redis_client.keys(pattern)
+                # Use SCAN instead of KEYS to avoid blocking
+                keys = []
+                async for key in redis_client.scan_iter(match=pattern):
+                    keys.append(key)
                 key_counts[pattern] = len(keys)
 
             return {

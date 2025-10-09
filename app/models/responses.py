@@ -2,7 +2,7 @@
 Common response models for the API.
 """
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 
@@ -87,7 +87,7 @@ class APIKeyInfo(BaseModel):
     usage_count: int
     rate_limit: int
     created_by: str
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ValidationErrorDetail(BaseModel):
@@ -101,4 +101,4 @@ class ValidationErrorDetail(BaseModel):
 class ValidationErrorResponse(ErrorResponse):
     """Validation error response with field details"""
 
-    validation_errors: List[ValidationErrorDetail] = []
+    validation_errors: List[ValidationErrorDetail] = Field(default_factory=list)

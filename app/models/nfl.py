@@ -35,8 +35,8 @@ class Team(BaseModel):
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     # Enhanced fields for sentiment analysis
-    aliases: List[str] = []  # Alternative names/nicknames for the team
-    keywords: List[str] = []  # Team-specific keywords for sentiment analysis
+    aliases: List[str] = Field(default_factory=list)  # Alternative names/nicknames for the team
+    keywords: List[str] = Field(default_factory=list)  # Team-specific keywords for sentiment analysis
     established: Optional[int] = None
     stadium: Optional[str] = None
     head_coach: Optional[str] = None
@@ -56,8 +56,8 @@ class Player(BaseModel):
     college: Optional[str] = None
     years_pro: Optional[int] = None
     # Enhanced fields for sentiment analysis
-    aliases: List[str] = []  # Nicknames and alternative names
-    keywords: List[str] = []  # Player-specific keywords
+    aliases: List[str] = Field(default_factory=list)  # Nicknames and alternative names
+    keywords: List[str] = Field(default_factory=list)  # Player-specific keywords
     status: str = "active"  # active, injured, suspended, retired
     contract_year: Optional[int] = None
     is_rookie: bool = False
@@ -86,7 +86,7 @@ class Game(BaseModel):
     status: GameStatus = GameStatus.SCHEDULED
     home_score: Optional[int] = None
     away_score: Optional[int] = None
-    betting_lines: List[BettingLine] = []
+    betting_lines: List[BettingLine] = Field(default_factory=list)
     venue: Optional[str] = None
     weather: Optional[Dict] = None
     # Enhanced fields for sentiment analysis
@@ -94,7 +94,7 @@ class Game(BaseModel):
     primetime: bool = False
     rivalry_game: bool = False
     playoff_implications: bool = False
-    keywords: List[str] = []  # Game-specific keywords
+    keywords: List[str] = Field(default_factory=list)  # Game-specific keywords
 
     class Config:
         populate_by_name = True

@@ -91,8 +91,22 @@ class AuthContextMiddleware(BaseHTTPMiddleware):
                 )
                 user_id = payload.get("sub")
                 if user_id:
-                    # Store user ID for rate limiting (full user object loaded by dependencies)
+                    # Store user ID for rate limiting
                     request.state.user_id = user_id
+                    
+                    # Load the full user object for downstream middleware
+                    try:
+                        from ..core.database import get_database
+                        from bson import ObjectId
+                        
+                        db = await get_database()
+                        if db:
+                            user = await db.users.find_one({"_id": ObjectId(user_id)})
+                            if user:
+                                request.state.user = user
+                    except Exception:
+                        # If user lookup fails, leave request.state.user as None
+                        pass
             except JWTError:
                 pass
 

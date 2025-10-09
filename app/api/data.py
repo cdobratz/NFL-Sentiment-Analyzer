@@ -1008,6 +1008,7 @@ async def get_recent_sentiment(
         sentiment_data = []
         async for doc in cursor:
             doc["id"] = str(doc["_id"])
+            doc.pop("_id", None)
             sentiment_data.append(doc)
 
         return {

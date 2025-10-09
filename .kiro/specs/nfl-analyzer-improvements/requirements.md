@@ -41,7 +41,7 @@ The NFL Sentiment Analyzer currently has a basic FastAPI backend with simple sen
 
 ### Requirement 4: Enhanced Sentiment Analysis
 
-**User Story:** As a nfl fan, I want advanced NFL-specific sentiment analysis so that I can make informed game decisions based on market sentiment.
+**User Story:** As an NFL fan, I want advanced NFL-specific sentiment analysis so that I can make informed game decisions based on market sentiment.
 
 #### Acceptance Criteria
 

@@ -20,6 +20,8 @@ class SentimentCategory(str, Enum):
 
 
 class DataSource(str, Enum):
+    DRAFTKINGS = "draftkings"
+    MGM = "mgm"
     TWITTER = "twitter"
     ESPN = "espn"
     NEWS = "news"

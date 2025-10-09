@@ -83,6 +83,10 @@ class HealthChecker:
 
             # Test connection
             redis_client = db_manager.get_redis()
+            
+            # Check if redis_client is available
+            if not redis_client:
+                return {"status": "unhealthy", "error": "Redis unavailable"}
 
             # Run blocking Redis methods in thread pool
             await asyncio.to_thread(redis_client.ping)

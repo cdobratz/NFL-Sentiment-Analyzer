@@ -76,6 +76,9 @@ async def analyze_sentiment(
         # Store in database
         doc_data = {
             **sentiment_data.dict(),
+            "sentiment": result.sentiment,
+            "confidence": result.confidence,
+            "created_at": result.created_at if hasattr(result, 'created_at') and result.created_at else datetime.utcnow(),
             "sentiment_score": result.sentiment_score,
             "category": result.category.value,
             "timestamp": result.timestamp,
@@ -163,6 +166,7 @@ async def analyze_batch_sentiment(
                 "game_id": result.game_id,
                 "source": result.source.value,
                 "timestamp": result.timestamp,
+                "created_at": datetime.utcnow(),
                 "processed_at": datetime.utcnow(),
                 "model_version": result.model_version,
                 "processing_time_ms": result.processing_time_ms,

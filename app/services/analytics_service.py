@@ -52,7 +52,10 @@ class AnalyticsService:
             The cached AsyncIOMotorDatabase instance used by the service.
         """
         if not self.db:
-            self.db = await get_database()
+            db_result = await get_database()
+            if db_result is None:
+                raise RuntimeError("Failed to obtain database connection")
+            self.db = db_result
         return self.db
 
     async def get_cache_service(self):
@@ -123,7 +126,7 @@ class AnalyticsService:
             return cached_result
 
         db = await self.get_database()
-        collection = db.sentiment_analysis
+        collection = db.sentiment_analyses
 
         # Build aggregation pipeline
         pipeline = []
@@ -308,7 +311,7 @@ class AnalyticsService:
             return [SentimentTrend(**trend) for trend in cached_trends]
 
         db = await self.get_database()
-        collection = db.sentiment_analysis
+        collection = db.sentiment_analyses
 
         # Calculate time range
         end_time = datetime.utcnow()

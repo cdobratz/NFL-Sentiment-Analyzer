@@ -5,6 +5,8 @@ import logging
 import asyncio
 import psutil
 import time
+from bson import ObjectId
+from bson.errors import InvalidId
 
 from ..core.database import get_database, get_redis
 from ..core.dependencies import get_current_admin_user
@@ -60,7 +62,15 @@ async def get_user(
     Raises:
         HTTPException: 404 if the user with the given ID is not found.
     """
-    user = await db.users.find_one({"_id": user_id}, {"hashed_password": 0})
+    # Validate ObjectId
+    try:
+        object_id = ObjectId(user_id)
+    except (InvalidId, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user id"
+        )
+    
+    user = await db.users.find_one({"_id": object_id}, {"hashed_password": 0})
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -88,8 +98,16 @@ async def deactivate_user(
     Raises:
         HTTPException: 404 if no user with the given `user_id` exists.
     """
+    # Validate ObjectId
+    try:
+        object_id = ObjectId(user_id)
+    except (InvalidId, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user id"
+        )
+    
     result = await db.users.update_one(
-        {"_id": user_id},
+        {"_id": object_id},
         {"$set": {"is_active": False, "deactivated_at": datetime.utcnow()}},
     )
 
@@ -119,8 +137,16 @@ async def activate_user(
     Raises:
         HTTPException: HTTP 404 if no user with the given ID is found.
     """
+    # Validate ObjectId
+    try:
+        object_id = ObjectId(user_id)
+    except (InvalidId, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user id"
+        )
+    
     result = await db.users.update_one(
-        {"_id": user_id},
+        {"_id": object_id},
         {"$set": {"is_active": True}, "$unset": {"deactivated_at": ""}},
     )
 

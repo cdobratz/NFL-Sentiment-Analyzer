@@ -59,11 +59,16 @@ def mock_settings():
 @pytest.fixture
 def sample_user():
     """Sample user data for testing."""
+    # Use a test-specific hash that's not a real secret
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    test_password_hash = pwd_context.hash("test_password_123")
+    
     return {
         "_id": ObjectId(),
         "email": "test@example.com",
         "username": "testuser",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # "secret"
+        "hashed_password": test_password_hash,
         "role": "user",
         "is_active": True,
         "created_at": datetime.utcnow(),
@@ -74,11 +79,16 @@ def sample_user():
 @pytest.fixture
 def admin_user():
     """Sample admin user data for testing."""
+    # Use a test-specific hash that's not a real secret
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    test_password_hash = pwd_context.hash("test_admin_password_123")
+    
     return {
         "_id": ObjectId(),
         "email": "admin@example.com",
         "username": "adminuser",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # "secret"
+        "hashed_password": test_password_hash,
         "role": "admin",
         "is_active": True,
         "created_at": datetime.utcnow(),
@@ -197,7 +207,7 @@ class TestLoginEndpoint:
         
         login_data = {
             "username": "test@example.com",
-            "password": "secret"
+            "password": "test_password_123"
         }
         
         response = client.post("/auth/login", data=login_data)
@@ -485,7 +495,7 @@ class TestChangePasswordEndpoint:
         
         headers = self.create_auth_headers(str(sample_user["_id"]), mock_dep_settings)
         password_data = {
-            "currentPassword": "secret",
+            "currentPassword": "test_password_123",
             "newPassword": "newsecret123"
         }
         
@@ -498,7 +508,7 @@ class TestChangePasswordEndpoint:
     def test_change_password_no_auth(self, client):
         """Test password change without authentication."""
         password_data = {
-            "currentPassword": "secret",
+            "currentPassword": "test_password_123",
             "newPassword": "newsecret123"
         }
         response = client.put("/auth/change-password", json=password_data)

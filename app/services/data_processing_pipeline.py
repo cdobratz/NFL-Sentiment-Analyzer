@@ -329,6 +329,9 @@ class DataProcessingPipeline:
 
         Starts the data ingestion service, marks the pipeline as running, spawns three worker coroutines to process tasks, and starts the scheduler in a background thread.
         """
+        # Capture the running event loop for use in scheduler thread
+        self.loop = asyncio.get_running_loop()
+        
         await self.data_ingestion.start()
         self.is_running = True
 
@@ -413,7 +416,7 @@ class DataProcessingPipeline:
         )
 
         asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), asyncio.get_event_loop()
+            self.task_queue.add_task(task), self.loop
         )
 
     def _schedule_espn_collection(self):
@@ -434,7 +437,7 @@ class DataProcessingPipeline:
         )
 
         asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), asyncio.get_event_loop()
+            self.task_queue.add_task(task), self.loop
         )
 
     def _schedule_betting_lines_collection(self):
@@ -455,7 +458,7 @@ class DataProcessingPipeline:
         )
 
         asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), asyncio.get_event_loop()
+            self.task_queue.add_task(task), self.loop
         )
 
     def _schedule_data_cleanup(self):
@@ -476,7 +479,7 @@ class DataProcessingPipeline:
         )
 
         asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), asyncio.get_event_loop()
+            self.task_queue.add_task(task), self.loop
         )
 
     async def _worker(self, worker_id: str):

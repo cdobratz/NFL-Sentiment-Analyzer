@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional, List
 import os
 
@@ -51,9 +51,7 @@ class Settings(BaseSettings):
     # Monitoring
     sentry_dsn: Optional[str] = None
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
 
 # Create settings instance

@@ -4,6 +4,7 @@ Database indexing configuration for efficient sentiment analysis queries.
 
 from typing import List, Dict, Any
 from pymongo import IndexModel, ASCENDING, DESCENDING, TEXT
+from pymongo.errors import PyMongoError
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 
@@ -287,7 +288,7 @@ async def drop_all_indexes(db: AsyncIOMotorDatabase) -> Dict[str, bool]:
             collection = db[collection_name]
             await collection.drop_indexes()
             results[collection_name] = True
-        except Exception as e:
+        except PyMongoError as e:
             results[collection_name] = False
             print(f"Error dropping indexes for {collection_name}: {e}")
 

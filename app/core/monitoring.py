@@ -5,6 +5,7 @@ Application performance monitoring and alerting system.
 import asyncio
 import logging
 import time
+import uuid
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
@@ -233,7 +234,7 @@ class AlertManager:
             Alert: The created Alert object with id, type, severity, title, message, timestamp, and metadata.
         """
         alert = Alert(
-            id=f"{alert_type.value}_{int(time.time())}",
+            id=f"{alert_type.value}_{uuid.uuid4()}",
             type=alert_type,
             severity=severity,
             title=title,

@@ -10,7 +10,7 @@ from .exceptions import AuthenticationError, AuthorizationError
 
 logger = logging.getLogger(__name__)
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
@@ -33,6 +33,10 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    # Check for missing credentials
+    if credentials is None or not credentials.credentials:
+        raise credentials_exception
 
     token = credentials.credentials
 
@@ -83,6 +87,7 @@ async def get_current_admin_user(current_user: dict = Depends(get_current_user))
 async def get_optional_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db=Depends(get_database),
+    redis=Depends(get_redis),
 ):
     """
     Return the authenticated user dict when valid credentials are provided, otherwise None.
@@ -94,7 +99,7 @@ async def get_optional_user(
         return None
 
     try:
-        return await get_current_user(credentials, db)
+        return await get_current_user(credentials, db, redis)
     except HTTPException:
         return None
 
