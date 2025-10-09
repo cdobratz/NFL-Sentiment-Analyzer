@@ -334,11 +334,6 @@ class SentimentAnalysisService:
 
         return weights
 
-
-# Global sentiment service instance
-sentiment_service = SentimentAnalysisService()
-
-
     async def get_recent_sentiment(self, limit: int = 10) -> List[Dict]:
         """Get recent sentiment analyses"""
         # This would typically query the database for recent sentiment analyses
@@ -418,6 +413,10 @@ sentiment_service = SentimentAnalysisService()
                 "recent_sentiments": [],
                 "period": "last_7_days"
             }
+
+
+# Global sentiment service instance
+sentiment_service = SentimentAnalysisService()
 
 
 async def get_sentiment_service() -> SentimentAnalysisService:

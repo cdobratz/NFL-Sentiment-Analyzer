@@ -474,7 +474,6 @@ async def _get_game_predictions(db, game_id: str) -> List[Dict[str, Any]]:
     async for pred in cursor:
         pred["id"] = str(pred.get("_id"))
         pred.pop("_id", None)
-        pred["id"] = pred_id
         predictions.append(pred)
 
     return predictions
