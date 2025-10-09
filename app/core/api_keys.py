@@ -138,7 +138,7 @@ class APIKeyManager:
             db = db_manager.get_database()
             collection = db[self.collection_name]
 
-            await collection.insert_one(api_key.dict())
+            await collection.insert_one(api_key.model_dump())
 
             logger.info(
                 f"Created API key: {name}",
@@ -265,6 +265,34 @@ class APIKeyManager:
         except Exception as e:
             logger.error(f"Failed to list API keys: {e}")
             return []
+
+    async def get_api_key_by_id(self, key_id: str) -> Optional[APIKey]:
+        """
+        Retrieve a single API key by its ID using direct database lookup.
+
+        Parameters:
+            key_id (str): The unique identifier of the API key to retrieve.
+
+        Returns:
+            Optional[APIKey]: The API key object if found, None otherwise.
+        """
+        try:
+            db = await db_manager.get_database()
+            if not db:
+                logger.error("Database connection not available")
+                return None
+
+            collection = db[self.collection_name]
+            doc = await collection.find_one({"id": key_id})
+
+            if not doc:
+                return None
+
+            return APIKey(**doc)
+
+        except Exception as e:
+            logger.error(f"Failed to get API key by ID {key_id}: {e}")
+            return None
 
     async def get_api_key_usage(self, key_id: str) -> Dict[str, Any]:
         """

@@ -113,4 +113,4 @@ class Prediction(BaseModel):
     predicted_total: Optional[float] = None
     model_version: str
     created_at: datetime
-    factors: Dict[str, float] = {}  # sentiment, betting_trends, etc.
+    factors: Dict[str, float] = Field(default_factory=dict) # sentiment, betting_trends, etc.

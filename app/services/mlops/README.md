@@ -79,7 +79,7 @@ DEPLOYMENTS_DIR=./deployments
 
 The MLOps pipeline requires the following additional dependencies:
 
-```
+```bash
 wandb==0.16.0
 hopsworks==3.4.4
 huggingface-hub==0.19.4
@@ -241,7 +241,7 @@ python -m app.services.mlops.test_mlops_integration
 
 The MLOps pipeline follows a microservices architecture with clear separation of concerns:
 
-```
+```text
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   API Layer    │    │  MLOps Service   │    │  External APIs  │
 │                │    │                  │    │                 │

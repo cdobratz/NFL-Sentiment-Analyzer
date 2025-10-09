@@ -433,7 +433,7 @@ class EnhancedSentimentModelMigration(Migration):
         """
         try:
             # Remove the enhanced fields
-            collection = db.sentiment_analysis
+            collection = db.sentiment_analyses
 
             await collection.update_many(
                 {},

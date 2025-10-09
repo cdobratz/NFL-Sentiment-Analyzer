@@ -249,7 +249,11 @@ def log_error(
         **(context or {}),
     }
 
-    logger.error("Application error occurred", extra=log_data, exc_info=error)
+    logger.error(
+        "Application error occurred",
+        extra=log_data,
+        exc_info=(type(error), error, error.__traceback__),
+    )
 
 
 # Initialize logging

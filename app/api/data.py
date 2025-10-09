@@ -2,16 +2,35 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import logging
+from pydantic import BaseModel
 
 from ..core.database import get_database
 from ..models.nfl import Team, Player, Game, GameResponse, BettingLine
 from ..services.data_processing_pipeline import data_processing_pipeline
 
+
+class TeamOut(Team):
+    """Extended Team model with optional dynamic fields for API responses"""
+    current_stats: Optional[Dict[str, Any]] = None
+    current_sentiment: Optional[Dict[str, Any]] = None
+
+
+class PlayerOut(Player):
+    """Extended Player model with optional dynamic fields for API responses"""
+    current_stats: Optional[Dict[str, Any]] = None
+    current_sentiment: Optional[Dict[str, Any]] = None
+
+
+class GameResponseOut(GameResponse):
+    """Extended GameResponse model with optional dynamic fields for API responses"""
+    predictions: Optional[List[Dict[str, Any]]] = None
+    sentiment_summary: Optional[Dict[str, Any]] = None
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/data", tags=["data"])
 
 
-@router.get("/teams", response_model=List[Team])
+@router.get("/teams", response_model=List[TeamOut])
 async def get_teams(
     conference: Optional[str] = None,
     division: Optional[str] = None,
@@ -57,7 +76,7 @@ async def get_teams(
             sentiment = await _get_team_sentiment(db, doc["id"])
             doc["current_sentiment"] = sentiment
 
-        teams.append(Team(**doc))
+        teams.append(TeamOut(**doc))
 
     return teams
 
@@ -204,7 +223,7 @@ async def get_team(team_id: str, db=Depends(get_database)):
     return Team(**team)
 
 
-@router.get("/players", response_model=List[Player])
+@router.get("/players", response_model=List[PlayerOut])
 async def get_players(
     team_id: Optional[str] = None,
     position: Optional[str] = None,
@@ -262,7 +281,7 @@ async def get_players(
             sentiment = await _get_player_sentiment(db, doc["id"])
             doc["current_sentiment"] = sentiment
 
-        players.append(Player(**doc))
+        players.append(PlayerOut(**doc))
 
     return players
 
@@ -336,7 +355,7 @@ async def _get_player_sentiment(db, player_id: str) -> Dict[str, Any]:
     }
 
 
-@router.get("/players/{player_id}", response_model=Player)
+@router.get("/players/{player_id}", response_model=PlayerOut)
 async def get_player(player_id: str, db=Depends(get_database)):
     """
     Retrieve a single player by its ID.
@@ -357,10 +376,10 @@ async def get_player(player_id: str, db=Depends(get_database)):
         )
 
     player["id"] = str(player["_id"])
-    return Player(**player)
+    return PlayerOut(**player)
 
 
-@router.get("/games", response_model=List[GameResponse])
+@router.get("/games", response_model=List[GameResponseOut])
 async def get_games(
     week: Optional[int] = None,
     season: Optional[int] = None,
@@ -435,7 +454,7 @@ async def get_games(
             sentiment = await _get_game_sentiment(db, doc["id"])
             doc["sentiment_summary"] = sentiment
 
-        games.append(GameResponse(**doc))
+        games.append(GameResponseOut(**doc))
 
     return games
 
@@ -453,7 +472,9 @@ async def _get_game_predictions(db, game_id: str) -> List[Dict[str, Any]]:
     predictions = []
 
     async for pred in cursor:
-        pred["id"] = str(pred["_id"])
+        pred["id"] = str(pred.get("_id"))
+        pred.pop("_id", None)
+        pred["id"] = pred_id
         predictions.append(pred)
 
     return predictions
@@ -526,7 +547,7 @@ async def _get_game_sentiment(db, game_id: str) -> Dict[str, Any]:
     }
 
 
-@router.get("/games/{game_id}", response_model=GameResponse)
+@router.get("/games/{game_id}", response_model=GameResponseOut)
 async def get_game(game_id: str, db=Depends(get_database)):
     """
     Retrieve a single game by its ID and include embedded home and away team models when available.
@@ -557,7 +578,7 @@ async def get_game(game_id: str, db=Depends(get_database)):
         away_team["id"] = str(away_team["_id"])
         game["away_team"] = Team(**away_team)
 
-    return GameResponse(**game)
+    return GameResponseOut(**game)
 
 
 @router.get("/betting-lines")

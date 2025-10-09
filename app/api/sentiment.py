@@ -76,12 +76,16 @@ async def analyze_sentiment(
         # Store in database
         doc_data = {
             **sentiment_data.dict(),
-            "sentiment": result.sentiment,
-            "confidence": result.confidence,
-            "created_at": result.created_at if hasattr(result, 'created_at') and result.created_at else datetime.utcnow(),
+            "sentiment": result.sentiment.value,
             "sentiment_score": result.sentiment_score,
+            "confidence": result.confidence,
             "category": result.category.value,
+            "source": result.source.value,
+            "context": (
+                result.context.model_dump() if hasattr(result.context, "model_dump") else result.context.dict()
+            ),
             "timestamp": result.timestamp,
+            "created_at": result.timestamp,
             "processed_at": datetime.utcnow(),
             "model_version": result.model_version,
             "processing_time_ms": result.processing_time_ms,
@@ -91,7 +95,7 @@ async def analyze_sentiment(
             "user_id": str(auth["_id"]) if isinstance(auth, dict) and auth else None,
         }
 
-        db_result = await db.sentiment_analyses.insert_one(doc_data)
+        await db.sentiment_analyses.insert_one(doc_data)
 
         # Update aggregated sentiment in background
         background_tasks.add_task(
@@ -160,13 +164,16 @@ async def analyze_batch_sentiment(
                 "sentiment_score": result.sentiment_score,
                 "confidence": result.confidence,
                 "category": result.category.value,
-                "context": result.context.dict(),
+                "context": (
+                    result.context.model_dump() if hasattr(result.context, "model_dump")
+                    else result.context.dict()
+                ),
                 "team_id": result.team_id,
                 "player_id": result.player_id,
                 "game_id": result.game_id,
                 "source": result.source.value,
                 "timestamp": result.timestamp,
-                "created_at": datetime.utcnow(),
+                "created_at": result.timestamp,
                 "processed_at": datetime.utcnow(),
                 "model_version": result.model_version,
                 "processing_time_ms": result.processing_time_ms,
@@ -175,6 +182,7 @@ async def analyze_batch_sentiment(
                 "keyword_contributions": result.keyword_contributions,
                 "user_id": str(current_user["_id"]) if current_user else None,
             }
+            
             docs_to_insert.append(doc_data)
 
         if docs_to_insert:

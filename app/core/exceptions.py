@@ -85,7 +85,7 @@ class AuthorizationError(APIError):
 class NotFoundError(APIError):
     """Raised when a resource is not found"""
 
-    def __init__(self, resource: str, identifier: str = None):
+    def __init__(self, resource: str, identifier: Optional[str] = None):
         """
         Initialize a NotFoundError for a missing resource.
 
@@ -140,7 +140,7 @@ class RateLimitError(APIError):
 class ExternalServiceError(APIError):
     """Raised when external service fails"""
 
-    def __init__(self, service: str, message: str = None):
+    def __init__(self, service: str, message: Optional[str] = None):
         """
         Initialize an APIError representing a failure in an external service.
 
@@ -206,7 +206,7 @@ class DatabaseError(APIError):
 class MLModelError(APIError):
     """Raised when ML model operations fail"""
 
-    def __init__(self, message: str, model_name: str = None):
+    def __init__(self, message: str, model_name: Optional[str] = None):
         """
         Constructs an MLModelError containing a composed error message and optional model context.
 
@@ -231,7 +231,7 @@ class MLModelError(APIError):
 class DataIngestionError(APIError):
     """Raised when data ingestion fails"""
 
-    def __init__(self, message: str, source: str = None):
+    def __init__(self, message: str, source: Optional[str] = None):
         """
         Initialize a DataIngestionError for failures that occur while ingesting data.
 
@@ -258,7 +258,7 @@ class DataIngestionError(APIError):
 class ConfigurationError(APIError):
     """Raised when configuration is invalid"""
 
-    def __init__(self, message: str, config_key: str = None):
+    def __init__(self, message: str, config_key: Optional[str] = None):
         """
         Initialize the ConfigurationError with optional configuration key context.
 

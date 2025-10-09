@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 from typing import Optional, List
 import os
 
@@ -41,8 +42,8 @@ class Settings(BaseSettings):
     models_dir: str = "./models"
     deployments_dir: str = "./deployments"
 
-    # CORS settings
-    allowed_origins: List[str] = ["*"]
+    # CORS settings - safe development default, override with ALLOWED_ORIGINS env var for production
+    allowed_origins: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"] 
 
     # Rate limiting
     rate_limit_requests: int = 100
@@ -50,6 +51,24 @@ class Settings(BaseSettings):
 
     # Monitoring
     sentry_dsn: Optional[str] = None
+
+    @field_validator('allowed_origins', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS origins from environment variable or return default"""
+        if isinstance(v, str):
+            # Parse comma-separated string from environment variable
+            origins = [origin.strip() for origin in v.split(',') if origin.strip()]
+            # Validate that wildcard is not used in production
+            if "*" in origins:
+                import warnings
+                warnings.warn(
+                    "CORS wildcard '*' detected in allowed_origins. "
+                    "This is unsafe for production. Use explicit origins instead.",
+                    UserWarning
+                )
+            return origins
+        return v
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 

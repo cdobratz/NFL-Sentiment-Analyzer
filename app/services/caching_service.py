@@ -49,7 +49,7 @@ class CachingService:
         @returns Redis client instance, or `None` if a client could not be obtained.
         """
         if not self.redis_client:
-            self.redis_client = get_redis()
+            self.redis_client = await get_redis()
         return self.redis_client
 
     def _serialize_data(self, data: Any) -> str:

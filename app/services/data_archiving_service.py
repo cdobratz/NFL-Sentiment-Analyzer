@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from motor.motor_asyncio import AsyncIOMotorDatabase
 import logging
+from pymongo.errors import BulkWriteError
 from app.core.database import get_database
 from app.models.sentiment import SentimentAnalysisInDB
 
@@ -56,7 +57,10 @@ class DataArchivingService:
             db (AsyncIOMotorDatabase): The MongoDB database instance used by the service.
         """
         if not self.db:
-            self.db = await get_database()
+            db_result = await get_database()
+            if db_result is None:
+                raise RuntimeError("Database connection not established")
+            self.db = db_result
         return self.db
 
     async def archive_old_sentiment_data(self) -> Dict[str, int]:
@@ -95,22 +99,13 @@ class DataArchivingService:
                     # Insert batch into archive
                     if batch:
                         try:
-                            await archive_collection.insert_many(batch, ordered=False)
-                            archived_count += len(batch)
-                        except Exception as e:
+                            result = await archive_collection.insert_many(batch, ordered=False)
+                            archived_count += len(result.inserted_ids)
+                        except BulkWriteError as e:
                             # Handle duplicate key errors for idempotency
-                            if "duplicate key" in str(e).lower() or "11000" in str(e):
-                                # Count only successfully inserted documents
-                                existing_ids = set()
-                                for doc in batch:
-                                    existing = await archive_collection.find_one({"_id": doc["_id"]})
-                                    if not existing:
-                                        archived_count += 1
-                                    else:
-                                        existing_ids.add(doc["_id"])
-                                logger.info(f"Skipped {len(existing_ids)} duplicate documents in batch")
-                            else:
-                                raise
+                            n_inserted = e.details.get("nInserted", 0)
+                            archived_count += n_inserted
+                            logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in batch")
 
                         # Delete from active collection
                         ids_to_delete = [doc["_id"] for doc in batch]
@@ -126,22 +121,13 @@ class DataArchivingService:
             # Process remaining documents
             if batch:
                 try:
-                    await archive_collection.insert_many(batch, ordered=False)
-                    archived_count += len(batch)
-                except Exception as e:
+                    result = await archive_collection.insert_many(batch, ordered=False)
+                    archived_count += len(result.inserted_ids)
+                except BulkWriteError as e:
                     # Handle duplicate key errors for idempotency
-                    if "duplicate key" in str(e).lower() or "11000" in str(e):
-                        # Count only successfully inserted documents
-                        existing_ids = set()
-                        for doc in batch:
-                            existing = await archive_collection.find_one({"_id": doc["_id"]})
-                            if not existing:
-                                archived_count += 1
-                            else:
-                                existing_ids.add(doc["_id"])
-                        logger.info(f"Skipped {len(existing_ids)} duplicate documents in final batch")
-                    else:
-                        raise
+                    n_inserted = e.details.get("nInserted", 0)
+                    archived_count += n_inserted
+                    logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final batch")
 
                 ids_to_delete = [doc["_id"] for doc in batch]
                 result = await active_collection.delete_many(
@@ -204,22 +190,13 @@ class DataArchivingService:
                     # Insert into deleted collection
                     if batch:
                         try:
-                            await deleted_collection.insert_many(batch, ordered=False)
-                            moved_to_deleted += len(batch)
-                        except Exception as e:
+                            result = await deleted_collection.insert_many(batch, ordered=False)
+                            moved_to_deleted += len(result.inserted_ids)
+                        except BulkWriteError as e:
                             # Handle duplicate key errors for idempotency
-                            if "duplicate key" in str(e).lower() or "11000" in str(e):
-                                # Count only successfully inserted documents
-                                existing_ids = set()
-                                for doc in batch:
-                                    existing = await deleted_collection.find_one({"_id": doc["_id"]})
-                                    if not existing:
-                                        moved_to_deleted += 1
-                                    else:
-                                        existing_ids.add(doc["_id"])
-                                logger.info(f"Skipped {len(existing_ids)} duplicate documents in deleted batch")
-                            else:
-                                raise
+                            n_inserted = e.details.get("nInserted", 0)
+                            moved_to_deleted += n_inserted
+                            logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in deleted batch")
 
                         # Delete from archive
                         ids_to_delete = [doc["_id"] for doc in batch]
@@ -235,22 +212,13 @@ class DataArchivingService:
             # Process remaining documents
             if batch:
                 try:
-                    await deleted_collection.insert_many(batch, ordered=False)
-                    moved_to_deleted += len(batch)
-                except Exception as e:
+                    result = await deleted_collection.insert_many(batch, ordered=False)
+                    moved_to_deleted += len(result.inserted_ids)
+                except BulkWriteError as e:
                     # Handle duplicate key errors for idempotency
-                    if "duplicate key" in str(e).lower() or "11000" in str(e):
-                        # Count only successfully inserted documents
-                        existing_ids = set()
-                        for doc in batch:
-                            existing = await deleted_collection.find_one({"_id": doc["_id"]})
-                            if not existing:
-                                moved_to_deleted += 1
-                            else:
-                                existing_ids.add(doc["_id"])
-                        logger.info(f"Skipped {len(existing_ids)} duplicate documents in final deleted batch")
-                    else:
-                        raise
+                    n_inserted = e.details.get("nInserted", 0)
+                    moved_to_deleted += n_inserted
+                    logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final deleted batch")
 
                 ids_to_delete = [doc["_id"] for doc in batch]
                 result = await archive_collection.delete_many(
@@ -398,8 +366,14 @@ class DataArchivingService:
                 if len(batch) >= self.batch_size:
                     # Insert back into active collection
                     if batch:
-                        await active_collection.insert_many(batch)
-                        restored_count += len(batch)
+                        try:
+                            result = await active_collection.insert_many(batch, ordered=False)
+                            restored_count += len(result.inserted_ids)
+                        except BulkWriteError as e:
+                            # Handle duplicate key errors for idempotency
+                            n_inserted = e.details.get("nInserted", 0)
+                            restored_count += n_inserted
+                            logger.info(f"Restored {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in batch")
 
                         # Remove from archive
                         ids_to_remove = [doc["_id"] for doc in batch]
@@ -413,8 +387,14 @@ class DataArchivingService:
 
             # Process remaining documents
             if batch:
-                await active_collection.insert_many(batch)
-                restored_count += len(batch)
+                try:
+                    result = await active_collection.insert_many(batch, ordered=False)
+                    restored_count += len(result.inserted_ids)
+                except BulkWriteError as e:
+                    # Handle duplicate key errors for idempotency
+                    n_inserted = e.details.get("nInserted", 0)
+                    restored_count += n_inserted
+                    logger.info(f"Restored {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final batch")
 
                 ids_to_remove = [doc["_id"] for doc in batch]
                 await archive_collection.delete_many({"_id": {"$in": ids_to_remove}})

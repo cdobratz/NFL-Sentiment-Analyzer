@@ -249,7 +249,7 @@ async def get_system_health(
 
     # Get system resource usage
     try:
-        cpu_percent = psutil.cpu_percent(interval=1)
+        cpu_percent = await asyncio.to_thread(psutil.cpu_percent, interval=1)
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage("/")
 

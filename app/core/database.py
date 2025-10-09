@@ -19,7 +19,7 @@ class DatabaseManager:
             db: MongoDB database handle or None until a database is selected after connection.
         """
         self.mongodb_client: Optional[AsyncIOMotorClient] = None
-        self.redis_client: Optional[redis.Redis] = None
+        self.redis_client: Optional[redis_asyncio.Redis] = None
         self.db = None
 
     async def connect_mongodb(self):

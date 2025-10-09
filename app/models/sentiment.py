@@ -34,24 +34,24 @@ class DataSource(str, Enum):
 class NFLContext(BaseModel):
     """NFL-specific context for sentiment analysis"""
 
-    team_mentions: List[str] = []
-    player_mentions: List[str] = []
-    position_mentions: List[str] = []
+    team_mentions: List[str] = Field(default_factory=list)
+    player_mentions: List[str] = Field(default_factory=list)
+    position_mentions: List[str] = Field(default_factory=list)
     game_situation: Optional[str] = None  # "playoff", "regular_season", "preseason"
     week: Optional[int] = None
     season: Optional[int] = None
     injury_related: bool = False
     trade_related: bool = False
-    performance_metrics: Dict[str, float] = {}
+    performance_metrics: Dict[str, float] = Field(default_factory=dict)
 
 
 class AnalysisContext(BaseModel):
-    keywords: List[str] = []
-    entities: List[str] = []
-    topics: List[str] = []
-    confidence_factors: Dict[str, float] = {}
+    keywords: List[str] = Field(default_factory=list)
+    entities: List[str] = Field(default_factory=list)
+    topics: List[str] = Field(default_factory=list)
+    confidence_factors: Dict[str, float] = Field(default_factory=dict)
     nfl_context: Optional[NFLContext] = None
-    sentiment_weights: Dict[str, float] = {}  # Custom weights for NFL-specific terms
+    sentiment_weights: Dict[str, float] = Field(default_factory=dict)  # Custom weights for NFL-specific terms
 
 
 class SentimentAnalysisBase(BaseModel):
@@ -60,13 +60,13 @@ class SentimentAnalysisBase(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0)
     sentiment_score: float = Field(..., ge=-1.0, le=1.0)  # Normalized sentiment score
     category: SentimentCategory = SentimentCategory.GENERAL
-    context: AnalysisContext = AnalysisContext()
+    context: AnalysisContext = Field(default_factory=AnalysisContext)
     team_id: Optional[str] = None
     player_id: Optional[str] = None
     game_id: Optional[str] = None
     source: DataSource = DataSource.USER_INPUT
     language: str = "en"
-    metadata: Dict[str, Any] = {}  # Additional metadata like retweet count, likes, etc.
+    metadata: Dict[str, Any] = Field(default_factory=dict)  # Additional metadata like retweet count, likes, etc.
 
 
 class SentimentAnalysisCreate(SentimentAnalysisBase):
@@ -109,11 +109,9 @@ class SentimentResult(BaseModel):
     processing_time_ms: float
 
     # Detailed sentiment breakdown
-    emotion_scores: Dict[str, float] = {}  # joy, anger, fear, etc.
-    aspect_sentiments: Dict[str, float] = {}  # performance, coaching, etc.
-    keyword_contributions: Dict[str, float] = (
-        {}
-    )  # How each keyword contributed to sentiment
+    emotion_scores: Dict[str, float] = Field(default_factory=dict)  # joy, anger, fear, etc.
+    aspect_sentiments: Dict[str, float] = Field(default_factory=dict)  # performance, coaching, etc.
+    keyword_contributions: Dict[str, float] = Field(default_factory=dict)  # How each keyword contributed to sentiment
 
 
 class BatchSentimentRequest(BaseModel):
@@ -139,19 +137,19 @@ class SentimentTrend(BaseModel):
     timestamp: datetime
     sentiment_score: float
     volume: int
-    category_breakdown: Dict[SentimentCategory, float] = {}
-    source_breakdown: Dict[DataSource, int] = {}
+    category_breakdown: Dict[SentimentCategory, float] = Field(default_factory=dict)
+    source_breakdown: Dict[DataSource, int] = Field(default_factory=dict)
 
 
 class AggregatedSentiment(BaseModel):
     """Base class for aggregated sentiment data"""
 
     current_sentiment: float = Field(..., ge=-1.0, le=1.0)
-    sentiment_trend: List[SentimentTrend] = []
+    sentiment_trend: List[SentimentTrend] = Field(default_factory=list)
     total_mentions: int = 0
     last_updated: datetime
-    sentiment_by_category: Dict[SentimentCategory, float] = {}
-    sentiment_by_source: Dict[DataSource, float] = {}
+    sentiment_by_category: Dict[SentimentCategory, float] = Field(default_factory=dict)
+    sentiment_by_source: Dict[DataSource, float] = Field(default_factory=dict)
     confidence_score: float = Field(..., ge=0.0, le=1.0)
 
 
@@ -217,11 +215,9 @@ class SentimentInsights(BaseModel):
 
     entity_id: str
     entity_type: str
-    key_themes: List[str] = []
-    sentiment_drivers: Dict[str, float] = (
-        {}
-    )  # What's driving positive/negative sentiment
-    anomalies: List[Dict[str, Any]] = []  # Unusual sentiment patterns
-    predictions: Dict[str, float] = {}  # Predicted sentiment trends
-    recommendations: List[str] = []  # Actionable insights
+    key_themes: List[str] = Field(default_factory=list)
+    sentiment_drivers: Dict[str, float] = Field(default_factory=dict)  # What's driving positive/negative sentiment
+    anomalies: List[Dict[str, Any]] = Field(default_factory=list)  # Unusual sentiment patterns
+    predictions: Dict[str, float] = Field(default_factory=dict)  # Predicted sentiment trends
+    recommendations: List[str] = Field(default_factory=list)  # Actionable insights
     generated_at: datetime

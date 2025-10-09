@@ -161,8 +161,7 @@ async def get_api_key(
         NotFoundError: If no API key with `key_id` exists.
     """
     try:
-        api_keys = await api_key_manager.list_api_keys()
-        api_key = next((key for key in api_keys if key.id == key_id), None)
+        api_key = await api_key_manager.get_api_key_by_id(key_id)
 
         if not api_key:
             raise NotFoundError("API key", key_id)

@@ -61,11 +61,25 @@ class ConnectionManager:
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
-        if user_id and user_id in self.user_connections:
-            if websocket in self.user_connections[user_id]:
-                self.user_connections[user_id].remove(websocket)
-            if not self.user_connections[user_id]:
-                del self.user_connections[user_id]
+        if user_id:
+            # Handle case when user_id is provided
+            connections = self.user_connections.get(user_id, [])
+            if websocket in connections:
+                connections.remove(websocket)
+            if not connections:
+                self.user_connections.pop(user_id, None)
+        else:
+            # When user_id is not provided, iterate over all user connections to find and remove the websocket
+            to_remove = []
+            for uid, connections in self.user_connections.items():
+                if websocket in connections:
+                    connections.remove(websocket)
+                if not connections:
+                    to_remove.append(uid)
+            
+            # Remove empty user entries
+            for uid in to_remove:
+                self.user_connections.pop(uid, None)
 
         logger.info(
             f"WebSocket disconnected. Total connections: {len(self.active_connections)}"
