@@ -43,7 +43,11 @@ class Settings(BaseSettings):
     deployments_dir: str = "./deployments"
 
     # CORS settings - safe development default, override with ALLOWED_ORIGINS env var for production
-    allowed_origins: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000"] 
+    allowed_origins: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+    ]
 
     # Rate limiting
     rate_limit_requests: int = 100
@@ -52,20 +56,21 @@ class Settings(BaseSettings):
     # Monitoring
     sentry_dsn: Optional[str] = None
 
-    @field_validator('allowed_origins', mode='before')
+    @field_validator("allowed_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
         """Parse CORS origins from environment variable or return default"""
         if isinstance(v, str):
             # Parse comma-separated string from environment variable
-            origins = [origin.strip() for origin in v.split(',') if origin.strip()]
+            origins = [origin.strip() for origin in v.split(",") if origin.strip()]
             # Validate that wildcard is not used in production
             if "*" in origins:
                 import warnings
+
                 warnings.warn(
                     "CORS wildcard '*' detected in allowed_origins. "
                     "This is unsafe for production. Use explicit origins instead.",
-                    UserWarning
+                    UserWarning,
                 )
             return origins
         return v

@@ -102,14 +102,14 @@ class RateLimiter:
             redis = db_manager.get_redis()
             if not redis:
                 return 0
-            
+
             # Redis client should be async from database.py, but handle both cases
             try:
                 count = await redis.get(redis_key)
             except TypeError:
                 # Fallback to sync method wrapped in thread
                 count = await asyncio.to_thread(redis.get, redis_key)
-            
+
             return int(count) if count else 0
         except Exception as e:
             logger.error(f"Failed to get rate limit count: {e}")
@@ -135,7 +135,7 @@ class RateLimiter:
             pipe = redis.pipeline()
             pipe.incr(redis_key)
             pipe.expire(redis_key, window_seconds)
-            
+
             try:
                 results = await pipe.execute()
             except TypeError:

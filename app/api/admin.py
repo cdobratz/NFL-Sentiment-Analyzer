@@ -69,7 +69,7 @@ async def get_user(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user id"
         )
-    
+
     user = await db.users.find_one({"_id": object_id}, {"hashed_password": 0})
     if not user:
         raise HTTPException(
@@ -105,7 +105,7 @@ async def deactivate_user(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user id"
         )
-    
+
     result = await db.users.update_one(
         {"_id": object_id},
         {"$set": {"is_active": False, "deactivated_at": datetime.utcnow()}},
@@ -144,7 +144,7 @@ async def activate_user(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user id"
         )
-    
+
     result = await db.users.update_one(
         {"_id": object_id},
         {"$set": {"is_active": True}, "$unset": {"deactivated_at": ""}},

@@ -25,9 +25,6 @@ from ..models.nfl import Team, Player, Game, BettingLine
 logger = logging.getLogger(__name__)
 
 
-
-
-
 @dataclass
 class RawDataItem:
     """Raw data item from external sources"""
@@ -69,7 +66,7 @@ class RateLimiter:
         """
         async with self._requests_lock:
             now = datetime.now(timezone.utc)
-            
+
             # Remove old requests outside the time window
             self.requests = [
                 req_time
@@ -80,13 +77,15 @@ class RateLimiter:
             if len(self.requests) >= self.max_requests:
                 # Wait until we can make another request
                 oldest_request = min(self.requests)
-                wait_time = max(0, self.time_window - (now - oldest_request).total_seconds())
-                
+                wait_time = max(
+                    0, self.time_window - (now - oldest_request).total_seconds()
+                )
+
                 if wait_time > 0:
                     await asyncio.sleep(wait_time)
                     # Update now after sleeping
                     now = datetime.now(timezone.utc)
-            
+
             self.requests.append(now)
 
 
@@ -178,7 +177,7 @@ class DataIngestionService:
             # Lazily create session if it doesn't exist
             if not self.session:
                 self.session = aiohttp.ClientSession()
-            
+
             async with self.session.get(
                 url, headers=headers, params=params
             ) as response:
@@ -276,7 +275,7 @@ class DataIngestionService:
             # Lazily create session if it doesn't exist
             if not self.session:
                 self.session = aiohttp.ClientSession()
-            
+
             async with self.session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -340,7 +339,7 @@ class DataIngestionService:
             # Lazily create session if it doesn't exist
             if not self.session:
                 self.session = aiohttp.ClientSession()
-            
+
             async with self.session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -576,11 +575,13 @@ class DataIngestionService:
         # Use explicit mapping to avoid incorrect pluralization
         collection_mapping = {
             "tweet": "raw_tweets",
-            "news": "raw_news", 
+            "news": "raw_news",
             "game": "raw_games",
-            "betting_line": "raw_betting_lines"
+            "betting_line": "raw_betting_lines",
         }
-        collection_name = collection_mapping.get(item.data_type, f"raw_{item.data_type}s")
+        collection_name = collection_mapping.get(
+            item.data_type, f"raw_{item.data_type}s"
+        )
 
         # Create a unique identifier based on source and content
         if item.data_type == "tweet":

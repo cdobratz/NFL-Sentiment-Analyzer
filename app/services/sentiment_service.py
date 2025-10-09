@@ -339,11 +339,13 @@ class SentimentAnalysisService:
         # This would typically query the database for recent sentiment analyses
         # For now, return a placeholder implementation
         from ..core.database import get_database
-        
+
         try:
             db = await get_database()
-            cursor = db.sentiment_analyses.find({}).sort([("created_at", -1)]).limit(limit)
-            
+            cursor = (
+                db.sentiment_analyses.find({}).sort([("created_at", -1)]).limit(limit)
+            )
+
             recent_sentiments = []
             async for doc in cursor:
                 doc["id"] = str(doc["_id"])
@@ -354,7 +356,7 @@ class SentimentAnalysisService:
                 if "timestamp" in doc and hasattr(doc["timestamp"], "isoformat"):
                     doc["timestamp"] = doc["timestamp"].isoformat()
                 recent_sentiments.append(doc)
-            
+
             return recent_sentiments
         except Exception as e:
             logger.error(f"Error getting recent sentiment: {e}")
@@ -366,21 +368,20 @@ class SentimentAnalysisService:
         # For now, return a placeholder implementation
         from ..core.database import get_database
         from datetime import timedelta
-        
+
         try:
             db = await get_database()
-            
+
             # Get recent sentiment for the team (last 7 days)
             week_ago = datetime.utcnow() - timedelta(days=7)
-            cursor = db.sentiment_analyses.find({
-                "team_id": team_id,
-                "created_at": {"$gte": week_ago}
-            }).sort([("created_at", -1)])
-            
+            cursor = db.sentiment_analyses.find(
+                {"team_id": team_id, "created_at": {"$gte": week_ago}}
+            ).sort([("created_at", -1)])
+
             sentiments = []
             total_score = 0
             count = 0
-            
+
             async for doc in cursor:
                 doc["id"] = str(doc["_id"])
                 doc.pop("_id", None)
@@ -390,19 +391,19 @@ class SentimentAnalysisService:
                 if "timestamp" in doc and hasattr(doc["timestamp"], "isoformat"):
                     doc["timestamp"] = doc["timestamp"].isoformat()
                 sentiments.append(doc)
-                
+
                 if "sentiment_score" in doc:
                     total_score += doc["sentiment_score"]
                     count += 1
-            
+
             avg_sentiment = total_score / count if count > 0 else 0.0
-            
+
             return {
                 "team_id": team_id,
                 "average_sentiment": round(avg_sentiment, 3),
                 "total_analyses": count,
                 "recent_sentiments": sentiments[:10],  # Limit to 10 most recent
-                "period": "last_7_days"
+                "period": "last_7_days",
             }
         except Exception as e:
             logger.error(f"Error getting team sentiment: {e}")
@@ -411,7 +412,7 @@ class SentimentAnalysisService:
                 "average_sentiment": 0.0,
                 "total_analyses": 0,
                 "recent_sentiments": [],
-                "period": "last_7_days"
+                "period": "last_7_days",
             }
 
 

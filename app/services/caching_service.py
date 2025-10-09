@@ -96,9 +96,13 @@ class CachingService:
                 try:
                     # Decode hex string to bytes, then to UTF-8 text
                     decoded_bytes = bytes.fromhex(data)
-                    decoded_text = decoded_bytes.decode('utf-8')
+                    decoded_text = decoded_bytes.decode("utf-8")
                     return json.loads(decoded_text)
-                except (json.JSONDecodeError, UnicodeDecodeError, ValueError) as decode_error:
+                except (
+                    json.JSONDecodeError,
+                    UnicodeDecodeError,
+                    ValueError,
+                ) as decode_error:
                     logger.error(f"Error decoding cached data: {decode_error}")
                     return None
         except Exception as e:
@@ -150,7 +154,7 @@ class CachingService:
             if data:
                 # Decode bytes to string if needed
                 if isinstance(data, bytes):
-                    data = data.decode('utf-8')
+                    data = data.decode("utf-8")
                 return self._deserialize_data(data, data_type)
             return None
         except Exception as e:

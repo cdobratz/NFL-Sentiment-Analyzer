@@ -331,7 +331,7 @@ class DataProcessingPipeline:
         """
         # Capture the running event loop for use in scheduler thread
         self.loop = asyncio.get_running_loop()
-        
+
         await self.data_ingestion.start()
         self.is_running = True
 
@@ -415,9 +415,7 @@ class DataProcessingPipeline:
             created_at=datetime.now(),
         )
 
-        asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), self.loop
-        )
+        asyncio.run_coroutine_threadsafe(self.task_queue.add_task(task), self.loop)
 
     def _schedule_espn_collection(self):
         """
@@ -436,9 +434,7 @@ class DataProcessingPipeline:
             created_at=datetime.now(),
         )
 
-        asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), self.loop
-        )
+        asyncio.run_coroutine_threadsafe(self.task_queue.add_task(task), self.loop)
 
     def _schedule_betting_lines_collection(self):
         """
@@ -457,9 +453,7 @@ class DataProcessingPipeline:
             created_at=datetime.now(),
         )
 
-        asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), self.loop
-        )
+        asyncio.run_coroutine_threadsafe(self.task_queue.add_task(task), self.loop)
 
     def _schedule_data_cleanup(self):
         """
@@ -478,9 +472,7 @@ class DataProcessingPipeline:
             created_at=datetime.now(),
         )
 
-        asyncio.run_coroutine_threadsafe(
-            self.task_queue.add_task(task), self.loop
-        )
+        asyncio.run_coroutine_threadsafe(self.task_queue.add_task(task), self.loop)
 
     async def _worker(self, worker_id: str):
         """

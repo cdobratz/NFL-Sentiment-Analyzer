@@ -76,7 +76,7 @@ class ConnectionManager:
                     connections.remove(websocket)
                 if not connections:
                     to_remove.append(uid)
-            
+
             # Remove empty user entries
             for uid in to_remove:
                 self.user_connections.pop(uid, None)

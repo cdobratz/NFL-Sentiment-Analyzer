@@ -82,7 +82,9 @@ async def analyze_sentiment(
             "category": result.category.value,
             "source": result.source.value,
             "context": (
-                result.context.model_dump() if hasattr(result.context, "model_dump") else result.context.dict()
+                result.context.model_dump()
+                if hasattr(result.context, "model_dump")
+                else result.context.dict()
             ),
             "timestamp": result.timestamp,
             "created_at": result.timestamp,
@@ -165,7 +167,8 @@ async def analyze_batch_sentiment(
                 "confidence": result.confidence,
                 "category": result.category.value,
                 "context": (
-                    result.context.model_dump() if hasattr(result.context, "model_dump")
+                    result.context.model_dump()
+                    if hasattr(result.context, "model_dump")
                     else result.context.dict()
                 ),
                 "team_id": result.team_id,
@@ -182,7 +185,7 @@ async def analyze_batch_sentiment(
                 "keyword_contributions": result.keyword_contributions,
                 "user_id": str(current_user["_id"]) if current_user else None,
             }
-            
+
             docs_to_insert.append(doc_data)
 
         if docs_to_insert:

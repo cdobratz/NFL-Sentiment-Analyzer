@@ -51,7 +51,9 @@ class AnalysisContext(BaseModel):
     topics: List[str] = Field(default_factory=list)
     confidence_factors: Dict[str, float] = Field(default_factory=dict)
     nfl_context: Optional[NFLContext] = None
-    sentiment_weights: Dict[str, float] = Field(default_factory=dict)  # Custom weights for NFL-specific terms
+    sentiment_weights: Dict[str, float] = Field(
+        default_factory=dict
+    )  # Custom weights for NFL-specific terms
 
 
 class SentimentAnalysisBase(BaseModel):
@@ -66,7 +68,9 @@ class SentimentAnalysisBase(BaseModel):
     game_id: Optional[str] = None
     source: DataSource = DataSource.USER_INPUT
     language: str = "en"
-    metadata: Dict[str, Any] = Field(default_factory=dict)  # Additional metadata like retweet count, likes, etc.
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict
+    )  # Additional metadata like retweet count, likes, etc.
 
 
 class SentimentAnalysisCreate(SentimentAnalysisBase):
@@ -109,9 +113,15 @@ class SentimentResult(BaseModel):
     processing_time_ms: float
 
     # Detailed sentiment breakdown
-    emotion_scores: Dict[str, float] = Field(default_factory=dict)  # joy, anger, fear, etc.
-    aspect_sentiments: Dict[str, float] = Field(default_factory=dict)  # performance, coaching, etc.
-    keyword_contributions: Dict[str, float] = Field(default_factory=dict)  # How each keyword contributed to sentiment
+    emotion_scores: Dict[str, float] = Field(
+        default_factory=dict
+    )  # joy, anger, fear, etc.
+    aspect_sentiments: Dict[str, float] = Field(
+        default_factory=dict
+    )  # performance, coaching, etc.
+    keyword_contributions: Dict[str, float] = Field(
+        default_factory=dict
+    )  # How each keyword contributed to sentiment
 
 
 class BatchSentimentRequest(BaseModel):
@@ -216,8 +226,14 @@ class SentimentInsights(BaseModel):
     entity_id: str
     entity_type: str
     key_themes: List[str] = Field(default_factory=list)
-    sentiment_drivers: Dict[str, float] = Field(default_factory=dict)  # What's driving positive/negative sentiment
-    anomalies: List[Dict[str, Any]] = Field(default_factory=list)  # Unusual sentiment patterns
-    predictions: Dict[str, float] = Field(default_factory=dict)  # Predicted sentiment trends
+    sentiment_drivers: Dict[str, float] = Field(
+        default_factory=dict
+    )  # What's driving positive/negative sentiment
+    anomalies: List[Dict[str, Any]] = Field(
+        default_factory=list
+    )  # Unusual sentiment patterns
+    predictions: Dict[str, float] = Field(
+        default_factory=dict
+    )  # Predicted sentiment trends
     recommendations: List[str] = Field(default_factory=list)  # Actionable insights
     generated_at: datetime

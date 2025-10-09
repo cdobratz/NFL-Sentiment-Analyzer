@@ -35,8 +35,12 @@ class Team(BaseModel):
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     # Enhanced fields for sentiment analysis
-    aliases: List[str] = Field(default_factory=list)  # Alternative names/nicknames for the team
-    keywords: List[str] = Field(default_factory=list)  # Team-specific keywords for sentiment analysis
+    aliases: List[str] = Field(
+        default_factory=list
+    )  # Alternative names/nicknames for the team
+    keywords: List[str] = Field(
+        default_factory=list
+    )  # Team-specific keywords for sentiment analysis
     established: Optional[int] = None
     stadium: Optional[str] = None
     head_coach: Optional[str] = None
@@ -113,4 +117,6 @@ class Prediction(BaseModel):
     predicted_total: Optional[float] = None
     model_version: str
     created_at: datetime
-    factors: Dict[str, float] = Field(default_factory=dict) # sentiment, betting_trends, etc.
+    factors: Dict[str, float] = Field(
+        default_factory=dict
+    )  # sentiment, betting_trends, etc.

@@ -11,20 +11,24 @@ from ..services.data_processing_pipeline import data_processing_pipeline
 
 class TeamOut(Team):
     """Extended Team model with optional dynamic fields for API responses"""
+
     current_stats: Optional[Dict[str, Any]] = None
     current_sentiment: Optional[Dict[str, Any]] = None
 
 
 class PlayerOut(Player):
     """Extended Player model with optional dynamic fields for API responses"""
+
     current_stats: Optional[Dict[str, Any]] = None
     current_sentiment: Optional[Dict[str, Any]] = None
 
 
 class GameResponseOut(GameResponse):
     """Extended GameResponse model with optional dynamic fields for API responses"""
+
     predictions: Optional[List[Dict[str, Any]]] = None
     sentiment_summary: Optional[Dict[str, Any]] = None
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/data", tags=["data"])

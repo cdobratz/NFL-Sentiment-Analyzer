@@ -404,8 +404,8 @@ class HuggingFaceModelService:
             )
             model = await asyncio.to_thread(
                 AutoModelForSequenceClassification.from_pretrained,
-                base_model, 
-                num_labels=3  # positive, negative, neutral
+                base_model,
+                num_labels=3,  # positive, negative, neutral
             )
 
             # Prepare training configuration

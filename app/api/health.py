@@ -52,7 +52,9 @@ class HealthChecker:
             try:
                 server_status = await db.command("serverStatus")
             except OperationFailure as op_error:
-                logger.warning(f"MongoDB serverStatus command failed (insufficient privileges): {op_error}")
+                logger.warning(
+                    f"MongoDB serverStatus command failed (insufficient privileges): {op_error}"
+                )
                 # Continue with empty server_status - ping is the primary connectivity check
 
             response_time = (time.time() - start_time) * 1000
@@ -89,7 +91,7 @@ class HealthChecker:
 
             # Test connection
             redis_client = db_manager.get_redis()
-            
+
             # Check if redis_client is available
             if not redis_client:
                 return {"status": "unhealthy", "error": "Redis unavailable"}
@@ -109,7 +111,7 @@ class HealthChecker:
                 "connected_clients": info.get("connected_clients", 0),
                 "used_memory": info.get("used_memory_human"),
             }
-            
+
         except Exception as e:
             logger.error(f"Redis health check failed: {e}")
             return {"status": "unhealthy", "error": str(e)}

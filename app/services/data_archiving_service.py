@@ -99,13 +99,17 @@ class DataArchivingService:
                     # Insert batch into archive
                     if batch:
                         try:
-                            result = await archive_collection.insert_many(batch, ordered=False)
+                            result = await archive_collection.insert_many(
+                                batch, ordered=False
+                            )
                             archived_count += len(result.inserted_ids)
                         except BulkWriteError as e:
                             # Handle duplicate key errors for idempotency
                             n_inserted = e.details.get("nInserted", 0)
                             archived_count += n_inserted
-                            logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in batch")
+                            logger.info(
+                                f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in batch"
+                            )
 
                         # Delete from active collection
                         ids_to_delete = [doc["_id"] for doc in batch]
@@ -127,7 +131,9 @@ class DataArchivingService:
                     # Handle duplicate key errors for idempotency
                     n_inserted = e.details.get("nInserted", 0)
                     archived_count += n_inserted
-                    logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final batch")
+                    logger.info(
+                        f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final batch"
+                    )
 
                 ids_to_delete = [doc["_id"] for doc in batch]
                 result = await active_collection.delete_many(
@@ -190,13 +196,17 @@ class DataArchivingService:
                     # Insert into deleted collection
                     if batch:
                         try:
-                            result = await deleted_collection.insert_many(batch, ordered=False)
+                            result = await deleted_collection.insert_many(
+                                batch, ordered=False
+                            )
                             moved_to_deleted += len(result.inserted_ids)
                         except BulkWriteError as e:
                             # Handle duplicate key errors for idempotency
                             n_inserted = e.details.get("nInserted", 0)
                             moved_to_deleted += n_inserted
-                            logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in deleted batch")
+                            logger.info(
+                                f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in deleted batch"
+                            )
 
                         # Delete from archive
                         ids_to_delete = [doc["_id"] for doc in batch]
@@ -207,7 +217,9 @@ class DataArchivingService:
 
                         batch_count = len(batch)
                         batch = []
-                        logger.info(f"Deleted batch of {batch_count} archived documents")
+                        logger.info(
+                            f"Deleted batch of {batch_count} archived documents"
+                        )
 
             # Process remaining documents
             if batch:
@@ -218,7 +230,9 @@ class DataArchivingService:
                     # Handle duplicate key errors for idempotency
                     n_inserted = e.details.get("nInserted", 0)
                     moved_to_deleted += n_inserted
-                    logger.info(f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final deleted batch")
+                    logger.info(
+                        f"Inserted {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final deleted batch"
+                    )
 
                 ids_to_delete = [doc["_id"] for doc in batch]
                 result = await archive_collection.delete_many(
@@ -367,13 +381,17 @@ class DataArchivingService:
                     # Insert back into active collection
                     if batch:
                         try:
-                            result = await active_collection.insert_many(batch, ordered=False)
+                            result = await active_collection.insert_many(
+                                batch, ordered=False
+                            )
                             restored_count += len(result.inserted_ids)
                         except BulkWriteError as e:
                             # Handle duplicate key errors for idempotency
                             n_inserted = e.details.get("nInserted", 0)
                             restored_count += n_inserted
-                            logger.info(f"Restored {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in batch")
+                            logger.info(
+                                f"Restored {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in batch"
+                            )
 
                         # Remove from archive
                         ids_to_remove = [doc["_id"] for doc in batch]
@@ -394,7 +412,9 @@ class DataArchivingService:
                     # Handle duplicate key errors for idempotency
                     n_inserted = e.details.get("nInserted", 0)
                     restored_count += n_inserted
-                    logger.info(f"Restored {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final batch")
+                    logger.info(
+                        f"Restored {n_inserted} documents, skipped {len(batch) - n_inserted} duplicates in final batch"
+                    )
 
                 ids_to_remove = [doc["_id"] for doc in batch]
                 await archive_collection.delete_many({"_id": {"$in": ids_to_remove}})
