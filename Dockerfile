@@ -15,9 +15,10 @@ RUN apt-get update && apt-get install -y \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy dependency files
+# Copy dependency files and README (required by build backend)
 COPY pyproject.toml ./
 COPY uv.lock ./
+COPY README.md ./
 
 # Install dependencies using uv
 RUN uv sync --frozen
@@ -50,9 +51,10 @@ RUN apt-get update && apt-get install -y \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy dependency files
+# Copy dependency files and README (required by build backend)
 COPY pyproject.toml ./
 COPY uv.lock ./
+COPY README.md ./
 
 # Install dependencies using uv (including gunicorn)
 RUN uv sync --frozen && \
