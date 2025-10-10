@@ -645,11 +645,11 @@ async def get_ml_jobs(
     async for doc in cursor:
         doc["id"] = str(doc["_id"])
         # Convert datetime objects to ISO strings
-        if doc.get("created_at"):  
-            doc["created_at"] = doc["created_at"].isoformat()  
-        if doc.get("started_at"):  
-            doc["started_at"] = doc["started_at"].isoformat()  
-        if doc.get("completed_at"):  
+        if doc.get("created_at"):
+            doc["created_at"] = doc["created_at"].isoformat()
+        if doc.get("started_at"):
+            doc["started_at"] = doc["started_at"].isoformat()
+        if doc.get("completed_at"):
             doc["completed_at"] = doc["completed_at"].isoformat()
         jobs.append(doc)
 
@@ -1027,7 +1027,9 @@ async def _safe_clear_redis_app_keys(redis) -> int:
                     if keys_to_delete:
                         deleted = await redis.unlink(*keys_to_delete)
                         total_deleted += deleted
-                        logger.debug(f"Deleted {deleted} keys matching pattern {pattern}")
+                        logger.debug(
+                            f"Deleted {deleted} keys matching pattern {pattern}"
+                        )
                         keys_to_delete = []
 
             # Delete remaining keys in the final batch
@@ -1041,7 +1043,9 @@ async def _safe_clear_redis_app_keys(redis) -> int:
             # Continue with other patterns even if one fails
             continue
 
-    logger.info(f"Safe Redis cache clear completed. Total keys deleted: {total_deleted}")
+    logger.info(
+        f"Safe Redis cache clear completed. Total keys deleted: {total_deleted}"
+    )
     return total_deleted
 
 
@@ -1075,7 +1079,9 @@ async def clear_cache(
         if redis and (cache_type is None or cache_type in ["redis", "all"]):
             keys_deleted = await _safe_clear_redis_app_keys(redis)
             cleared_caches.append("redis")
-            logger.info(f"Cleared {keys_deleted} Redis keys for app: {settings.redis_key_prefix}")
+            logger.info(
+                f"Cleared {keys_deleted} Redis keys for app: {settings.redis_key_prefix}"
+            )
 
         # Clear MLOps cache
         if cache_type is None or cache_type in ["mlops", "all"]:
