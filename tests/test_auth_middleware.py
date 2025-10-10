@@ -13,7 +13,7 @@ from jose import jwt
 
 # Mock settings before importing app modules
 with patch.dict('os.environ', {
-    'SECRET_KEY': 'test-secret-key',
+    'SECRET_KEY': '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1',
     'MONGODB_URL': 'mongodb://test:27017',
     'DATABASE_NAME': 'test_db'
 }):
@@ -34,7 +34,7 @@ class TestGetCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_valid_token_success(self, mock_settings):
         """Test successful authentication with valid token."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
@@ -47,7 +47,7 @@ class TestGetCurrentUserDependency:
         
         # Create valid token
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         # Mock credentials
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
@@ -70,12 +70,12 @@ class TestGetCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_blacklisted_token_rejection(self, mock_settings):
         """Test rejection of blacklisted token."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         
@@ -93,7 +93,7 @@ class TestGetCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_invalid_token_format(self, mock_settings):
         """Test rejection of invalid token format."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid-token")
@@ -111,12 +111,12 @@ class TestGetCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_token_missing_subject(self, mock_settings):
         """Test rejection of token missing subject claim."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         # Token without 'sub' claim
         token_data = {"role": "user", "exp": datetime.utcnow() + timedelta(minutes=30)}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         
@@ -133,12 +133,12 @@ class TestGetCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_user_not_found_in_database(self, mock_settings):
         """Test rejection when user not found in database."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         
@@ -157,7 +157,7 @@ class TestGetCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_redis_connection_failure_graceful_handling(self, mock_settings):
         """Test graceful handling of Redis connection failures."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
@@ -169,7 +169,7 @@ class TestGetCurrentUserDependency:
         }
         
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         
@@ -303,7 +303,7 @@ class TestGetCurrentUserWebSocketDependency:
     @patch('app.core.dependencies.settings')
     async def test_valid_websocket_token(self, mock_settings):
         """Test valid WebSocket token authentication."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
@@ -314,7 +314,7 @@ class TestGetCurrentUserWebSocketDependency:
         }
         
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         mock_websocket = MagicMock(spec=WebSocket)
         mock_db = MagicMock()
@@ -343,12 +343,12 @@ class TestGetCurrentUserWebSocketDependency:
     @patch('app.core.dependencies.settings')
     async def test_websocket_blacklisted_token_returns_none(self, mock_settings):
         """Test WebSocket authentication with blacklisted token returns None."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         mock_websocket = MagicMock(spec=WebSocket)
         mock_db = MagicMock()
@@ -363,7 +363,7 @@ class TestGetCurrentUserWebSocketDependency:
     @patch('app.core.dependencies.settings')
     async def test_websocket_invalid_token_returns_none(self, mock_settings):
         """Test WebSocket authentication with invalid token returns None."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         mock_websocket = MagicMock(spec=WebSocket)
@@ -450,7 +450,7 @@ class TestMiddlewareErrorHandling:
     @patch('app.core.dependencies.settings')
     async def test_jwt_decode_error_handling(self, mock_settings):
         """Test handling of JWT decode errors."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         # Create token with wrong secret
@@ -472,12 +472,12 @@ class TestMiddlewareErrorHandling:
     @patch('app.core.dependencies.settings')
     async def test_database_error_handling(self, mock_settings):
         """Test handling of database errors."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         

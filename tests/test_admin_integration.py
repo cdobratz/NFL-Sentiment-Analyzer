@@ -10,7 +10,7 @@ from bson import ObjectId
 
 # Mock settings before importing app modules
 with patch.dict('os.environ', {
-    'SECRET_KEY': 'test-secret-key',
+    'SECRET_KEY': '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1',
     'MONGODB_URL': 'mongodb://test:27017',
     'DATABASE_NAME': 'test_db'
 }):

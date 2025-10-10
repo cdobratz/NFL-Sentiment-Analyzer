@@ -56,6 +56,45 @@ class Settings(BaseSettings):
     # Monitoring
     sentry_dsn: Optional[str] = None
 
+    @field_validator("mongodb_url")
+    @classmethod
+    def validate_mongodb_url(cls, v):
+        """Validate MongoDB connection string format"""
+        if not v:
+            raise ValueError("mongodb_url is required")
+        if not v.startswith(("mongodb://", "mongodb+srv://")):
+            raise ValueError(
+                "mongodb_url must start with 'mongodb://' or 'mongodb+srv://'"
+            )
+        return v
+
+    @field_validator("secret_key")
+    @classmethod
+    def validate_secret_key(cls, v):
+        """Validate secret key meets minimum security requirements"""
+        if not v:
+            raise ValueError("secret_key is required")
+        if len(v) < 32:
+            raise ValueError(
+                "secret_key must be at least 32 characters for security. "
+                "Generate one using: openssl rand -hex 32"
+            )
+        # Check for common placeholder values
+        placeholder_values = [
+            "your-super-secret-key-change-this-in-production",
+            "change-me",
+            "secret",
+            "your-secret-key",
+            "changeme",
+            "your_secret_key",
+        ]
+        if v.lower() in placeholder_values:
+            raise ValueError(
+                "secret_key appears to be a placeholder value. "
+                "Generate a secure random key using: openssl rand -hex 32"
+            )
+        return v
+
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
@@ -63,13 +102,18 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             # Parse comma-separated string from environment variable
             origins = [origin.strip() for origin in v.split(",") if origin.strip()]
-            # Validate that wildcard is not used in production
+            # Prevent wildcard in non-development environments
             if "*" in origins:
+                import os
+                env = os.getenv("ENVIRONMENT", "production").lower()
+                if env in ["production", "prod", "staging"]:
+                    raise ValueError(
+                        "CORS wildcard '*' is not allowed in production or staging. "
+                        "Use explicit origins instead."
+                    )
                 import warnings
-
                 warnings.warn(
-                    "CORS wildcard '*' detected in allowed_origins. "
-                    "This is unsafe for production. Use explicit origins instead.",
+                    "CORS wildcard '*' detected - acceptable for development only",
                     UserWarning,
                 )
             return origins

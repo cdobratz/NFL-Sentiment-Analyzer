@@ -28,7 +28,7 @@ sys.modules['numpy'] = MagicMock()
 
 # Mock settings before importing app modules
 with patch.dict('os.environ', {
-    'SECRET_KEY': 'test-secret-key',
+    'SECRET_KEY': '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1',
     'MONGODB_URL': 'mongodb://test:27017',
     'DATABASE_NAME': 'test_db'
 }):
@@ -61,7 +61,7 @@ def client(test_app):
 def mock_settings():
     """Mock settings for testing."""
     settings = Settings(
-        secret_key="test-secret-key",
+        secret_key="78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1",
         algorithm="HS256",
         access_token_expire_minutes=30,
         mongodb_url="mongodb://test",
@@ -116,7 +116,7 @@ class TestUserManagementEndpoints:
     @patch('app.api.admin.get_database')
     def test_get_users_success(self, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful retrieval of users list."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         # Mock dependency database
@@ -179,7 +179,7 @@ class TestUserManagementEndpoints:
     @patch('app.core.dependencies.settings')
     def test_get_users_non_admin_denied(self, mock_dep_settings, mock_get_redis, mock_dep_db, client, regular_user, mock_settings):
         """Test that non-admin users cannot access user list."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -202,7 +202,7 @@ class TestUserManagementEndpoints:
     @patch('app.api.admin.get_database')
     def test_get_user_by_id_success(self, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful retrieval of specific user by ID."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -242,7 +242,7 @@ class TestUserManagementEndpoints:
     @patch('app.api.admin.get_database')
     def test_get_user_by_id_not_found(self, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test user not found error."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -269,7 +269,7 @@ class TestUserManagementEndpoints:
     @patch('app.api.admin.get_database')
     def test_deactivate_user_success(self, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful user deactivation."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -305,7 +305,7 @@ class TestUserManagementEndpoints:
     @patch('app.api.admin.get_database')
     def test_activate_user_success(self, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful user activation."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -350,7 +350,7 @@ class TestSystemHealthEndpoint:
     @patch('psutil.disk_usage')
     def test_get_system_health_success(self, mock_disk, mock_memory, mock_cpu, mock_mlops, mock_admin_redis, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful system health check."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -432,7 +432,7 @@ class TestSystemHealthEndpoint:
     @patch('app.api.admin.get_database')
     def test_get_system_health_mongodb_failure(self, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test system health with MongoDB failure."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -481,7 +481,7 @@ class TestAnalyticsEndpoint:
     @patch('app.api.admin.get_database')
     def test_get_analytics_success(self, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful analytics retrieval."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -591,7 +591,7 @@ class TestModelRetrainingEndpoint:
     @patch('app.api.admin.mlops_service')
     def test_retrain_models_success(self, mock_mlops, mock_admin_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful model retraining trigger."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -647,7 +647,7 @@ class TestModelRetrainingEndpoint:
     @patch('app.api.admin.mlops_service')
     def test_retrain_models_mlops_failure(self, mock_mlops, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test model retraining with MLOps service failure."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -679,7 +679,7 @@ class TestCacheClearEndpoint:
     @patch('app.api.admin.mlops_service')
     def test_clear_cache_redis_success(self, mock_mlops, mock_admin_redis, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test successful Redis cache clearing."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()
@@ -713,7 +713,7 @@ class TestCacheClearEndpoint:
     @patch('app.api.admin.get_redis')
     def test_clear_cache_no_redis_available(self, mock_admin_redis, mock_dep_settings, mock_get_redis, mock_dep_db, client, admin_user, mock_settings):
         """Test cache clearing when Redis is not available."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db_dep = MagicMock()

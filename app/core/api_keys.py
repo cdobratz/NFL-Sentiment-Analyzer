@@ -135,7 +135,7 @@ class APIKeyManager:
             )
 
             # Store in database
-            db = db_manager.get_database()
+            db = await db_manager.get_database()
             collection = db[self.collection_name]
 
             await collection.insert_one(api_key.model_dump())

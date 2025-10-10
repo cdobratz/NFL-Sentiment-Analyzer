@@ -13,7 +13,7 @@ from jose import jwt
 
 # Mock settings before importing app modules
 with patch.dict('os.environ', {
-    'SECRET_KEY': 'test-secret-key',
+    'SECRET_KEY': '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1',
     'MONGODB_URL': 'mongodb://test:27017',
     'DATABASE_NAME': 'test_db'
 }):
@@ -47,7 +47,7 @@ def client(test_app):
 def mock_settings():
     """Mock settings for testing."""
     return Settings(
-        secret_key="test-secret-key",
+        secret_key="78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1",
         algorithm="HS256",
         access_token_expire_minutes=30,
         mongodb_url="mongodb://test",
@@ -66,11 +66,11 @@ class TestCompleteAuthenticationFlow:
     def test_complete_registration_login_profile_flow(self, mock_auth_settings, mock_dep_settings, mock_get_redis, mock_dep_db, mock_auth_db, client):
         """Test complete flow: register -> login -> get profile."""
         # Setup mocks
-        mock_auth_settings.secret_key = "test-secret-key"
+        mock_auth_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_auth_settings.algorithm = "HS256"
         mock_auth_settings.access_token_expire_minutes = 30
         
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         # Mock database for registration
@@ -150,11 +150,11 @@ class TestCompleteAuthenticationFlow:
     def test_login_logout_token_blacklist_flow(self, mock_auth_redis, mock_auth_settings, mock_dep_settings, mock_get_redis, mock_dep_db, mock_auth_db, client):
         """Test login -> logout -> attempt to use blacklisted token."""
         # Setup mocks
-        mock_auth_settings.secret_key = "test-secret-key"
+        mock_auth_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_auth_settings.algorithm = "HS256"
         mock_auth_settings.access_token_expire_minutes = 30
         
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         user_id = ObjectId()
@@ -224,11 +224,11 @@ class TestCompleteAuthenticationFlow:
     def test_token_refresh_flow(self, mock_auth_settings, mock_dep_settings, mock_get_redis, mock_dep_db, mock_auth_db, client):
         """Test login -> refresh token -> use new token."""
         # Setup mocks
-        mock_auth_settings.secret_key = "test-secret-key"
+        mock_auth_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_auth_settings.algorithm = "HS256"
         mock_auth_settings.access_token_expire_minutes = 30
         
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         user_id = ObjectId()
@@ -304,7 +304,7 @@ class TestRoleBasedAccessControl:
     @patch('app.core.dependencies.settings')
     def test_regular_user_access_control(self, mock_settings, mock_get_redis, mock_get_db, client):
         """Test that regular users can access user endpoints but not admin endpoints."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = ObjectId()
@@ -341,7 +341,7 @@ class TestRoleBasedAccessControl:
     @patch('app.core.dependencies.settings')
     def test_admin_user_access_control(self, mock_settings, mock_get_redis, mock_get_db, client):
         """Test that admin users can access both user and admin endpoints."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = ObjectId()
@@ -382,7 +382,7 @@ class TestTokenExpiration:
     @patch('app.core.dependencies.settings')
     def test_expired_token_rejection(self, mock_settings, mock_get_redis, mock_get_db, client):
         """Test that expired tokens are rejected."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
@@ -390,7 +390,7 @@ class TestTokenExpiration:
         # Create expired token
         expired_time = datetime.utcnow() - timedelta(minutes=1)
         token_data = {"sub": user_id, "exp": expired_time}
-        expired_token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        expired_token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         headers = {"Authorization": f"Bearer {expired_token}"}
         
@@ -400,7 +400,7 @@ class TestTokenExpiration:
     @patch('app.api.auth.settings')
     def test_token_expiration_time_setting(self, mock_settings):
         """Test that token expiration respects settings."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         mock_settings.access_token_expire_minutes = 60
         
@@ -409,7 +409,7 @@ class TestTokenExpiration:
         data = {"sub": "user123"}
         token = create_access_token(data)
         
-        payload = jwt.decode(token, "test-secret-key", algorithms=["HS256"])
+        payload = jwt.decode(token, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithms=["HS256"])
         exp_time = datetime.fromtimestamp(payload["exp"])
         expected_time = datetime.utcnow() + timedelta(minutes=60)
         
@@ -426,12 +426,12 @@ class TestSecurityScenarios:
     @patch('app.core.dependencies.settings')
     def test_token_reuse_after_logout(self, mock_settings, mock_get_redis, mock_get_db, client):
         """Test that tokens cannot be reused after logout."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         
         # Mock Redis to simulate blacklisted token
         mock_redis = AsyncMock()

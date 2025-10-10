@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import logging
@@ -297,7 +298,7 @@ async def get_analytics(
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=days)
 
-    analytics = {
+    analytics: dict[str, Any] = {
         "period": f"{days} days",
         "period_start": start_date.isoformat(),
         "period_end": end_date.isoformat(),
@@ -643,11 +644,11 @@ async def get_ml_jobs(
     async for doc in cursor:
         doc["id"] = str(doc["_id"])
         # Convert datetime objects to ISO strings
-        if "created_at" in doc:
-            doc["created_at"] = doc["created_at"].isoformat()
-        if "started_at" in doc:
-            doc["started_at"] = doc["started_at"].isoformat()
-        if "completed_at" in doc:
+        if doc.get("created_at"):  
+            doc["created_at"] = doc["created_at"].isoformat()  
+        if doc.get("started_at"):  
+            doc["started_at"] = doc["started_at"].isoformat()  
+        if doc.get("completed_at"):  
             doc["completed_at"] = doc["completed_at"].isoformat()
         jobs.append(doc)
 
@@ -782,7 +783,7 @@ async def get_model_performance(
         start_date = end_date - timedelta(days=days)
 
         # Build query
-        query = {"timestamp": {"$gte": start_date}}
+        query: dict[str, Any] = {"timestamp": {"$gte": start_date}}
         if model_id:
             query["model_id"] = model_id
 
@@ -1055,8 +1056,8 @@ async def get_scheduled_tasks_status(
         HTTPException: If retrieving the scheduled tasks status fails.
     """
     try:
-        status = scheduled_tasks.get_task_status()
-        return status
+        task_status = scheduled_tasks.get_task_status()
+        return task_status
     except Exception as e:
         logger.error(f"Error getting scheduled tasks status: {e}")
         raise HTTPException(

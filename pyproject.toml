@@ -28,55 +28,44 @@ dependencies = [
     "fastapi>=0.104.1,<0.105.0",
     "uvicorn[standard]>=0.24.0,<0.25.0",
     "gunicorn>=21.2.0,<22.0.0",
-    
     # Database and caching
     "pymongo>=4.6.0,<5.0.0",
     "motor>=3.3.2,<4.0.0",
     "redis>=5.0.1,<6.0.0",
-    
     # Environment and configuration
     "python-dotenv>=1.0.0,<2.0.0",
     "pydantic>=2.5.2,<3.0.0",
     "pydantic-settings>=2.1.0,<3.0.0",
     "email-validator>=2.1.0,<3.0.0",
-    
     # Authentication and security
     "python-jose[cryptography]>=3.3.0,<4.0.0",
     "passlib[bcrypt]>=1.7.4,<2.0.0",
     "python-multipart>=0.0.6,<1.0.0",
-    
     # ML and NLP - Using more flexible versions
     "transformers>=4.35.0,<5.0.0",
     "torch>=2.2.0,<3.0.0",
     "numpy>=1.24.0,<2.0.0",
     "scikit-learn>=1.3.0,<2.0.0",
-    
     # HTTP client and API integrations
     "requests>=2.31.0,<3.0.0",
     "httpx>=0.25.0,<1.0.0",
     "aiohttp>=3.9.0,<4.0.0",
-    
     # Monitoring and logging
     "prometheus-client>=0.19.0,<1.0.0",
     "structlog>=23.2.0,<24.0.0",
     "sentry-sdk[fastapi]>=1.38.0,<2.0.0",
-    
     # Data processing - More flexible pandas version
     "pandas>=2.0.0,<3.0.0",
     "python-dateutil>=2.8.0,<3.0.0",
-    
     # WebSocket support
     "websockets>=12.0,<13.0",
-    
     # Production utilities
     "psutil>=5.9.0,<6.0.0",
     "schedule>=1.2.0,<2.0.0",
     "apscheduler>=3.10.0,<4.0.0",
-    
     # Data ingestion and processing
     "tweepy>=4.14.0,<5.0.0",
     "feedparser>=6.0.0,<7.0.0",
-    
     # MLOps dependencies - Made optional to avoid conflicts
     "wandb>=0.16.0,<1.0.0",
     "huggingface-hub>=0.19.0,<1.0.0",

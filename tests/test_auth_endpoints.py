@@ -13,7 +13,7 @@ from jose import jwt
 
 # Mock settings before importing app modules
 with patch.dict('os.environ', {
-    'SECRET_KEY': 'test-secret-key',
+    'SECRET_KEY': '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1',
     'MONGODB_URL': 'mongodb://test:27017',
     'DATABASE_NAME': 'test_db'
 }):
@@ -47,7 +47,7 @@ def client(test_app):
 def mock_settings():
     """Mock settings for testing."""
     settings = Settings(
-        secret_key="test-secret-key",
+        secret_key="78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1",
         algorithm="HS256",
         access_token_expire_minutes=30,
         mongodb_url="mongodb://test",
@@ -196,7 +196,7 @@ class TestLoginEndpoint:
     @patch('app.api.auth.settings')
     def test_login_success(self, mock_settings, mock_get_db, client, sample_user):
         """Test successful user login."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         mock_settings.access_token_expire_minutes = 30
         
@@ -220,7 +220,7 @@ class TestLoginEndpoint:
         
         # Verify token contains correct user ID
         token = data["access_token"]
-        payload = jwt.decode(token, "test-secret-key", algorithms=["HS256"])
+        payload = jwt.decode(token, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithms=["HS256"])
         assert payload["sub"] == str(sample_user["_id"])
     
     @patch('app.api.auth.get_database')
@@ -272,7 +272,7 @@ class TestProfileEndpoint:
     @patch('app.core.dependencies.settings')
     def test_get_profile_success(self, mock_settings, mock_get_redis, mock_get_db, client, sample_user):
         """Test successful profile retrieval."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         mock_db = MagicMock()
@@ -304,7 +304,7 @@ class TestProfileEndpoint:
     @patch('app.core.dependencies.settings')
     def test_get_profile_invalid_token(self, mock_settings, mock_get_redis, mock_get_db, client):
         """Test profile retrieval with invalid token."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         headers = {"Authorization": "Bearer invalid-token"}
@@ -328,11 +328,11 @@ class TestRefreshTokenEndpoint:
     @patch('app.api.auth.settings')
     def test_refresh_token_success(self, mock_auth_settings, mock_dep_settings, mock_get_redis, mock_get_db, client, sample_user):
         """Test successful token refresh."""
-        mock_auth_settings.secret_key = "test-secret-key"
+        mock_auth_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_auth_settings.algorithm = "HS256"
         mock_auth_settings.access_token_expire_minutes = 30
         
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db = MagicMock()
@@ -375,10 +375,10 @@ class TestLogoutEndpoint:
     @patch('app.api.auth.settings')
     def test_logout_success(self, mock_auth_settings, mock_auth_redis, mock_dep_settings, mock_dep_redis, mock_get_db, client, sample_user):
         """Test successful user logout."""
-        mock_auth_settings.secret_key = "test-secret-key"
+        mock_auth_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_auth_settings.algorithm = "HS256"
         
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         mock_db = MagicMock()
@@ -423,7 +423,7 @@ class TestUpdateProfileEndpoint:
     @patch('app.api.auth.get_database')
     def test_update_profile_success(self, mock_auth_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, sample_user):
         """Test successful profile update."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         # Mock for dependency
@@ -476,7 +476,7 @@ class TestChangePasswordEndpoint:
     @patch('app.api.auth.get_database')
     def test_change_password_success(self, mock_auth_db, mock_dep_settings, mock_get_redis, mock_dep_db, client, sample_user):
         """Test successful password change."""
-        mock_dep_settings.secret_key = "test-secret-key"
+        mock_dep_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_dep_settings.algorithm = "HS256"
         
         # Mock for dependency

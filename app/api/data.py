@@ -3,6 +3,8 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import logging
 from pydantic import BaseModel
+from bson import ObjectId
+from bson.errors import InvalidId
 
 from ..core.database import get_database
 from ..models.nfl import Team, Player, Game, GameResponse, BettingLine
@@ -217,7 +219,15 @@ async def get_team(team_id: str, db=Depends(get_database)):
     Raises:
         HTTPException: Raised with status 404 if no team with the given ID exists.
     """
-    team = await db.teams.find_one({"_id": team_id})
+    try:
+        team_oid = ObjectId(team_id)
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid team id",
+        )
+
+    team = await db.teams.find_one({"_id": team_oid})
     if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Team not found"
@@ -418,7 +428,7 @@ async def get_games(
     """
     query = {}
     if week:
-        query["week"] = week
+        query["week"] = {"$in": [str(week)]}  # Ensure value is a dict[str, list[str]]
     if season:
         query["season"] = season
     if team_id:
@@ -623,7 +633,7 @@ async def get_betting_lines(
                 "last_updated": str              # ISO8601 timestamp when response was generated
             }
     """
-    query = {}
+    query: dict[str, Any] = {}
     if game_id:
         query["_id"] = game_id
     if week:

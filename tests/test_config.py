@@ -16,7 +16,7 @@ class TestConfig:
     REDIS_URL = os.getenv("TEST_REDIS_URL", "redis://localhost:6379/1")
     
     # Auth settings
-    SECRET_KEY = "test-secret-key-for-testing-only"
+    SECRET_KEY = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
     

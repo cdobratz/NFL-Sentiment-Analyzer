@@ -448,7 +448,7 @@ class TestSmokeTests:
         
         # Set test environment variables
         test_env = {
-            'SECRET_KEY': 'test-secret-key-for-testing-only',
+            'SECRET_KEY': '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1',
             'MONGODB_URL': 'mongodb://localhost:27017',
             'DATABASE_NAME': 'nfl_sentiment_test',
             'REDIS_URL': 'redis://localhost:6379',

@@ -12,7 +12,7 @@ from bson import ObjectId
 
 # Mock settings before importing app modules
 with patch.dict('os.environ', {
-    'SECRET_KEY': 'test-secret-key',
+    'SECRET_KEY': '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1',
     'MONGODB_URL': 'mongodb://test:27017',
     'DATABASE_NAME': 'test_db'
 }):
@@ -70,7 +70,7 @@ class TestJWTTokenHandling:
     @patch('app.api.auth.settings')
     def test_create_access_token_default_expiry(self, mock_settings):
         """Test token creation with default expiry."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         mock_settings.access_token_expire_minutes = 30
         
@@ -78,21 +78,21 @@ class TestJWTTokenHandling:
         token = create_access_token(data)
         
         # Decode token to verify contents
-        payload = jwt.decode(token, "test-secret-key", algorithms=["HS256"])
+        payload = jwt.decode(token, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithms=["HS256"])
         assert payload["sub"] == "user123"
         assert "exp" in payload
     
     @patch('app.api.auth.settings')
     def test_create_access_token_custom_expiry(self, mock_settings):
         """Test token creation with custom expiry."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         data = {"sub": "user123"}
         expires_delta = timedelta(minutes=60)
         token = create_access_token(data, expires_delta)
         
-        payload = jwt.decode(token, "test-secret-key", algorithms=["HS256"])
+        payload = jwt.decode(token, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithms=["HS256"])
         assert payload["sub"] == "user123"
         
         # Check that expiry exists
@@ -102,14 +102,14 @@ class TestJWTTokenHandling:
     @patch('app.api.auth.settings')
     def test_token_with_additional_claims(self, mock_settings):
         """Test token creation with additional claims."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         mock_settings.access_token_expire_minutes = 30
         
         data = {"sub": "user123", "role": "admin", "email": "test@example.com"}
         token = create_access_token(data)
         
-        payload = jwt.decode(token, "test-secret-key", algorithms=["HS256"])
+        payload = jwt.decode(token, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithms=["HS256"])
         assert payload["sub"] == "user123"
         assert payload["role"] == "admin"
         assert payload["email"] == "test@example.com"
@@ -172,14 +172,14 @@ class TestCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_get_current_user_success(self, mock_settings):
         """Test successful current user retrieval."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         # Create mock credentials
         mock_credentials = MagicMock()
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         mock_credentials.credentials = token
         
         # Create mock database
@@ -206,13 +206,13 @@ class TestCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_get_current_user_redis_failure_graceful(self, mock_settings):
         """Test current user retrieval handles Redis failures gracefully."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         mock_credentials = MagicMock()
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         mock_credentials.credentials = token
         
         mock_db = MagicMock()
@@ -237,7 +237,7 @@ class TestCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_get_current_user_invalid_token(self, mock_settings):
         """Test current user retrieval with invalid token."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         mock_credentials = MagicMock()
@@ -256,12 +256,12 @@ class TestCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_get_current_user_no_subject(self, mock_settings):
         """Test current user retrieval with token missing subject."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         mock_credentials = MagicMock()
         token_data = {"role": "user"}  # Missing 'sub' claim
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         mock_credentials.credentials = token
         
         mock_db = MagicMock()
@@ -277,13 +277,13 @@ class TestCurrentUserDependency:
     @patch('app.core.dependencies.settings')
     async def test_get_current_user_user_not_found(self, mock_settings):
         """Test current user retrieval when user doesn't exist in database."""
-        mock_settings.secret_key = "test-secret-key"
+        mock_settings.secret_key = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
         mock_settings.algorithm = "HS256"
         
         mock_credentials = MagicMock()
         user_id = str(ObjectId())
         token_data = {"sub": user_id}
-        token = jwt.encode(token_data, "test-secret-key", algorithm="HS256")
+        token = jwt.encode(token_data, "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1", algorithm="HS256")
         mock_credentials.credentials = token
         
         mock_db = MagicMock()

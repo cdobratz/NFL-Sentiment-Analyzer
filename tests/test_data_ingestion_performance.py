@@ -12,7 +12,7 @@ import aiohttp
 
 # Set test environment variables before importing
 import os
-os.environ.setdefault('SECRET_KEY', 'test-secret-key')
+os.environ.setdefault('SECRET_KEY', '78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1')
 os.environ.setdefault('MONGODB_URL', 'mongodb://localhost:27017/test')
 os.environ.setdefault('DATABASE_NAME', 'test_db')
 os.environ.setdefault('REDIS_URL', 'redis://localhost:6379/1')
