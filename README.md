@@ -9,6 +9,14 @@ A real-time sentiment analysis tool for NFL games that helps fans and analysts u
 - Containerized with Docker for easy deployment
 - Scalable architecture ready for high-traffic game days
 
+## ✨ Recent Improvements
+
+- **Enhanced Security**: Replaced dangerous `redis.flushdb()` with safe prefix-based key deletion to prevent accidental data loss in shared Redis instances
+- **Performance Optimization**: Improved MongoDB query efficiency by using direct integer equality instead of `$in` operators for better index utilization
+- **Bug Fixes**: Fixed CORS validator to properly read environment settings from `.env` files using Pydantic's ValidationInfo
+- **CI/CD Improvements**: Resolved NumPy 2.0 compatibility issues in test suite and updated Docker builds to use UV package manager
+- **Code Quality**: Applied Black formatting and improved test reliability with tolerance-based floating-point comparisons
+
 ## 🚀 Quick Start
 
 1. Clone the repository:
