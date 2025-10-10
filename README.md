@@ -20,21 +20,24 @@ A real-time sentiment analysis tool for NFL games that helps fans and analysts u
 ## 🚀 Quick Start
 
 1. Clone the repository:
-```bash
-git clone https://github.com/cdobratz/NFL-Sentiment-Analyzer.git
-cd NFL-Sentiment-Analyzer
-```
+
+    ```bash
+    git clone https://github.com/cdobratz/NFL-Sentiment-Analyzer.git
+    cd NFL-Sentiment-Analyzer
+    ```
 
 2. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your MongoDB Atlas credentials
-```
+
+    ```bash
+    cp .env.example .env
+    # Edit .env with your MongoDB Atlas credentials
+    ```
 
 3. Run with Docker:
-```bash
-docker-compose up --build
-```
+
+    ```bash
+    docker-compose up --build
+    ```
 
 The API will be available at `http://localhost:8000`
 
