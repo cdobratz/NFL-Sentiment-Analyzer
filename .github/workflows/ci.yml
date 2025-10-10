@@ -220,10 +220,11 @@ jobs:
         # Example: curl -f https://api.nfl-sentiment.com/health
 
     - name: Notify deployment
+      if: always()
+      continue-on-error: true
       uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
         channel: '#deployments'
       env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-      if: always()
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
