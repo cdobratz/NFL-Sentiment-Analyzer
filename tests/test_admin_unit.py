@@ -267,7 +267,8 @@ class TestAdminDataAggregation:
         assert sentiment_percentages["positive"] == 46.15
         assert sentiment_percentages["negative"] == 23.08
         assert sentiment_percentages["neutral"] == 30.77
-        assert sum(sentiment_percentages.values()) == 100.0
+        # Account for floating-point rounding errors
+        assert abs(sum(sentiment_percentages.values()) - 100.0) < 0.01
     
     def test_model_performance_aggregation(self):
         """Test model performance metrics aggregation."""
