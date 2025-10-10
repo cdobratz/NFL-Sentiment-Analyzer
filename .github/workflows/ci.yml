@@ -83,7 +83,7 @@ jobs:
         MONGODB_URL: mongodb://localhost:27017
         REDIS_URL: redis://localhost:6379
         DATABASE_NAME: test_nfl_sentiment
-        JWT_SECRET_KEY: test-secret-key
+        SECRET_KEY: 78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1
       run: |
         uv run pytest --cov=app --cov-report=xml --cov-report=html -k "not (test_monitoring_validation or test_sentiment_integration or test_admin_endpoints or test_auth_endpoints or test_auth_integration or test_performance_validation or test_smoke_tests or test_security_validation or test_sentiment_performance or test_load_performance or test_api_documentation_monitoring or test_auth_middleware or test_auth_unit or test_data_ingestion_integration or test_data_ingestion_performance or test_data_ingestion_unit or test_deployment_infrastructure or test_docker_builds or test_mlops_deployment or test_mlops_integration)" --tb=short
 
