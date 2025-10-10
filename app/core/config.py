@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import field_validator, ValidationInfo
 from typing import Optional, List
 import os
+import warnings
 
 
 class Settings(BaseSettings):
@@ -9,6 +10,7 @@ class Settings(BaseSettings):
     app_name: str = "NFL Sentiment Analyzer"
     app_version: str = "2.0.0"
     debug: bool = False
+    environment: str = "development"  # Environment: development, staging, production
 
     # Database settings
     mongodb_url: str
@@ -16,6 +18,7 @@ class Settings(BaseSettings):
 
     # Redis settings
     redis_url: str = "redis://localhost:6379"
+    redis_key_prefix: str = "nfl_sentiment"  # Prefix for all Redis keys in this app
 
     # Authentication settings
     secret_key: str
@@ -97,21 +100,20 @@ class Settings(BaseSettings):
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v):
+    def parse_cors_origins(cls, v, info: ValidationInfo):
         """Parse CORS origins from environment variable or return default"""
         if isinstance(v, str):
             # Parse comma-separated string from environment variable
             origins = [origin.strip() for origin in v.split(",") if origin.strip()]
             # Prevent wildcard in non-development environments
             if "*" in origins:
-                import os
-                env = os.getenv("ENVIRONMENT", "production").lower()
+                # Get environment from the settings being validated
+                env = info.data.get("environment", "production").lower()
                 if env in ["production", "prod", "staging"]:
                     raise ValueError(
                         "CORS wildcard '*' is not allowed in production or staging. "
                         "Use explicit origins instead."
                     )
-                import warnings
                 warnings.warn(
                     "CORS wildcard '*' detected - acceptable for development only",
                     UserWarning,

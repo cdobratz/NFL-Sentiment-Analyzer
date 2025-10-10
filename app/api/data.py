@@ -428,7 +428,7 @@ async def get_games(
     """
     query = {}
     if week:
-        query["week"] = {"$in": [str(week)]}  # Ensure value is a dict[str, list[str]]
+        query["week"] = int(week)  # Direct integer equality match
     if season:
         query["season"] = season
     if team_id:

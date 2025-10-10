@@ -11,6 +11,7 @@ from bson.errors import InvalidId
 
 from ..core.database import get_database, get_redis
 from ..core.dependencies import get_current_admin_user
+from ..core.config import settings
 from ..models.user import UserResponse
 from ..services.mlops.mlops_service import mlops_service
 from ..models.mlops import ModelRetrainingRequest
@@ -977,6 +978,73 @@ async def acknowledge_alert(
         )
 
 
+async def _safe_clear_redis_app_keys(redis) -> int:
+    """
+    Safely clear all Redis keys belonging to this application using prefix-based scanning.
+
+    This function uses SCAN to iterate through keys matching the app's prefix pattern
+    and deletes them in batches to avoid blocking Redis and prevent deletion of
+    keys from other applications sharing the same Redis instance.
+
+    Parameters:
+        redis: Redis client instance
+
+    Returns:
+        int: Total number of keys deleted
+
+    Raises:
+        Exception: If Redis operations fail
+    """
+    total_deleted = 0
+    batch_size = 1000  # Delete keys in batches to avoid large blocking operations
+
+    # Define all known key patterns used by this application
+    app_key_patterns = [
+        f"{settings.redis_key_prefix}:*",  # General app prefix
+        "blacklist:*",  # Auth tokens
+        "rate_limit:*",  # Rate limiting
+        "team_sentiment:*",  # Team sentiment cache
+        "player_sentiment:*",  # Player sentiment cache
+        "game_sentiment:*",  # Game sentiment cache
+        "sentiment_trends:*",  # Sentiment trends
+        "analytics:*",  # Analytics cache
+        "leaderboard:*",  # Leaderboard cache
+    ]
+
+    logger.info(f"Starting safe Redis cache clear for app: {settings.redis_key_prefix}")
+
+    for pattern in app_key_patterns:
+        try:
+            keys_to_delete = []
+
+            # Use SCAN to iterate through keys matching the pattern
+            # This is non-blocking and safe for production use
+            async for key in redis.scan_iter(match=pattern, count=100):
+                keys_to_delete.append(key)
+
+                # Delete in batches to avoid overwhelming Redis
+                if len(keys_to_delete) >= batch_size:
+                    if keys_to_delete:
+                        deleted = await redis.unlink(*keys_to_delete)
+                        total_deleted += deleted
+                        logger.debug(f"Deleted {deleted} keys matching pattern {pattern}")
+                        keys_to_delete = []
+
+            # Delete remaining keys in the final batch
+            if keys_to_delete:
+                deleted = await redis.unlink(*keys_to_delete)
+                total_deleted += deleted
+                logger.debug(f"Deleted {deleted} keys matching pattern {pattern}")
+
+        except Exception as e:
+            logger.error(f"Error clearing Redis keys for pattern {pattern}: {e}")
+            # Continue with other patterns even if one fails
+            continue
+
+    logger.info(f"Safe Redis cache clear completed. Total keys deleted: {total_deleted}")
+    return total_deleted
+
+
 @router.delete("/cache/clear")
 async def clear_cache(
     cache_type: Optional[str] = Query(
@@ -1003,10 +1071,11 @@ async def clear_cache(
     try:
         cleared_caches = []
 
-        # Clear Redis cache
+        # Clear Redis cache - SAFE: Only deletes keys belonging to this app
         if redis and (cache_type is None or cache_type in ["redis", "all"]):
-            await redis.flushdb()
+            keys_deleted = await _safe_clear_redis_app_keys(redis)
             cleared_caches.append("redis")
+            logger.info(f"Cleared {keys_deleted} Redis keys for app: {settings.redis_key_prefix}")
 
         # Clear MLOps cache
         if cache_type is None or cache_type in ["mlops", "all"]:
