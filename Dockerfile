@@ -5,15 +5,15 @@ FROM python:3.11-slim AS development
 
 WORKDIR /app
 
-# Install system dependencies and uv
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     g++ \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/root/.cargo/bin:$PATH"
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Copy dependency files
 COPY pyproject.toml ./
@@ -39,16 +39,16 @@ FROM python:3.11-slim AS production
 
 WORKDIR /app
 
-# Install system dependencies, security updates, and uv
+# Install system dependencies and security updates
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     g++ \
     && apt-get upgrade -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/root/.cargo/bin:$PATH"
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Copy dependency files
 COPY pyproject.toml ./
