@@ -1,20 +1,26 @@
 # Multi-stage Dockerfile for production deployment
 
 # Development stage
-FROM python:3.11-slim as development
+FROM python:3.11-slim AS development
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and uv
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     g++ \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Copy dependency files
+COPY pyproject.toml ./
+COPY uv.lock ./
+
+# Install dependencies using uv
+RUN uv sync --frozen
 
 # Copy application code
 COPY . .
@@ -26,25 +32,31 @@ USER app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.11-slim AS production
 
 WORKDIR /app
 
-# Install system dependencies and security updates
+# Install system dependencies, security updates, and uv
 RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     g++ \
     && apt-get upgrade -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir gunicorn
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Copy dependency files
+COPY pyproject.toml ./
+COPY uv.lock ./
+
+# Install dependencies using uv (including gunicorn)
+RUN uv sync --frozen && \
+    uv pip install gunicorn
 
 # Copy application code
 COPY app/ ./app/
@@ -64,5 +76,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 
 EXPOSE 8000
 
-# Use Gunicorn for production
-CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--access-logfile", "/app/logs/access.log", "--error-logfile", "/app/logs/error.log", "--log-level", "info"]
+# Use Gunicorn for production via uv
+CMD ["uv", "run", "gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--access-logfile", "/app/logs/access.log", "--error-logfile", "/app/logs/error.log", "--log-level", "info"]
