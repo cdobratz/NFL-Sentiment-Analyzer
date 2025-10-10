@@ -610,8 +610,8 @@ class TestAnalyticsFeatures:
         
         # Verify breakdown
         assert breakdown["performance"] == 0.5  # 3/6
-        assert breakdown["general"] == pytest.approx(0.333, abs=0.01)  # 2/6
-        assert breakdown["injury"] == pytest.approx(0.167, abs=0.01)  # 1/6
+        assert abs(breakdown["general"] - 0.333) < 0.01  # 2/6
+        assert abs(breakdown["injury"] - 0.167) < 0.01  # 1/6
         assert abs(sum(breakdown.values()) - 1.0) < 0.001
     
     def test_sentiment_volatility_calculation(self):
@@ -687,7 +687,7 @@ class TestAnalyticsFeatures:
         
         # Verify calculations
         assert abs(sentiment_change - 0.2) < 0.001
-        assert sentiment_percent_change == pytest.approx(33.33, abs=0.01)
+        assert abs(sentiment_percent_change - 33.33) < 0.01
         assert mentions_change == 20
         assert mentions_percent_change == 25.0
     
