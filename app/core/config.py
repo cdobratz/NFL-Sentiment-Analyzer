@@ -114,6 +114,7 @@ class Settings(BaseSettings):
                         "CORS wildcard '*' is not allowed in production or staging. "
                         "Use explicit origins instead."
                     )
+                import warnings
                 warnings.warn(
                     "CORS wildcard '*' detected - acceptable for development only",
                     UserWarning,
