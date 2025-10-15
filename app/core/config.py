@@ -115,6 +115,7 @@ class Settings(BaseSettings):
                         "Use explicit origins instead."
                     )
                 import warnings
+
                 warnings.warn(
                     "CORS wildcard '*' detected - acceptable for development only",
                     UserWarning,
