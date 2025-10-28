@@ -1,5 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
-from typing import List, Optional, Dict, Any, Union
+import json
+from json import JSONDecodeError
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+    Query,
+    BackgroundTasks,
+    UploadFile,
+    File,
+)
+from typing import List, Optional, Dict, Any, Union, Set
 from datetime import datetime, timedelta
 import logging
 import time
@@ -233,6 +245,203 @@ async def analyze_batch_sentiment(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error processing batch sentiment analysis",
         )
+
+
+@router.post("/import-json")
+async def import_sentiment_json(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(..., description="JSON file containing sentiment records"),
+    db=Depends(get_database),
+    auth: Union[dict, APIKey] = Depends(
+        require_user_or_api_scope(APIKeyScope.WRITE_SENTIMENT)
+    ),
+):
+    """Ingest a JSON file of sentiment records and process them through the sentiment pipeline."""
+
+    if file.content_type not in {
+        "application/json",
+        "text/json",
+        "application/octet-stream",
+    }:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file must be JSON",
+        )
+
+    payload_bytes = await file.read()
+    if not payload_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is empty",
+        )
+
+    try:
+        parsed_payload = json.loads(payload_bytes)
+    except JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid JSON payload: {exc.msg}",
+        ) from exc
+
+    records = (
+        parsed_payload.get("records")
+        if isinstance(parsed_payload, dict) and "records" in parsed_payload
+        else parsed_payload
+    )
+
+    if not isinstance(records, list):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="JSON payload must be a list of records or contain a 'records' array",
+        )
+
+    service = SentimentAnalysisService()
+    processed_results: List[SentimentResult] = []
+    errors: List[Dict[str, Any]] = []
+    affected_team_ids: Set[str] = set()
+    affected_player_ids: Set[str] = set()
+    affected_game_ids: Set[str] = set()
+
+    for idx, raw_record in enumerate(records):
+        if not isinstance(raw_record, dict):
+            errors.append({"index": idx, "error": "Record is not an object"})
+            continue
+
+        text = raw_record.get("text") or raw_record.get("body")
+        if not text:
+            errors.append({"index": idx, "error": "Missing required 'text' field"})
+            continue
+
+        try:
+            sentiment_value = raw_record.get("sentiment")
+            if sentiment_value:
+                try:
+                    sentiment_label = SentimentLabel(sentiment_value.upper())
+                except ValueError:
+                    sentiment_label = SentimentLabel.NEUTRAL
+            else:
+                sentiment_label = SentimentLabel.NEUTRAL
+
+            category_value = raw_record.get("category")
+            if category_value:
+                try:
+                    sentiment_category = SentimentCategory(category_value.lower())
+                except ValueError:
+                    sentiment_category = SentimentCategory.GENERAL
+            else:
+                sentiment_category = SentimentCategory.GENERAL
+
+            source_value = raw_record.get("source")
+            if source_value:
+                try:
+                    source_enum = DataSource(source_value.lower())
+                except ValueError:
+                    source_enum = DataSource.TWITTER
+            else:
+                source_enum = DataSource.TWITTER
+
+            context_payload = raw_record.get("context") or {}
+            if not isinstance(context_payload, dict):
+                context_payload = {}
+
+            try:
+                analysis_context = AnalysisContext(**context_payload)
+            except Exception:  # pylint: disable=broad-except
+                analysis_context = AnalysisContext()
+
+            metadata = raw_record.get("metadata") or {}
+            if not isinstance(metadata, dict):
+                metadata = {"raw_metadata": metadata}
+
+            confidence_value = raw_record.get("confidence", 0.5)
+            try:
+                confidence = float(confidence_value)
+            except (TypeError, ValueError):
+                confidence = 0.5
+
+            score_value = raw_record.get("sentiment_score", 0.0)
+            try:
+                sentiment_score = float(score_value)
+            except (TypeError, ValueError):
+                sentiment_score = 0.0
+
+            sentiment_input = SentimentAnalysisCreate(
+                text=text,
+                sentiment=sentiment_label,
+                confidence=confidence,
+                sentiment_score=sentiment_score,
+                category=sentiment_category,
+                context=analysis_context,
+                team_id=raw_record.get("team_id"),
+                player_id=raw_record.get("player_id"),
+                game_id=raw_record.get("game_id"),
+                source=source_enum,
+                language=raw_record.get("language", "en"),
+                metadata=metadata,
+            )
+
+            result = await service.analyze_text(
+                text=sentiment_input.text,
+                context=sentiment_input.context,
+                team_id=sentiment_input.team_id,
+                player_id=sentiment_input.player_id,
+                game_id=sentiment_input.game_id,
+                source=sentiment_input.source,
+            )
+
+            doc_data = {
+                **sentiment_input.dict(),
+                "sentiment": result.sentiment.value,
+                "sentiment_score": result.sentiment_score,
+                "confidence": result.confidence,
+                "category": result.category.value,
+                "source": result.source.value,
+                "context": (
+                    result.context.model_dump()
+                    if hasattr(result.context, "model_dump")
+                    else result.context.dict()
+                ),
+                "timestamp": result.timestamp,
+                "created_at": result.timestamp,
+                "processed_at": datetime.utcnow(),
+                "model_version": result.model_version,
+                "processing_time_ms": result.processing_time_ms,
+                "emotion_scores": result.emotion_scores,
+                "aspect_sentiments": result.aspect_sentiments,
+                "keyword_contributions": result.keyword_contributions,
+                "user_id": str(auth["_id"])
+                if isinstance(auth, dict) and auth
+                else None,
+            }
+
+            await db.sentiment_analyses.insert_one(doc_data)
+
+            if sentiment_input.team_id:
+                affected_team_ids.add(sentiment_input.team_id)
+            if sentiment_input.player_id:
+                affected_player_ids.add(sentiment_input.player_id)
+            if sentiment_input.game_id:
+                affected_game_ids.add(sentiment_input.game_id)
+
+            processed_results.append(result)
+
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error("Failed to process record %s: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)})
+
+    for team_id in affected_team_ids:
+        background_tasks.add_task(update_aggregated_sentiment, db, team_id=team_id)
+    for player_id in affected_player_ids:
+        background_tasks.add_task(update_aggregated_sentiment, db, player_id=player_id)
+    for game_id in affected_game_ids:
+        background_tasks.add_task(update_aggregated_sentiment, db, game_id=game_id)
+
+    return {
+        "uploaded_records": len(records),
+        "processed": len(processed_results),
+        "failed": len(errors),
+        "errors": errors,
+    }
 
 
 @router.get("/team/{team_id}", response_model=TeamSentiment)

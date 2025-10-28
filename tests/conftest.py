@@ -1,8 +1,6 @@
 import pytest
-import asyncio
 import os
 import sys
-from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock
 
 # Set test environment variables before importing app
@@ -46,14 +44,6 @@ class TestSettings:
     SECRET_KEY = "78183c734c4337b3b9ac71f816dfab85a8a3bebbc4f4dc6ecd5d1b9c0d4307f1"
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture

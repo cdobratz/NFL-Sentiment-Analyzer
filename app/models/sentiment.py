@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -84,8 +84,7 @@ class SentimentAnalysisInDB(SentimentAnalysisBase):
     model_version: str = "1.0"
     processing_time_ms: Optional[float] = None
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class SentimentAnalysisResponse(SentimentAnalysisBase):
@@ -125,7 +124,7 @@ class SentimentResult(BaseModel):
 
 
 class BatchSentimentRequest(BaseModel):
-    texts: List[str] = Field(..., max_items=100)
+    texts: List[str] = Field(..., max_length=100)
     context: Optional[AnalysisContext] = None
     team_id: Optional[str] = None
     player_id: Optional[str] = None

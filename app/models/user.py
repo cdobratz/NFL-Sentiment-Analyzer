@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -37,10 +37,9 @@ class UserInDB(UserBase):
     is_active: bool = True
     created_at: datetime
     last_login: Optional[datetime] = None
-    preferences: UserPreferences = UserPreferences()
+    preferences: UserPreferences = Field(default_factory=UserPreferences)
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class UserResponse(UserBase):

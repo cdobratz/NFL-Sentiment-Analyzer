@@ -1,4 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    UploadFile,
+    File,
+    BackgroundTasks,
+)
 from fastapi import status
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
@@ -19,6 +27,21 @@ from ..services.scheduled_tasks_service import (
     get_scheduled_tasks_service,
     ScheduledTasksService,
 )
+from .sentiment import import_sentiment_json
+@router.post("/ingest/sentiment-json")
+async def admin_import_sentiment_json(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(..., description="JSON file with sentiment records"),
+    current_admin: dict = Depends(get_current_admin_user),
+    db=Depends(get_database),
+):
+    return await import_sentiment_json(
+        background_tasks=background_tasks,
+        file=file,
+        db=db,
+        auth=current_admin,
+    )
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
