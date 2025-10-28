@@ -51,3 +51,7 @@ yarn-error.log*
 .coverage
 coverage/
 *.lcov
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
