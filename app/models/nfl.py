@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict
 from datetime import datetime
 from enum import Enum
@@ -45,8 +45,7 @@ class Team(BaseModel):
     stadium: Optional[str] = None
     head_coach: Optional[str] = None
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Player(BaseModel):
@@ -67,8 +66,7 @@ class Player(BaseModel):
     is_rookie: bool = False
     fantasy_relevant: bool = True
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class BettingLine(BaseModel):
@@ -100,8 +98,7 @@ class Game(BaseModel):
     playoff_implications: bool = False
     keywords: List[str] = Field(default_factory=list)  # Game-specific keywords
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class GameResponse(Game):
