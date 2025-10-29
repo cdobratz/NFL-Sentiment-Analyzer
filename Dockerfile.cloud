@@ -1,0 +1,45 @@
+# Cloud-optimized Dockerfile for Render/Railway deployment
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    g++ \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy dependency files and README (required by build backend)
+COPY pyproject.toml ./
+COPY uv.lock ./
+COPY README.md ./
+
+# Install dependencies using uv
+RUN uv sync --frozen
+
+# Copy application code
+COPY app/ ./app/
+COPY scripts/ ./scripts/
+
+# Create logs directory
+RUN mkdir -p /app/logs
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash app && \
+    chown -R app:app /app
+USER app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+
+# Use PORT environment variable for cloud platforms
+EXPOSE ${PORT:-8000}
+
+# Cloud platforms prefer single process - use gunicorn with uvicorn workers
+CMD ["sh", "-c", "uv run gunicorn app.main:app -w ${WORKERS:-2} -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:${PORT:-8000} --access-logfile - --error-logfile - --log-level ${LOG_LEVEL:-info}"]
