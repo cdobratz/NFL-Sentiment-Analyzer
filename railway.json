@@ -3,15 +3,12 @@
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "Dockerfile",
-    "buildContext": ".",
     "watchPatterns": ["app/**", "scripts/**", "pyproject.toml", "uv.lock", "start.sh", "Dockerfile"]
   },
   "deploy": {
     "startCommand": "./start.sh",
     "runtime": "V2",
     "numReplicas": 1,
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
     "sleepApplication": false,
     "useLegacyStacker": false,
     "multiRegionConfig": {
