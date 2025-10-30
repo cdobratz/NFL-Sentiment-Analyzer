@@ -35,7 +35,7 @@ describe('PWA Utilities (Vitest)', () => {
     it('registers when supported and logs success', async () => {
       const mockRegistration = {
         addEventListener: vi.fn(),
-        installing: null as any,
+        installing: null as unknown,
       }
       const mockRegister = vi.fn().mockResolvedValue(mockRegistration)
       Object.defineProperty(navigator, 'serviceWorker', {
@@ -79,7 +79,7 @@ describe('PWA Utilities (Vitest)', () => {
 
     it('wires updatefound listener', async () => {
       const addListener = vi.fn()
-      const mockRegistration = { addEventListener: addListener, installing: null as any }
+      const mockRegistration = { addEventListener: addListener, installing: null as unknown }
       const mockRegister = vi.fn().mockResolvedValue(mockRegistration)
       Object.defineProperty(navigator, 'serviceWorker', {
         value: { register: mockRegister },
@@ -92,8 +92,8 @@ describe('PWA Utilities (Vitest)', () => {
     })
 
     it('logs when new content available after install and controller exists', async () => {
-      let updateFoundCb: any
-      let stateChangeCb: any
+      let updateFoundCb: unknown
+      let stateChangeCb: unknown
       const newWorker = {
         state: 'installed',
         addEventListener: vi.fn((ev, cb) => {
@@ -101,7 +101,7 @@ describe('PWA Utilities (Vitest)', () => {
         }),
       }
       const mockRegistration = {
-        installing: newWorker as any,
+        installing: newWorker as unknown,
         addEventListener: vi.fn((ev, cb) => {
           if (ev === 'updatefound') updateFoundCb = cb
         }),
@@ -120,8 +120,8 @@ describe('PWA Utilities (Vitest)', () => {
     })
 
     it('does not log new content when no controller', async () => {
-      let updateFoundCb: any
-      let stateChangeCb: any
+      let updateFoundCb: unknown
+      let stateChangeCb: unknown
       const newWorker = {
         state: 'installed',
         addEventListener: vi.fn((ev, cb) => {
@@ -129,7 +129,7 @@ describe('PWA Utilities (Vitest)', () => {
         }),
       }
       const mockRegistration = {
-        installing: newWorker as any,
+        installing: newWorker as unknown,
         addEventListener: vi.fn((ev, cb) => {
           if (ev === 'updatefound') updateFoundCb = cb
         }),
@@ -149,9 +149,9 @@ describe('PWA Utilities (Vitest)', () => {
     })
 
     it('handles null installing worker', async () => {
-      let updateFoundCb: any
+      let updateFoundCb: unknown
       const mockRegistration = {
-        installing: null as any,
+        installing: null as unknown,
         addEventListener: vi.fn((ev, cb) => {
           if (ev === 'updatefound') updateFoundCb = cb
         }),
@@ -562,7 +562,7 @@ describe('PWA Utilities (Vitest)', () => {
     })
 
     it('Service Worker register + unregister', async () => {
-      const mockRegistration = { addEventListener: vi.fn(), installing: null as any }
+      const mockRegistration = { addEventListener: vi.fn(), installing: null as unknown }
       const register = vi.fn().mockResolvedValue(mockRegistration)
       const unregister = vi.fn().mockResolvedValue(true)
       Object.defineProperty(navigator, 'serviceWorker', {

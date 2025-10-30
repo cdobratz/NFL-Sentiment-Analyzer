@@ -11,7 +11,7 @@ interface User {
   is_active: boolean
   created_at: string
   last_login?: string
-  preferences: Record<string, any>
+  preferences: Record<string, unknown>
 }
 
 interface AuthState {
@@ -71,9 +71,9 @@ export const useAuthStore = create<AuthState>()(
           
           toast.success('Login successful!')
           return true
-        } catch (error: any) {
+        } catch (error: unknown) {
           set({ isLoading: false })
-          const message = error.response?.data?.detail || 'Login failed'
+          const message = (error as any)?.response?.data?.detail || 'Login failed'
           toast.error(message)
           return false
         }
@@ -86,9 +86,9 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false })
           toast.success('Registration successful! Please log in.')
           return true
-        } catch (error: any) {
+        } catch (error: unknown) {
           set({ isLoading: false })
-          const message = error.response?.data?.detail || 'Registration failed'
+          const message = (error as any)?.response?.data?.detail || 'Registration failed'
           toast.error(message)
           return false
         }
@@ -197,8 +197,8 @@ export const useAuthStore = create<AuthState>()(
           set({ user: updatedUser })
           toast.success('Profile updated successfully!')
           return true
-        } catch (error: any) {
-          const message = error.response?.data?.detail || 'Failed to update profile'
+        } catch (error: unknown) {
+          const message = (error as any)?.response?.data?.detail || 'Failed to update profile'
           toast.error(message)
           return false
         }
@@ -212,8 +212,8 @@ export const useAuthStore = create<AuthState>()(
           await authApi.changePassword(passwordData, token)
           toast.success('Password changed successfully!')
           return true
-        } catch (error: any) {
-          const message = error.response?.data?.detail || 'Failed to change password'
+        } catch (error: unknown) {
+          const message = (error as any)?.response?.data?.detail || 'Failed to change password'
           toast.error(message)
           return false
         }

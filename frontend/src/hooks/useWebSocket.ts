@@ -3,9 +3,9 @@ import { useAuthStore } from '../stores/authStore'
 
 export interface WebSocketMessage {
   type: string
-  data?: any
+  data?: unknown
   timestamp: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface UseWebSocketOptions {
@@ -156,7 +156,7 @@ export function useWebSocket(endpoint: string, options: UseWebSocketOptions = {}
     }))
   }, [])
 
-  const sendMessage = useCallback((message: any) => {
+  const sendMessage = useCallback((message: unknown) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message))
       return true

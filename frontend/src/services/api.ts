@@ -76,10 +76,10 @@ export const authApi = {
 
 // Sentiment API
 export const sentimentApi = {
-  analyze: (text: string, context?: any) =>
+  analyze: (text: string, context?: unknown) =>
     api.post('/sentiment/analyze', { text, context }),
   
-  analyzeBatch: (texts: string[], context?: any) =>
+  analyzeBatch: (texts: string[], context?: unknown) =>
     api.post('/sentiment/analyze/batch', { texts, context }),
   
   getTeamSentiment: (teamId: string, days = 7) =>
@@ -166,7 +166,7 @@ export const adminApi = {
   retrainModels: (data?: { 
     model_name?: string; 
     trigger_reason?: string; 
-    training_config?: any; 
+    training_config?: unknown; 
     auto_deploy?: boolean 
   }) =>
     api.post('/admin/retrain-models', data),

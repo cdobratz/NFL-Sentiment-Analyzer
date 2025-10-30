@@ -23,7 +23,7 @@ optimizeViewport()
 
 // Register service worker in production
 if (import.meta.env.PROD) {
-  registerServiceWorker()
+  void registerServiceWorker()
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -20,7 +20,7 @@ const useIsMobile = () => {
     checkIsMobile()
     window.addEventListener('resize', checkIsMobile)
 
-    return () => window.removeEventListener('resize', checkIsMobile)
+    return () => { window.removeEventListener('resize', checkIsMobile); }
   }, [])
 
   return isMobile
@@ -152,7 +152,7 @@ const SentimentDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
         <select
           value={selectedConference}
-          onChange={(e) => setSelectedConference(e.target.value)}
+          onChange={(e) => { setSelectedConference(e.target.value); }}
           className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">All Conferences</option>
