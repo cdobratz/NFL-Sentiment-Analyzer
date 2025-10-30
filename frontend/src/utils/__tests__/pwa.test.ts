@@ -114,8 +114,8 @@ describe('PWA Utilities (Vitest)', () => {
       })
 
       await registerServiceWorker()
-      updateFoundCb()
-      stateChangeCb()
+      ;(updateFoundCb as () => void)()
+      ;(stateChangeCb as () => void)()
       expect(logSpy).toHaveBeenCalledWith('New content available, please refresh')
     })
 
@@ -143,8 +143,8 @@ describe('PWA Utilities (Vitest)', () => {
 
       await registerServiceWorker()
       logSpy.mockClear()
-      updateFoundCb()
-      stateChangeCb()
+      ;(updateFoundCb as () => void)()
+      ;(stateChangeCb as () => void)()
       expect(logSpy).not.toHaveBeenCalledWith('New content available, please refresh')
     })
 
@@ -163,7 +163,7 @@ describe('PWA Utilities (Vitest)', () => {
         writable: true,
       })
       await registerServiceWorker()
-      expect(() => updateFoundCb()).not.toThrow()
+      expect(() => (updateFoundCb as () => void)()).not.toThrow()
     })
   })
 
@@ -249,7 +249,7 @@ describe('PWA Utilities (Vitest)', () => {
       })
       initializePWAPrompt()
       const ev = { preventDefault: vi.fn() }
-      beforeCb(ev)
+      ;(beforeCb as (ev: any) => void)(ev)
       expect(ev.preventDefault).toHaveBeenCalled()
       expect(logSpy).toHaveBeenCalledWith('PWA install prompt available')
     })
@@ -261,7 +261,7 @@ describe('PWA Utilities (Vitest)', () => {
         if (evt === 'appinstalled') appCb = cb
       })
       initializePWAPrompt()
-      appCb()
+      ;(appCb as () => void)()
       expect(logSpy).toHaveBeenCalledWith('PWA was installed')
     })
   })
@@ -280,7 +280,7 @@ describe('PWA Utilities (Vitest)', () => {
       initializePWAPrompt()
       const prompt = vi.fn()
       const event = { preventDefault: vi.fn(), prompt, userChoice: Promise.resolve({ outcome: 'accepted' }) }
-      beforeCb(event)
+      ;(beforeCb as (event: any) => void)(event)
 
       const res = await showInstallPrompt()
       expect(prompt).toHaveBeenCalled()
@@ -296,7 +296,7 @@ describe('PWA Utilities (Vitest)', () => {
       initializePWAPrompt()
       const prompt = vi.fn()
       const event = { preventDefault: vi.fn(), prompt, userChoice: Promise.resolve({ outcome: 'dismissed' }) }
-      beforeCb(event)
+      ;(beforeCb as (event: any) => void)(event)
 
       const res = await showInstallPrompt()
       expect(prompt).toHaveBeenCalled()
@@ -312,7 +312,7 @@ describe('PWA Utilities (Vitest)', () => {
       initializePWAPrompt()
       const err = new Error('choice error')
       const event = { preventDefault: vi.fn(), prompt: vi.fn(), userChoice: Promise.reject(err) }
-      beforeCb(event)
+      ;(beforeCb as (event: any) => void)(event)
 
       const res = await showInstallPrompt()
       expect(res).toBe(false)
@@ -326,7 +326,7 @@ describe('PWA Utilities (Vitest)', () => {
       })
       initializePWAPrompt()
       const event = { preventDefault: vi.fn(), prompt: vi.fn(), userChoice: Promise.resolve({ outcome: 'accepted' }) }
-      beforeCb(event)
+      ;(beforeCb as (event: any) => void)(event)
       await showInstallPrompt()
       const res2 = await showInstallPrompt()
       expect(res2).toBe(false)
@@ -381,9 +381,9 @@ describe('PWA Utilities (Vitest)', () => {
       })
       expect(canInstallPWA()).toBe(false)
       initializePWAPrompt()
-      beforeCb({ preventDefault: vi.fn() })
+      ;(beforeCb as (ev: any) => void)({ preventDefault: vi.fn() })
       expect(canInstallPWA()).toBe(true)
-      appCb()
+      ;(appCb as () => void)()
       expect(canInstallPWA()).toBe(false)
     })
   })
@@ -421,12 +421,12 @@ describe('PWA Utilities (Vitest)', () => {
       expect(isTouchDevice()).toBe(true)
     })
     it('true when maxTouchPoints > 0', () => {
-      delete (window as unknown).ontouchstart
+      delete (window as any).ontouchstart
       Object.defineProperty(navigator as unknown, 'maxTouchPoints', { value: 3, configurable: true, writable: true })
       expect(isTouchDevice()).toBe(true)
     })
     it('false when no touch support', () => {
-      delete (window as unknown).ontouchstart
+      delete (window as any).ontouchstart
       Object.defineProperty(navigator as unknown, 'maxTouchPoints', { value: 0, configurable: true, writable: true })
       expect(isTouchDevice()).toBe(false)
     })
@@ -448,7 +448,7 @@ describe('PWA Utilities (Vitest)', () => {
   describe('optimizeViewport', () => {
     it('sets viewport content when meta exists', () => {
       const setAttribute = vi.fn()
-      vi.spyOn(document, 'querySelector').mockReturnValue({ setAttribute } as unknown)
+      vi.spyOn(document, 'querySelector').mockReturnValue({ setAttribute } as unknown as Element)
       optimizeViewport()
       expect(document.querySelector).toHaveBeenCalledWith('meta[name="viewport"]')
       expect(setAttribute).toHaveBeenCalledWith(
@@ -462,7 +462,7 @@ describe('PWA Utilities (Vitest)', () => {
       expect(document.querySelector).toHaveBeenCalledWith('meta[name="viewport"]')
     })
     it('throws if meta element lacks setAttribute', () => {
-      vi.spyOn(document, 'querySelector').mockReturnValue({} as unknown)
+      vi.spyOn(document, 'querySelector').mockReturnValue({} as Element)
       expect(() => optimizeViewport()).toThrow()
     })
   })
@@ -480,10 +480,10 @@ describe('PWA Utilities (Vitest)', () => {
       const el1 = { addEventListener: vi.fn() }
       const el2 = { addEventListener: vi.fn() }
       const el3 = { addEventListener: vi.fn() }
-      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el1, el2, el3] as unknown)
+      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el1, el2, el3] as unknown as NodeListOf<Element>)
       preventZoomOnInputFocus()
       expect(document.querySelectorAll).toHaveBeenCalledWith('input, select, textarea')
-      ;[el1, el2, el3].forEach((el: unknown) => {
+      ;[el1, el2, el3].forEach((el: any) => {
         expect(el.addEventListener).toHaveBeenCalledWith('focus', expect.any(Function))
         expect(el.addEventListener).toHaveBeenCalledWith('blur', expect.any(Function))
       })
@@ -503,11 +503,11 @@ describe('PWA Utilities (Vitest)', () => {
     it('sets maximum-scale on focus', () => {
       let focusCb: unknown
       const el = { addEventListener: vi.fn((ev, cb) => ev === 'focus' && (focusCb = cb)) }
-      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el] as unknown)
+      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el] as unknown as NodeListOf<Element>)
       const setAttribute = vi.fn()
-      vi.spyOn(document, 'querySelector').mockReturnValue({ setAttribute } as unknown)
+      vi.spyOn(document, 'querySelector').mockReturnValue({ setAttribute } as unknown as Element)
       preventZoomOnInputFocus()
-      focusCb()
+      ;(focusCb as () => void)()
       expect(document.querySelector).toHaveBeenCalledWith('meta[name="viewport"]')
       expect(setAttribute).toHaveBeenCalledWith(
         'content',
@@ -518,11 +518,11 @@ describe('PWA Utilities (Vitest)', () => {
     it('removes maximum-scale on blur', () => {
       let blurCb: unknown
       const el = { addEventListener: vi.fn((ev, cb) => ev === 'blur' && (blurCb = cb)) }
-      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el] as unknown)
+      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el] as unknown as NodeListOf<Element>)
       const setAttribute = vi.fn()
-      vi.spyOn(document, 'querySelector').mockReturnValue({ setAttribute } as unknown)
+      vi.spyOn(document, 'querySelector').mockReturnValue({ setAttribute } as unknown as Element)
       preventZoomOnInputFocus()
-      blurCb()
+      ;(blurCb as () => void)()
       expect(setAttribute).toHaveBeenCalledWith(
         'content',
         'width=device-width, initial-scale=1.0, user-scalable=no'
@@ -532,14 +532,14 @@ describe('PWA Utilities (Vitest)', () => {
     it('gracefully handles missing viewport meta', () => {
       let focusCb: unknown
       const el = { addEventListener: vi.fn((ev, cb) => ev === 'focus' && (focusCb = cb)) }
-      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el] as unknown)
+      vi.spyOn(document, 'querySelectorAll').mockReturnValue([el] as unknown as NodeListOf<Element>)
       vi.spyOn(document, 'querySelector').mockReturnValue(null)
       preventZoomOnInputFocus()
-      expect(() => focusCb()).not.toThrow()
+      expect(() => (focusCb as () => void)()).not.toThrow()
     })
 
     it('handles empty input list', () => {
-      vi.spyOn(document, 'querySelectorAll').mockReturnValue([] as unknown)
+      vi.spyOn(document, 'querySelectorAll').mockReturnValue([] as unknown as NodeListOf<Element>)
       expect(() => preventZoomOnInputFocus()).not.toThrow()
     })
   })
@@ -553,7 +553,7 @@ describe('PWA Utilities (Vitest)', () => {
       initializePWAPrompt()
       expect(canInstallPWA()).toBe(false)
       const ev = { preventDefault: vi.fn(), prompt: vi.fn(), userChoice: Promise.resolve({ outcome: 'accepted' }) }
-      beforeCb(ev)
+      ;(beforeCb as (ev: any) => void)(ev)
       expect(canInstallPWA()).toBe(true)
       const res = await showInstallPrompt()
       expect(res).toBe(true)

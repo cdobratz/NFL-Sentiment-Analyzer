@@ -72,7 +72,7 @@ class MockWebSocket {
     }, 10)
   }
 
-  send(data: string) {
+  send(_data: string) {
     if (this.readyState !== MockWebSocket.OPEN) {
       throw new Error('WebSocket is not open')
     }
@@ -103,22 +103,6 @@ class MockWebSocket {
 // Replace global WebSocket
 global.WebSocket = MockWebSocket as any
 
-const mockTeams = [
-  {
-    id: '1',
-    name: 'New England Patriots',
-    abbreviation: 'NE',
-    conference: 'AFC',
-    division: 'East',
-  },
-  {
-    id: '2',
-    name: 'Dallas Cowboys',
-    abbreviation: 'DAL',
-    conference: 'NFC',
-    division: 'East',
-  },
-]
 
 describe('Real-Time Updates Integration Tests', () => {
   let mockWebSocket: MockWebSocket
@@ -128,9 +112,13 @@ describe('Real-Time Updates Integration Tests', () => {
     vi.useFakeTimers()
     
     // Mock successful API response
-    vi.mocked(api.dataApi.getTeams).mockResolvedValue(
-      
-    )
+    vi.mocked(api.dataApi.getTeams).mockResolvedValue({
+      data: [],
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as any
+    })
 
     // Clear any existing WebSocket instances
     ;(global.WebSocket as any).mock?.instances?.forEach((ws: MockWebSocket) => {
@@ -390,9 +378,6 @@ describe('Real-Time Updates Integration Tests', () => {
 
     // Should create a new WebSocket instance
     expect(MockWebSocket).toHaveBeenCalledTimes(2)
-
-    // Establish new connection
-    const newMockWebSocket = (global.WebSocket as any).mock.instances[1]
     
     act(() => {
       vi.advanceTimersByTime(20)

@@ -23,6 +23,56 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+interface ApiError {
+  response?: {
+    data?: {
+      detail?: string
+    }
+  }
+}
+
+interface RetrainParams {
+  model_name?: string
+  trigger_reason?: string
+  training_config?: unknown
+  auto_deploy?: boolean
+}
+
+interface Model {
+  modelId?: string
+  id?: string
+  pipeline_tag?: string
+  downloads?: number
+}
+
+interface User {
+  id: string
+  username: string
+  email: string
+  created_at: string
+  is_active: boolean
+  role?: string
+}
+
+interface Alert {
+  alert_id: string
+  message: string
+  description?: string
+  severity: string
+  created_at: string
+  status: string
+}
+
+interface Job {
+  job_id: string
+  model_name?: string
+  status: string
+  created_at: string
+  updated_at?: string
+  trigger_reason?: string
+  progress?: number
+}
+
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<'overview' | 'models' | 'users' | 'alerts' | 'jobs'>('overview')
   const [selectedDays, setSelectedDays] = useState(7)
@@ -71,13 +121,14 @@ export default function AdminPanel() {
 
   // Mutations
   const retrainModelsMutation = useMutation({
-    mutationFn: (data?: unknown) => adminApi.retrainModels(data),
+    mutationFn: (data?: RetrainParams) => adminApi.retrainModels(data),
     onSuccess: () => {
       toast.success('Model retraining started successfully')
       queryClient.invalidateQueries({ queryKey: ['ml-jobs'] })
     },
     onError: (error: unknown) => {
-      toast.error(error.response?.data?.detail || 'Failed to start model retraining')
+      const apiError = error as ApiError
+      toast.error(apiError.response?.data?.detail || 'Failed to start model retraining')
     },
   })
 
@@ -88,7 +139,8 @@ export default function AdminPanel() {
       queryClient.invalidateQueries({ queryKey: ['system-health'] })
     },
     onError: (error: unknown) => {
-      toast.error(error.response?.data?.detail || 'Failed to clear cache')
+      const apiError = error as ApiError
+      toast.error(apiError.response?.data?.detail || 'Failed to clear cache')
     },
   })
 
@@ -99,7 +151,8 @@ export default function AdminPanel() {
       queryClient.invalidateQueries({ queryKey: ['admin-alerts'] })
     },
     onError: (error: unknown) => {
-      toast.error(error.response?.data?.detail || 'Failed to acknowledge alert')
+      const apiError = error as ApiError
+      toast.error(apiError.response?.data?.detail || 'Failed to acknowledge alert')
     },
   })
 
@@ -490,7 +543,7 @@ export default function AdminPanel() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Available Models</h2>
                 {models?.data?.models && models.data.models.length > 0 ? (
                   <div className="space-y-4">
-                    {models.data.models.map((model: unknown, index: number) => (
+                    {models.data.models.map((model: Model, index: number) => (
                       <div key={index} className="p-4 border border-gray-200 rounded-lg">
                         <div className="flex items-center justify-between">
                           <div>
@@ -530,7 +583,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {users?.data && users.data.length > 0 ? (
-                users.data.map((user: unknown) => (
+                users.data.map((user: User) => (
                   <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -579,7 +632,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {alerts?.data?.alerts && alerts.data.alerts.length > 0 ? (
-                alerts.data.alerts.map((alert: unknown) => (
+                alerts.data.alerts.map((alert: Alert) => (
                   <div key={alert.alert_id} className={`p-4 border rounded-lg ${getSeverityColor(alert.severity)}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -629,7 +682,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {mlJobs?.data?.jobs && mlJobs.data.jobs.length > 0 ? (
-                mlJobs.data.jobs.map((job: unknown) => (
+                mlJobs.data.jobs.map((job: Job) => (
                   <div key={job.job_id} className="p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
