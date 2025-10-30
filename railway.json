@@ -5,9 +5,11 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
+    "startCommand": "./start.sh",
     "runtime": "V2",
     "numReplicas": 1,
     "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
     "sleepApplication": false,
     "useLegacyStacker": false,
     "multiRegionConfig": {

@@ -9,16 +9,20 @@ echo "Environment: ${ENVIRONMENT:-production}"
 echo "Port: ${PORT:-8000}"
 echo "Workers: ${WORKERS:-2}"
 
+# Activate the uv environment
+echo "Activating uv environment..."
+source .venv/bin/activate
+
 # Wait a moment for any system setup
 sleep 2
 
 # Check if we can import the app
 echo "Testing app import..."
-uv run python -c "from app.main import app; print('App imported successfully')"
+python -c "from app.main import app; print('App imported successfully')"
 
 # Start the server
 echo "Starting Gunicorn server..."
-exec uv run gunicorn app.main:app \
+exec gunicorn app.main:app \
     -w ${WORKERS:-2} \
     -k uvicorn.workers.UvicornWorker \
     --bind 0.0.0.0:${PORT:-8000} \

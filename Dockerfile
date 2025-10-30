@@ -19,8 +19,10 @@ COPY pyproject.toml ./
 COPY uv.lock ./
 COPY README.md ./
 
-# Install dependencies using uv
-RUN uv sync --frozen
+# Install dependencies using uv with optimizations for Railway
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
+    uv sync --frozen --no-dev
 
 # Copy application code
 COPY app/ ./app/
@@ -38,12 +40,11 @@ RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app
 USER app
 
-# Use PORT environment variable for Railway
-EXPOSE $PORT
+# Expose port 8000 (Railway will handle port mapping)
+EXPOSE 8000
 
-# Health check - wait longer for startup
-HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=5 \
-    CMD curl -f http://localhost:$PORT/health || exit 1
+# Health check - Railway handles this via healthcheckPath in railway.json
+# No HEALTHCHECK needed as Railway uses external health checks
 
 # Use our custom startup script
 CMD ["./start.sh"]
