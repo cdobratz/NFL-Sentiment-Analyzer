@@ -18,11 +18,14 @@ RUN npm run build
 # Install serve globally for serving static files
 RUN npm install -g serve
 
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Expose port 3000 (Railway will handle port mapping)
 EXPOSE 3000
 
 # Health check - Railway handles this externally
 # No HEALTHCHECK needed as Railway uses external health checks
 
-# Start the application
-CMD ["sh", "-c", "serve -s dist -l ${PORT:-3000}"]
+# Start the application using startup script
+CMD ["./start.sh"]

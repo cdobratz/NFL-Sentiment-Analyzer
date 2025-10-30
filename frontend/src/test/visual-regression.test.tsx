@@ -131,11 +131,19 @@ describe('Visual Regression Tests', () => {
     
     vi.mocked(api.dataApi.getTeams).mockResolvedValue({
       data: { data: mockTeams },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
 
     vi.mocked(api.dataApi.getGames).mockResolvedValue({
       data: { data: [] },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
 
     vi.mocked(useSentimentWebSocketModule.default).mockReturnValue(mockWebSocketData)
   })
@@ -152,7 +160,7 @@ describe('Visual Regression Tests', () => {
 
     it('renders dashboard with loading state', async () => {
       vi.mocked(api.dataApi.getTeams).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        () => new Promise(() => {}) as any // Never resolves
       )
 
       const { container } = render(<SentimentDashboard />)
@@ -341,7 +349,11 @@ describe('Visual Regression Tests', () => {
     it('renders panel with empty state', async () => {
       vi.mocked(api.dataApi.getGames).mockResolvedValue({
         data: { data: [] },
-      })
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      } as any)
 
       const { container } = render(
         <GamePredictionPanel predictions={[]} />
@@ -404,12 +416,19 @@ describe('Visual Regression Tests', () => {
   describe('Login', () => {
     beforeEach(() => {
       vi.mocked(useAuth).mockReturnValue({
-        login: vi.fn(),
+        user: null,
+        token: null,
         isLoading: false,
         isAuthenticated: false,
-        user: null,
-        logout: vi.fn(),
+        login: vi.fn(),
         register: vi.fn(),
+        logout: vi.fn(),
+        checkAuth: vi.fn(),
+        refreshToken: vi.fn(),
+        updateProfile: vi.fn(),
+        changePassword: vi.fn(),
+        isAdmin: false,
+        isUser: false,
       })
     })
 
@@ -433,12 +452,19 @@ describe('Visual Regression Tests', () => {
 
     it('renders login form in loading state', () => {
       vi.mocked(useAuth).mockReturnValue({
-        login: vi.fn(),
+        user: null,
+        token: null,
         isLoading: true,
         isAuthenticated: false,
-        user: null,
-        logout: vi.fn(),
+        login: vi.fn(),
         register: vi.fn(),
+        logout: vi.fn(),
+        checkAuth: vi.fn(),
+        refreshToken: vi.fn(),
+        updateProfile: vi.fn(),
+        changePassword: vi.fn(),
+        isAdmin: false,
+        isUser: false,
       })
 
       const { container } = render(<Login />)

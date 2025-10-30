@@ -96,7 +96,11 @@ describe('GamePredictionPanel', () => {
     // Mock successful API response
     vi.mocked(api.dataApi.getGames).mockResolvedValue({
       data: { data: mockGames },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
   })
 
   it('renders with upcoming games tab active by default', async () => {
@@ -172,7 +176,7 @@ describe('GamePredictionPanel', () => {
   it('shows loading state for games', async () => {
     // Mock loading state
     vi.mocked(api.dataApi.getGames).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
+      () => new Promise(() => {}) as any // Never resolves
     )
 
     render(<GamePredictionPanel predictions={mockPredictions} />)
@@ -183,7 +187,11 @@ describe('GamePredictionPanel', () => {
   it('shows empty state when no games', async () => {
     vi.mocked(api.dataApi.getGames).mockResolvedValue({
       data: { data: [] },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
 
     render(<GamePredictionPanel predictions={mockPredictions} />)
 
@@ -205,7 +213,11 @@ describe('GamePredictionPanel', () => {
   it('shows team-specific empty state for games', async () => {
     vi.mocked(api.dataApi.getGames).mockResolvedValue({
       data: { data: [] },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
 
     render(<GamePredictionPanel predictions={mockPredictions} selectedTeam="1" />)
 

@@ -6,10 +6,14 @@ import 'jest-axe/extend-expect'
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
+  root = null
+  rootMargin = ''
+  thresholds = []
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
+  takeRecords() { return [] }
 }
 
 // Mock ResizeObserver
@@ -37,10 +41,15 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock WebSocket
 global.WebSocket = class WebSocket {
+  static readonly CONNECTING = 0
+  static readonly OPEN = 1
+  static readonly CLOSING = 2
+  static readonly CLOSED = 3
+  
   constructor() {}
   close() {}
   send() {}
-}
+} as any
 
 // Mock fetch if not available
 if (!global.fetch) {

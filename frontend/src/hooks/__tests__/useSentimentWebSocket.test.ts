@@ -24,7 +24,7 @@ describe('useSentimentWebSocket', () => {
     vi.clearAllMocks()
     
     // Mock the useWebSocket hook and capture the onMessage callback
-    vi.mocked(useWebSocketModule.default).mockImplementation((endpoint, options) => {
+    vi.mocked(useWebSocketModule.default).mockImplementation((_endpoint, options) => {
       mockOnMessage = options?.onMessage || (() => {})
       return mockWebSocketHook
     })
@@ -295,7 +295,7 @@ describe('useSentimentWebSocket', () => {
   it('sends periodic ping messages when connected', () => {
     vi.useFakeTimers()
     
-    const { result } = renderHook(() => useSentimentWebSocket())
+    renderHook(() => useSentimentWebSocket())
 
     // Fast-forward 30 seconds
     act(() => {

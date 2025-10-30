@@ -1,5 +1,5 @@
 import React from 'react'
-import { TrendingUp, TrendingDown, Minus, Users, MessageCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, MessageCircle } from 'lucide-react'
 import { TeamSentiment } from '../hooks/useSentimentWebSocket'
 
 interface Team {

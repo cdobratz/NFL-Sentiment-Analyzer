@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { dataApi } from '../services/api'
 import { GamePrediction } from '../hooks/useSentimentWebSocket'
-import { Calendar, TrendingUp, TrendingDown, DollarSign, Clock, Target } from 'lucide-react'
+import { Calendar, DollarSign, Clock, Target } from 'lucide-react'
 import LoadingSpinner from './LoadingSpinner'
 
 interface GamePredictionPanelProps {

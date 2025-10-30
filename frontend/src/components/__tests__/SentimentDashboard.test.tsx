@@ -101,7 +101,11 @@ describe('SentimentDashboard', () => {
     // Mock successful API response
     vi.mocked(api.dataApi.getTeams).mockResolvedValue({
       data: { data: mockTeams },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
 
     // Mock WebSocket hook
     vi.mocked(useSentimentWebSocketModule.default).mockReturnValue(mockWebSocketData)
@@ -110,7 +114,7 @@ describe('SentimentDashboard', () => {
   it('renders dashboard with loading state initially', async () => {
     // Mock loading state
     vi.mocked(api.dataApi.getTeams).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
+      () => new Promise(() => {}) as any // Never resolves
     )
 
     render(<SentimentDashboard />)

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from './utils'
-import { axe, toHaveNoViolations } from 'jest-axe'
+import { axe } from 'jest-axe'
 import SentimentDashboard from '../components/SentimentDashboard'
 import TeamSentimentCard from '../components/TeamSentimentCard'
 import Navbar from '../components/Navbar'
@@ -10,8 +10,31 @@ import * as useSentimentWebSocketModule from '../hooks/useSentimentWebSocket'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthStore } from '../stores/authStore'
 
-// Extend Jest matchers
-expect.extend(toHaveNoViolations)
+// Custom matcher for accessibility violations
+const toHaveNoViolations = (results: any) => {
+  const pass = results.violations.length === 0
+  return {
+    pass,
+    message: () => 
+      pass 
+        ? 'Expected violations, but none were found'
+        : `Found ${results.violations.length} accessibility violations:\n${
+            results.violations.map((v: any) => `- ${v.description}`).join('\n')
+          }`
+  }
+}
+
+expect.extend({ toHaveNoViolations })
+
+// Extend Vitest's Assertion interface
+declare module 'vitest' {
+  interface Assertion<T = any> {
+    toHaveNoViolations(): T
+  }
+  interface AsymmetricMatchersContaining {
+    toHaveNoViolations(): any
+  }
+}
 
 // Mock dependencies
 vi.mock('../services/api', () => ({
@@ -99,7 +122,11 @@ describe('Accessibility Tests', () => {
     
     vi.mocked(api.dataApi.getTeams).mockResolvedValue({
       data: { data: mockTeams },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
 
     vi.mocked(useSentimentWebSocketModule.default).mockReturnValue(mockWebSocketData)
   })
@@ -300,12 +327,19 @@ describe('Accessibility Tests', () => {
   describe('Login', () => {
     beforeEach(() => {
       vi.mocked(useAuth).mockReturnValue({
-        login: vi.fn(),
+        user: null,
+        token: null,
         isLoading: false,
         isAuthenticated: false,
-        user: null,
-        logout: vi.fn(),
+        login: vi.fn(),
         register: vi.fn(),
+        logout: vi.fn(),
+        checkAuth: vi.fn(),
+        refreshToken: vi.fn(),
+        updateProfile: vi.fn(),
+        changePassword: vi.fn(),
+        isAdmin: false,
+        isUser: false,
       })
     })
 

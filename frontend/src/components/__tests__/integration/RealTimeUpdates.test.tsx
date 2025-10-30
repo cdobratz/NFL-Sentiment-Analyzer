@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, act } from '../../../test/utils'
 import SentimentDashboard from '../../SentimentDashboard'
 import * as api from '../../../services/api'
-import * as useWebSocketModule from '../../../hooks/useWebSocket'
+// import * as useWebSocketModule from '../../../hooks/useWebSocket' // Unused
 
 // Mock the API
 vi.mock('../../../services/api', () => ({
@@ -72,7 +72,7 @@ class MockWebSocket {
     }, 10)
   }
 
-  send(data: string) {
+  send(_data: string) {
     if (this.readyState !== MockWebSocket.OPEN) {
       throw new Error('WebSocket is not open')
     }
@@ -130,7 +130,11 @@ describe('Real-Time Updates Integration Tests', () => {
     // Mock successful API response
     vi.mocked(api.dataApi.getTeams).mockResolvedValue({
       data: { data: mockTeams },
-    })
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {},
+    } as any)
 
     // Clear any existing WebSocket instances
     ;(global.WebSocket as any).mock?.instances?.forEach((ws: MockWebSocket) => {
@@ -392,7 +396,7 @@ describe('Real-Time Updates Integration Tests', () => {
     expect(MockWebSocket).toHaveBeenCalledTimes(2)
 
     // Establish new connection
-    const newMockWebSocket = (global.WebSocket as any).mock.instances[1]
+    // const _newMockWebSocket = (global.WebSocket as any).mock.instances[1]
     
     act(() => {
       vi.advanceTimersByTime(20)

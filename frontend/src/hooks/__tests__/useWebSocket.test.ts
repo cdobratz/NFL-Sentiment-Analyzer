@@ -29,7 +29,7 @@ class MockWebSocket {
     }, 10)
   }
 
-  send(data: string) {
+  send(_data: string) {
     if (this.readyState !== MockWebSocket.OPEN) {
       throw new Error('WebSocket is not open')
     }
@@ -122,7 +122,7 @@ describe('useWebSocket', () => {
 
   it('handles incoming messages', async () => {
     const onMessage = vi.fn()
-    const { result } = renderHook(() => 
+    renderHook(() => 
       useWebSocket('/test', { onMessage })
     )
 
@@ -145,7 +145,7 @@ describe('useWebSocket', () => {
     const onMessage = vi.fn()
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     
-    const { result } = renderHook(() => 
+    renderHook(() => 
       useWebSocket('/test', { onMessage })
     )
 
@@ -337,7 +337,7 @@ describe('useWebSocket', () => {
   })
 
   it('cleans up on unmount', async () => {
-    const { result, unmount } = renderHook(() => useWebSocket('/test'))
+    const { unmount } = renderHook(() => useWebSocket('/test'))
 
     act(() => {
       vi.advanceTimersByTime(20)
@@ -352,8 +352,7 @@ describe('useWebSocket', () => {
   })
 
   it('uses custom WebSocket URL from environment', () => {
-    const originalEnv = import.meta.env.VITE_WS_URL
-    import.meta.env.VITE_WS_URL = 'ws://custom-url:9000'
+    vi.stubEnv('VITE_WS_URL', 'ws://custom-url:9000')
 
     renderHook(() => useWebSocket('/test'))
 
@@ -361,7 +360,7 @@ describe('useWebSocket', () => {
       'ws://custom-url:9000/test?token=test-token'
     )
 
-    import.meta.env.VITE_WS_URL = originalEnv
+    vi.unstubAllEnvs()
   })
 
   it('does not reconnect when manually closed', async () => {

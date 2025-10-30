@@ -5,7 +5,6 @@ import { z } from 'zod'
 import { useAuth } from '../hooks/useAuth'
 import { User, Mail, Calendar, Shield, Edit2, Save, X, Settings, Bell, Lock } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'
-import toast from 'react-hot-toast'
 
 const profileUpdateSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
