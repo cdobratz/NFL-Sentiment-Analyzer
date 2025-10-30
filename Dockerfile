@@ -19,10 +19,8 @@ COPY pyproject.toml ./
 COPY uv.lock ./
 COPY README.md ./
 
-# Install dependencies using uv with optimizations for Railway
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/root/.cache/pip \
-    uv sync --frozen --no-dev
+# Install dependencies using uv
+RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY app/ ./app/
