@@ -200,7 +200,7 @@ const GamePredictionPanel: React.FC<GamePredictionPanelProps> = ({
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
         <button
-          onClick={() => setActiveTab('upcoming')}
+          onClick={() => { setActiveTab('upcoming') }}
           className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
             activeTab === 'upcoming'
               ? 'bg-white text-gray-900 shadow-sm'
@@ -210,7 +210,7 @@ const GamePredictionPanel: React.FC<GamePredictionPanelProps> = ({
           Upcoming Games
         </button>
         <button
-          onClick={() => setActiveTab('predictions')}
+          onClick={() => { setActiveTab('predictions') }}
           className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
             activeTab === 'predictions'
               ? 'bg-white text-gray-900 shadow-sm'

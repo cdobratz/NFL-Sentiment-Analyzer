@@ -41,7 +41,7 @@ class MockWebSocket {
   }
 
   // Helper methods for testing
-  simulateMessage(data: any) {
+  simulateMessage(data: unknown) {
     if (this.onmessage) {
       this.onmessage(new MessageEvent('message', { data: JSON.stringify(data) }))
     }
@@ -58,10 +58,10 @@ class MockWebSocket {
 }
 
 // Replace global WebSocket
-global.WebSocket = MockWebSocket as any
+global.WebSocket = MockWebSocket as unknown as typeof WebSocket
 
 describe('useWebSocket', () => {
-  let mockAuthStore: any
+  let mockAuthStore: { token: string | null }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -132,7 +132,8 @@ describe('useWebSocket', () => {
 
     // Simulate receiving a message
     const mockMessage = { type: 'test', data: 'hello' }
-    const mockWs = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    const mockWs = globalWs.mock.instances[0]
     
     act(() => {
       mockWs.simulateMessage(mockMessage)
@@ -153,7 +154,8 @@ describe('useWebSocket', () => {
       vi.advanceTimersByTime(20)
     })
 
-    const mockWs = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    const mockWs = globalWs.mock.instances[0]
     
     act(() => {
       // Simulate malformed JSON
@@ -178,7 +180,8 @@ describe('useWebSocket', () => {
       vi.advanceTimersByTime(20)
     })
 
-    const mockWs = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    const mockWs = globalWs.mock.instances[0]
     const sendSpy = vi.spyOn(mockWs, 'send')
 
     const message = { type: 'test', data: 'hello' }
@@ -218,7 +221,8 @@ describe('useWebSocket', () => {
 
     expect(result.current.isConnected).toBe(true)
 
-    const mockWs = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    const mockWs = globalWs.mock.instances[0]
     
     act(() => {
       mockWs.simulateClose()
@@ -237,7 +241,8 @@ describe('useWebSocket', () => {
       vi.advanceTimersByTime(20)
     })
 
-    const mockWs = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    const mockWs = globalWs.mock.instances[0]
     
     act(() => {
       mockWs.simulateClose()
@@ -325,7 +330,8 @@ describe('useWebSocket', () => {
       vi.advanceTimersByTime(20)
     })
 
-    const mockWs = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    const mockWs = globalWs.mock.instances[0]
     
     act(() => {
       mockWs.simulateError()
@@ -343,7 +349,8 @@ describe('useWebSocket', () => {
       vi.advanceTimersByTime(20)
     })
 
-    const mockWs = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    const mockWs = globalWs.mock.instances[0]
     const closeSpy = vi.spyOn(mockWs, 'close')
 
     unmount()

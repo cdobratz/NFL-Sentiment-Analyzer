@@ -42,7 +42,7 @@ export default function Sidebar() {
     checkIsMobile()
     window.addEventListener('resize', checkIsMobile)
 
-    return () => window.removeEventListener('resize', checkIsMobile)
+    return () => { window.removeEventListener('resize', checkIsMobile) }
   }, [])
 
   const NavigationItems = () => (
@@ -53,7 +53,7 @@ export default function Sidebar() {
           <Link
             key={item.name}
             to={item.href}
-            onClick={() => isMobile && setIsMobileMenuOpen(false)}
+            onClick={() => { isMobile && setIsMobileMenuOpen(false) }}
             className={cn(
               'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               isActive
@@ -76,7 +76,7 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 to={item.href}
-                onClick={() => isMobile && setIsMobileMenuOpen(false)}
+                onClick={() => { isMobile && setIsMobileMenuOpen(false) }}
                 className={cn(
                   'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
@@ -99,7 +99,7 @@ export default function Sidebar() {
       <>
         {/* Mobile menu button */}
         <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen) }}
           className="fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md border border-gray-200 md:hidden"
         >
           {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -109,7 +109,7 @@ export default function Sidebar() {
         {isMobileMenuOpen && (
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={() => { setIsMobileMenuOpen(false) }}
           />
         )}
 

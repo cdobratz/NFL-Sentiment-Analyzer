@@ -84,7 +84,7 @@ class MockWebSocket {
   }
 
   // Helper methods for testing
-  simulateMessage(data: any) {
+  simulateMessage(data: unknown) {
     if (this.onmessage) {
       this.onmessage(new MessageEvent('message', { data: JSON.stringify(data) }))
     }
@@ -101,7 +101,7 @@ class MockWebSocket {
 }
 
 // Replace global WebSocket
-global.WebSocket = MockWebSocket as any
+global.WebSocket = MockWebSocket as unknown as typeof WebSocket
 
 const mockTeams = [
   {
@@ -134,10 +134,11 @@ describe('Real-Time Updates Integration Tests', () => {
       statusText: 'OK',
       headers: {},
       config: {},
-    } as any)
+    } as unknown as Awaited<ReturnType<typeof api.dataApi.getTeams>>)
 
     // Clear any existing WebSocket instances
-    ;(global.WebSocket as any).mock?.instances?.forEach((ws: MockWebSocket) => {
+    const globalWs = global.WebSocket as unknown as { mock?: { instances?: MockWebSocket[] } }
+    globalWs.mock?.instances?.forEach((ws: MockWebSocket) => {
       ws.close()
     })
   })
@@ -178,7 +179,8 @@ describe('Real-Time Updates Integration Tests', () => {
     })
 
     // Get the WebSocket instance
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Simulate receiving initial data
     const initialData = [
@@ -223,7 +225,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Send multiple sentiment updates
     const sentiments = [
@@ -287,7 +290,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Send team sentiment update
     const teamSentiment = {
@@ -328,7 +332,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Send game prediction update
     const gamePrediction = {
@@ -376,7 +381,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Simulate connection loss
     act(() => {
@@ -419,7 +425,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
     const sendSpy = vi.spyOn(mockWebSocket, 'send')
 
     // Select a team
@@ -450,7 +457,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
     const sendSpy = vi.spyOn(mockWebSocket, 'send')
 
     // Fast-forward 30 seconds to trigger ping
@@ -475,7 +483,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Send 15 sentiment updates
     for (let i = 1; i <= 15; i++) {
@@ -519,7 +528,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Simulate WebSocket error
     act(() => {
@@ -545,7 +555,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Send malformed message
     act(() => {
@@ -581,7 +592,8 @@ describe('Real-Time Updates Integration Tests', () => {
       expect(screen.getByText('Live')).toBeInTheDocument()
     })
 
-    mockWebSocket = (global.WebSocket as any).mock.instances[0]
+    const globalWs = global.WebSocket as unknown as { mock: { instances: MockWebSocket[] } }
+    mockWebSocket = globalWs.mock.instances[0]
 
     // Simulate disconnection
     act(() => {

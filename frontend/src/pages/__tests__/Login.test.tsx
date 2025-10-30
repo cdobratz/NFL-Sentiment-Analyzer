@@ -283,7 +283,7 @@ describe('Login', () => {
   })
 
   it('prevents multiple submissions', async () => {
-    mockLogin.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(true), 100)))
+    mockLogin.mockImplementation(() => new Promise(resolve => setTimeout(() => { resolve(true) }, 100)))
 
     render(<Login />)
 

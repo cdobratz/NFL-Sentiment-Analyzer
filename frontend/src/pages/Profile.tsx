@@ -113,7 +113,7 @@ export default function Profile() {
               </h2>
               {!isEditing && (
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={() => { setIsEditing(true) }}
                   className="flex items-center space-x-2 text-primary-600 hover:text-primary-700 transition-colors"
                 >
                   <Edit2 className="w-4 h-4" />
@@ -249,7 +249,7 @@ export default function Profile() {
               </h2>
               {!isChangingPassword && (
                 <button
-                  onClick={() => setIsChangingPassword(true)}
+                  onClick={() => { setIsChangingPassword(true) }}
                   className="flex items-center space-x-2 text-primary-600 hover:text-primary-700 transition-colors"
                 >
                   <Lock className="w-4 h-4" />

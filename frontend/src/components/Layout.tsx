@@ -14,7 +14,7 @@ export default function Layout() {
     checkIsMobile()
     window.addEventListener('resize', checkIsMobile)
 
-    return () => window.removeEventListener('resize', checkIsMobile)
+    return () => { window.removeEventListener('resize', checkIsMobile) }
   }, [])
 
   return (

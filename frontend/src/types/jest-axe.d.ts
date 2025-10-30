@@ -1,9 +1,9 @@
 declare module 'jest-axe' {
   export interface AxeResults {
-    violations: any[]
+    violations: unknown[]
   }
 
-  export function axe(container: Element, options?: any): Promise<AxeResults>
+  export function axe(container: Element, options?: unknown): Promise<AxeResults>
   export function toHaveNoViolations(received: AxeResults): {
     message(): string
     pass: boolean
@@ -13,7 +13,7 @@ declare module 'jest-axe' {
 declare global {
   namespace Vi {
     interface AsymmetricMatchersContaining {
-      toHaveNoViolations(): any
+      toHaveNoViolations(): unknown
     }
   }
 }

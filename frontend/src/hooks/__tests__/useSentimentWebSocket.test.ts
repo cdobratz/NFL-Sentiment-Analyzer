@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import useSentimentWebSocket from '../useSentimentWebSocket'
 import * as useWebSocketModule from '../useWebSocket'
+import { WebSocketMessage } from '../useWebSocket'
 
 // Mock the base WebSocket hook
 vi.mock('../useWebSocket')
@@ -18,7 +19,7 @@ const mockWebSocketHook = {
 }
 
 describe('useSentimentWebSocket', () => {
-  let mockOnMessage: (message: any) => void
+  let mockOnMessage: (message: WebSocketMessage) => void
 
   beforeEach(() => {
     vi.clearAllMocks()

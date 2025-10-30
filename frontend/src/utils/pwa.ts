@@ -40,14 +40,19 @@ export const unregisterServiceWorker = async (): Promise<void> => {
 }
 
 // PWA installation prompt
-let deferredPrompt: any = null
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
+let deferredPrompt: BeforeInstallPromptEvent | null = null
 
 export const initializePWAPrompt = (): void => {
   window.addEventListener('beforeinstallprompt', (e) => {
     // Prevent the mini-infobar from appearing on mobile
     e.preventDefault()
     // Stash the event so it can be triggered later
-    deferredPrompt = e
+    deferredPrompt = e as BeforeInstallPromptEvent
     console.log('PWA install prompt available')
   })
 
@@ -64,7 +69,7 @@ export const showInstallPrompt = async (): Promise<boolean> => {
 
   try {
     // Show the install prompt
-    deferredPrompt.prompt()
+    await deferredPrompt.prompt()
     
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice
@@ -84,7 +89,7 @@ export const showInstallPrompt = async (): Promise<boolean> => {
 export const isPWAInstalled = (): boolean => {
   // Check if running in standalone mode (PWA)
   return window.matchMedia('(display-mode: standalone)').matches ||
-         (window.navigator as any).standalone === true
+         (window.navigator as unknown as { standalone?: boolean }).standalone === true
 }
 
 export const canInstallPWA = (): boolean => {

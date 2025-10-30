@@ -71,12 +71,12 @@ export default function AdminPanel() {
 
   // Mutations
   const retrainModelsMutation = useMutation({
-    mutationFn: (data?: any) => adminApi.retrainModels(data),
+    mutationFn: (data?: unknown) => adminApi.retrainModels(data),
     onSuccess: () => {
       toast.success('Model retraining started successfully')
       queryClient.invalidateQueries({ queryKey: ['ml-jobs'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.response?.data?.detail || 'Failed to start model retraining')
     },
   })
@@ -87,7 +87,7 @@ export default function AdminPanel() {
       toast.success(data.data.message)
       queryClient.invalidateQueries({ queryKey: ['system-health'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.response?.data?.detail || 'Failed to clear cache')
     },
   })
@@ -98,7 +98,7 @@ export default function AdminPanel() {
       toast.success('Alert acknowledged')
       queryClient.invalidateQueries({ queryKey: ['admin-alerts'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.response?.data?.detail || 'Failed to acknowledge alert')
     },
   })
@@ -191,7 +191,7 @@ export default function AdminPanel() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => { setActiveTab(tab.id as typeof activeTab) }}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
@@ -400,7 +400,7 @@ export default function AdminPanel() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button 
-                onClick={() => retrainModelsMutation.mutate(undefined)}
+                onClick={() => { retrainModelsMutation.mutate(undefined) }}
                 disabled={retrainModelsMutation.isPending}
                 className="flex items-center space-x-3 p-4 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50"
               >
@@ -412,7 +412,7 @@ export default function AdminPanel() {
               </button>
               
               <button 
-                onClick={() => clearCacheMutation.mutate(undefined)}
+                onClick={() => { clearCacheMutation.mutate(undefined) }}
                 disabled={clearCacheMutation.isPending}
                 className="flex items-center space-x-3 p-4 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
               >
@@ -424,7 +424,7 @@ export default function AdminPanel() {
               </button>
               
               <button 
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['system-health'] })}
+                onClick={() => { queryClient.invalidateQueries({ queryKey: ['system-health'] }) }}
                 className="flex items-center space-x-3 p-4 text-left bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
               >
                 <RefreshCw className="w-5 h-5 text-purple-600" />
@@ -490,7 +490,7 @@ export default function AdminPanel() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Available Models</h2>
                 {models?.data?.models && models.data.models.length > 0 ? (
                   <div className="space-y-4">
-                    {models.data.models.map((model: any, index: number) => (
+                    {models.data.models.map((model: unknown, index: number) => (
                       <div key={index} className="p-4 border border-gray-200 rounded-lg">
                         <div className="flex items-center justify-between">
                           <div>
@@ -530,7 +530,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {users?.data && users.data.length > 0 ? (
-                users.data.map((user: any) => (
+                users.data.map((user: unknown) => (
                   <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
@@ -579,7 +579,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {alerts?.data?.alerts && alerts.data.alerts.length > 0 ? (
-                alerts.data.alerts.map((alert: any) => (
+                alerts.data.alerts.map((alert: unknown) => (
                   <div key={alert.alert_id} className={`p-4 border rounded-lg ${getSeverityColor(alert.severity)}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -598,7 +598,7 @@ export default function AdminPanel() {
                         </span>
                         {alert.status === 'active' && (
                           <button
-                            onClick={() => acknowledgeAlertMutation.mutate(alert.alert_id)}
+                            onClick={() => { acknowledgeAlertMutation.mutate(alert.alert_id) }}
                             className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
                           >
                             Acknowledge
@@ -629,7 +629,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {mlJobs?.data?.jobs && mlJobs.data.jobs.length > 0 ? (
-                mlJobs.data.jobs.map((job: any) => (
+                mlJobs.data.jobs.map((job: unknown) => (
                   <div key={job.job_id} className="p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">

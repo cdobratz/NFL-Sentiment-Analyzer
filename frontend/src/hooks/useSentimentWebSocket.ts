@@ -77,30 +77,36 @@ export function useSentimentWebSocket() {
         break
 
       case 'initial_data':
-        if (message.data?.recent_sentiments) {
-          setData(prev => ({
-            ...prev,
-            recentSentiments: message.data.recent_sentiments
-          }))
+        if (message.data && typeof message.data === 'object' && message.data !== null) {
+          const data = message.data as { recent_sentiments?: SentimentData[] }
+          if (data.recent_sentiments) {
+            setData(prev => ({
+              ...prev,
+              recentSentiments: data.recent_sentiments || []
+            }))
+          }
         }
         break
 
       case 'sentiment_update':
         if (message.data) {
+          const sentimentData = message.data as SentimentData
           setData(prev => ({
             ...prev,
-            recentSentiments: [message.data, ...prev.recentSentiments.slice(0, 9)]
+            recentSentiments: [sentimentData, ...prev.recentSentiments.slice(0, 9)]
           }))
         }
         break
 
       case 'team_sentiment_update':
         if (message.team_id && message.data) {
+          const teamId = message.team_id as string
+          const teamData = message.data as TeamSentiment
           setData(prev => ({
             ...prev,
             teamSentiments: {
               ...prev.teamSentiments,
-              [message.team_id]: message.data
+              [teamId]: teamData
             }
           }))
         }
@@ -108,11 +114,13 @@ export function useSentimentWebSocket() {
 
       case 'game_prediction_update':
         if (message.game_id && message.data) {
+          const gameId = message.game_id as string
+          const gameData = message.data as GamePrediction
           setData(prev => ({
             ...prev,
             gamePredictions: {
               ...prev.gamePredictions,
-              [message.game_id]: message.data
+              [gameId]: gameData
             }
           }))
         }
@@ -192,7 +200,7 @@ export function useSentimentWebSocket() {
   useEffect(() => {
     if (websocket.isConnected) {
       const interval = setInterval(ping, 30000) // Ping every 30 seconds
-      return () => clearInterval(interval)
+      return () => { clearInterval(interval) }
     }
   }, [websocket.isConnected, ping])
 
