@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:1.7
 # Railway-optimized Dockerfile for backend API
 FROM python:3.11-slim
 

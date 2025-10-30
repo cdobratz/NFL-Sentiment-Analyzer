@@ -28,6 +28,11 @@ from ..services.scheduled_tasks_service import (
     ScheduledTasksService,
 )
 from .sentiment import import_sentiment_json
+
+
+router = APIRouter(prefix="/admin", tags=["admin"])
+
+
 @router.post("/ingest/sentiment-json")
 async def admin_import_sentiment_json(
     background_tasks: BackgroundTasks,
@@ -44,7 +49,6 @@ async def admin_import_sentiment_json(
 
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 @router.get("/users", response_model=List[UserResponse])

@@ -31,15 +31,15 @@ services:
       - MAX_REQUESTS=1000
       - MAX_REQUESTS_JITTER=100
 
-  mongodb:
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 2G
-        reservations:
-          cpus: '1.0'
-          memory: 1G
+  mongodb: {MONGO_URI}
+  deploy:
+    resources:
+    limits:
+      cpus: '2.0'
+    memory: 2G
+    reservations:
+      cpus: '1.0'
+      memory: 1G
     command: mongod --auth --bind_ip_all --replSet rs0
 
   redis:
