@@ -20,8 +20,8 @@ COPY uv.lock ./
 COPY README.md ./
 
 # Install dependencies using uv with optimizations for Railway
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
-    --mount=type=cache,id=pip-cache,target=/root/.cache/pip \
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
     uv sync --frozen --no-dev
 
 # Copy application code
