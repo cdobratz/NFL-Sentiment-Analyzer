@@ -1,26 +1,19 @@
 {
-  "$schema": "https://railway.app/railway.schema.json",
+  "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "builder": "RAILPACK"
   },
   "deploy": {
-    "startCommand": "uv run gunicorn app.main:app -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --access-logfile - --error-logfile - --log-level info",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
+    "runtime": "V2",
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "useLegacyStacker": false,
+    "multiRegionConfig": {
+      "us-west2": {
+        "numReplicas": 1
+      }
+    },
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
-  },
-  "environments": {
-    "production": {
-      "variables": {
-        "ENVIRONMENT": "production",
-        "LOG_LEVEL": "info",
-        "WORKERS": "2",
-        "MAX_REQUESTS": "1000",
-        "API_RATE_LIMIT_PER_MINUTE": "100",
-        "CORS_ORIGINS": "https://nfl-sentiment-frontend.up.railway.app"
-      }
-    }
   }
 }
