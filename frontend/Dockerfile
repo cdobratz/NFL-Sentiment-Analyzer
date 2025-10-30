@@ -18,12 +18,11 @@ RUN npm run build
 # Install serve globally for serving static files
 RUN npm install -g serve
 
-# Expose port (Railway sets this dynamically)
-EXPOSE $PORT
+# Expose port 3000 (Railway will handle port mapping)
+EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-3000} || exit 1
+# Health check - Railway handles this externally
+# No HEALTHCHECK needed as Railway uses external health checks
 
-# Start the application (run as root for Railway compatibility)
+# Start the application
 CMD ["sh", "-c", "serve -s dist -l ${PORT:-3000}"]
